@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -91,133 +91,9 @@
             .body-parts-visual { border: 1px solid #cbd5e1 !important; border-radius: 8px !important; padding: 15pt !important; background: #f8fafc !important; }
         }
     </style>
-
-    <!-- FIREBASE INIT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAZPXXQJXN3Y1mWwYBNCcLjGSusRqjwqrA",
-            authDomain: "tienganh6thaykhoadeptrai.firebaseapp.com",
-            projectId: "tienganh6thaykhoadeptrai",
-            storageBucket: "tienganh6thaykhoadeptrai.firebasestorage.app",
-            messagingSenderId: "924106863588",
-            appId: "1:924106863588:web:e702ff575534036b950df1",
-            measurementId: "G-X3MK9XTMR8"
-        };
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-
-            window.fauth = auth;
-            window.fdb = db;
-            window.fCollection = collection;
-            window.fAddDoc = addDoc;
-            window.fDoc = doc;
-            window.fSetDoc = setDoc;
-            window.fGetDoc = getDoc;
-            window.fGetDocs = getDocs;
-            window.fUpdateDoc = updateDoc;
-            window.fDeleteDoc = deleteDoc;
-            window.fQuery = query;
-            window.fWhere = where;
-
-            const ADMIN_EMAILS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
-
-            window.loginWithGoogle = async function() {
-                const provider = new GoogleAuthProvider();
-                try {
-                    await signInWithPopup(auth, provider);
-                } catch (error) {
-                    console.error(error);
-                    alert("Sign in failed. Please check if domain is authorized in Firebase.");
-                }
-            }
-
-            window.logoutGoogle = async function() {
-                await signOut(auth);
-                window.location.reload();
-            }
-
-            onAuthStateChanged(auth, async (user) => {
-                const authContainer = document.getElementById('auth-container');
-                const nicknameOverlay = document.getElementById('nicknameOverlay');
-                const printBtn = document.getElementById('print-btn');
-
-                if (user) {
-                    const userRef = doc(db, "users", user.uid);
-                    const userSnap = await getDoc(userRef);
-                    
-                    let nickname = user.displayName || user.email.split('@')[0];
-                    let isNewUser = false;
-
-                    if (userSnap.exists()) {
-                        const data = userSnap.data();
-                        if (data.status === 'blocked') {
-                            alert("Account suspended by Administrator.");
-                            await signOut(auth);
-                            return;
-                        }
-                        
-                        if (data.plan !== 'lifetime' && data.expiryDate) {
-                            if (Date.now() > data.expiryDate) {
-                                alert("Subscription expired. Please contact Admin.");
-                                await signOut(auth);
-                                return;
-                            }
-                        }
-                        nickname = data.nickname || nickname;
-                    } else {
-                        isNewUser = true;
-                        window.pendingUser = user;
-                        nicknameOverlay.classList.add('active');
-                        return; 
-                    }
-
-                    window.currentUser = { uid: user.uid, email: user.email, nickname: nickname };
-                    window.isAdmin = ADMIN_EMAILS.includes(user.email);
-
-                    authContainer.innerHTML = `
-                        <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
-                            <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
-                            <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
-                        </div>
-                        <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Sign out</button>
-                    `;
-
-                    if (window.isAdmin && printBtn) {
-                        printBtn.classList.remove('hidden');
-                    }
-
-                    if (!isNewUser) {
-                        await updateDoc(userRef, { lastLogin: Date.now() });
-                    }
-                    if (window.renderMenu) window.renderMenu();
-
-                } else {
-                    window.currentUser = null;
-                    window.isAdmin = false;
-                    authContainer.innerHTML = `
-                        <button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign in
-                        </button>
-                    `;
-                    if(printBtn) printBtn.classList.add('hidden');
-                    if (window.renderMenu) window.renderMenu();
-                }
-            });
-        } catch (e) {
-            console.error("Firebase Init Error:", e);
-        }
-    </script>
 </head>
 <body>
 
-    <!-- OVERLAY & SIDEBAR -->
     <div id="overlay" class="sidebar-overlay no-print" onclick="toggleMenu()"></div>
     <aside id="sidebar" class="sidebar no-print">
         <div class="p-6 border-b border-slate-100 bg-indigo-50 flex justify-between items-center">
@@ -230,19 +106,6 @@
         <div class="p-4 overflow-y-auto flex-1" id="nav-menu"></div>
     </aside>
 
-    <!-- NICKNAME MODAL -->
-    <div id="nicknameOverlay" class="custom-alert-overlay no-print">
-        <div class="custom-alert-box bg-white p-8 rounded-3xl w-[90%] max-w-sm text-center shadow-2xl">
-            <div class="text-5xl mb-4">📛</div>
-            <h2 class="text-2xl font-bold baloo-font text-indigo-900 mb-2">Create Nickname</h2>
-            <p class="text-slate-500 mb-6 text-sm">Displayed on Leaderboard.</p>
-            <input type="text" id="nicknameInput" placeholder="Enter nickname..." class="w-full p-4 border-2 border-slate-200 rounded-xl mb-4 text-center font-bold focus:border-indigo-500 outline-none" maxlength="20">
-            <button onclick="saveNickname()" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-700 shadow-md">Confirm</button>
-            <button onclick="document.getElementById('nicknameOverlay').classList.remove('active')" class="w-full text-slate-400 font-bold py-2 mt-2 text-sm hover:text-slate-600 hidden" id="cancelNicknameBtn">Cancel</button>
-        </div>
-    </div>
-
-    <!-- NOTIFICATION ALERT -->
     <div id="customAlert" class="custom-alert-overlay no-print">
         <div class="custom-alert-box">
             <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4" id="alertIcon">🔔</div>
@@ -252,20 +115,16 @@
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER -->
     <div class="flex flex-col h-screen">
-        <header class="flex justify-between items-center bg-white px-4 py-3 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
+        <header class="flex justify-between items-center bg-white px-4 py-4 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
             <div class="flex items-center gap-3">
                 <button onclick="toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50">☰ Menu</button>
-                <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate max-w-[200px] md:max-w-md hidden sm:block">Loading...</h2>
+                <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate">Loading...</h2>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="window.print()" id="print-btn" class="hidden bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm">
-                    🖨️ <span class="hidden md:inline">Print Book</span>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-slate-800 text-white font-bold py-2 px-5 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm">
+                    🖨️ Print Book
                 </button>
-                <div id="auth-container">
-                    <!-- Loaded by JS -->
-                </div>
             </div>
         </header>
 
@@ -278,9 +137,12 @@
                 <div id="content-area"></div>
             </div>
         </main>
+
+        <footer class="bg-slate-800 text-white text-center py-2.5 text-sm font-bold no-print z-50 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.1)] border-t border-slate-700 tracking-wide">
+            Giáo án điện tử bởi Mr. Khoa - Zalo: 0901-637-827
+        </footer>
     </div>
 
-    <!-- CORE SCRIPT -->
     <script>
         const database = {
             "class-6": {
@@ -555,7 +417,7 @@
                         ]
                     },
                     // ==========================================
-                    // REVIEW 1: EXAM MODULE
+                    // REVIEW 1: EXAM MODULE (NEW)
                     // ==========================================
                     {
                         id: "rev1",
@@ -591,11 +453,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ a maths test tomorrow. My teacher told me yesterday.", opts: ["A. have", "B. are having", "C. has", "D. having"], ans: 1, exp: "Kế hoạch chắc chắn trong tương lai dùng Hiện tại tiếp diễn (are having)." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. This is my _______ bedroom. They love it.", opts: ["A. parent's", "B. parents'", "C. parents", "D. parent"], ans: 1, exp: "Danh từ số nhiều có 's' (parents) chỉ cần thêm dấu nháy đơn ' ở cuối." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION", q: "21. Do students in Finland wear uniforms?", opts: ["A. Yes, they do.", "B. No, they don't.", "C. Only on Mondays.", "D. Sometimes."], ans: 1, exp: "Bài đọc: 'Students in Finland do not wear uniforms.'" },
-                                        { part: "PART IV: READING COMPREHENSION", q: "22. What clothes can they wear to school?", opts: ["A. Formal clothes", "B. Uniforms", "C. Jeans and T-shirts", "D. Hats"], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "23. Do they have a lot of homework?", opts: ["A. Yes, a lot.", "B. No, they don't have much.", "C. Only at weekends.", "D. The text doesn't say."], ans: 1, exp: "Bài đọc: 'They also do not have much homework'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "24. What do they do after school?", opts: ["A. Play sports or learn music", "B. Do homework", "C. Clean the school", "D. Go to the cinema"], ans: 0, exp: "Bài đọc: 'After school, they play sports or learn music'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "25. What are Finnish students like?", opts: ["A. Lazy and shy", "B. Creative and hard-working", "C. Funny and active", "D. Kind and clever"], ans: 1, exp: "Bài đọc: 'Finnish students are very creative and hard-working.'" },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Do students in Finland wear uniforms?", opts: ["A. Yes, they do.", "B. No, they don't.", "C. Only on Mondays.", "D. Sometimes."], ans: 1, exp: "Bài đọc: 'Students in Finland do not wear uniforms.'" },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. What clothes can they wear to school?", opts: ["A. Formal clothes", "B. Uniforms", "C. Jeans and T-shirts", "D. Hats"], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. Do they have a lot of homework?", opts: ["A. Yes, a lot.", "B. No, they don't have much.", "C. Only at weekends.", "D. The text doesn't say."], ans: 1, exp: "Bài đọc: 'They also do not have much homework'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What do they do after school?", opts: ["A. Play sports or learn music", "B. Do homework", "C. Clean the school", "D. Go to the cinema"], ans: 0, exp: "Bài đọc: 'After school, they play sports or learn music'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What are Finnish students like?", opts: ["A. Lazy and shy", "B. Creative and hard-working", "C. Funny and active", "D. Kind and clever"], ans: 1, exp: "Bài đọc: 'Finnish students are very creative and hard-working.'" },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'My house has four rooms.'", opts: ["A. There are four rooms in my house.", "B. There is four rooms in my house.", "C. My house have four rooms.", "D. Four rooms are my house."], ans: 0, exp: "Sử dụng cấu trúc 'There is/are' để viết lại câu sở hữu chỉ số lượng." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'The lamp is behind the TV.'", opts: ["A. The TV is next to the lamp.", "B. The TV is in front of the lamp.", "C. The TV is under the lamp.", "D. The TV is behind the lamp."], ans: 1, exp: "Nếu A ở sau B, thì B ở trước A (in front of)." },
@@ -627,11 +489,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ an English club meeting this weekend. Don't forget!", opts: ["A. have", "B. are having", "C. has", "D. having"], ans: 1, exp: "Kế hoạch đã định trước trong tương lai gần -> HT Tiếp diễn (are having)." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. Find the mistake: This <u>is</u> my <u>sister</u> <u>bicycle</u>.", opts: ["A. is", "B. sister", "C. bicycle", "D. This"], ans: 1, exp: "Phải dùng sở hữu cách 's để chỉ sự sở hữu -> my sister's bicycle." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION", q: "21. The word 'They' in line 2 refers to:", opts: ["A. Schools", "B. Uniforms", "C. Students", "D. Countries"], ans: 2, exp: "'They' thay thế cho danh từ 'Students' ở câu trước đó." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "22. Which statement is TRUE about Finnish students?", opts: ["A. They wear uniforms every day.", "B. They feel stressed about homework.", "C. They can wear whatever they feel comfortable in.", "D. They don't like playing sports."], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "23. What can be inferred about the education system in Finland?", opts: ["A. It is very strict.", "B. It focuses on rote learning.", "C. It encourages creativity and well-being.", "D. It forces students to study all day."], ans: 2, exp: "Suy luận: Không mặc đồng phục, ít bài tập, được chơi thể thao/âm nhạc -> Khuyến khích sự sáng tạo và sức khỏe (creativity and well-being)." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "24. What does the word 'hard-working' mean in the text?", opts: ["A. Lazy", "B. Putting a lot of effort into doing things", "C. Working in a difficult place", "D. Being very smart"], ans: 1, exp: "Định nghĩa của hard-working là chăm chỉ, nỗ lực nhiều." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "25. Which statement is NOT TRUE?", opts: ["A. Students wear jeans to school.", "B. They have a lot of homework.", "C. They play sports after school.", "D. They learn music."], ans: 1, exp: "Bài đọc ghi: 'They also do not have much homework'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. The word 'They' in line 2 refers to:", opts: ["A. Schools", "B. Uniforms", "C. Students", "D. Countries"], ans: 2, exp: "'They' thay thế cho danh từ 'Students' ở câu trước đó." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. Which statement is TRUE about Finnish students?", opts: ["A. They wear uniforms every day.", "B. They feel stressed about homework.", "C. They can wear whatever they feel comfortable in.", "D. They don't like playing sports."], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. What can be inferred about the education system in Finland?", opts: ["A. It is very strict.", "B. It focuses on rote learning.", "C. It encourages creativity and well-being.", "D. It forces students to study all day."], ans: 2, exp: "Suy luận: Không mặc đồng phục, ít bài tập, được chơi thể thao/âm nhạc -> Khuyến khích sự sáng tạo và sức khỏe (creativity and well-being)." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What does the word 'hard-working' mean in the text?", opts: ["A. Lazy", "B. Putting a lot of effort into doing things", "C. Working in a difficult place", "D. Being very smart"], ans: 1, exp: "Định nghĩa của hard-working là chăm chỉ, nỗ lực nhiều." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. Which statement is NOT TRUE?", opts: ["A. Students wear jeans to school.", "B. They have a lot of homework.", "C. They play sports after school.", "D. They learn music."], ans: 1, exp: "Bài đọc ghi: 'They also do not have much homework'." },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'The garden is in front of the building.'", opts: ["A. The building is next to the garden.", "B. The building is behind the garden.", "C. The building is in front of the garden.", "D. The building is under the garden."], ans: 1, exp: "Vườn ở trước tòa nhà -> Tòa nhà ở sau (behind) khu vườn." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'Let's go to the museum this weekend.'", opts: ["A. How about going to the museum this weekend?", "B. Why don't we going to the museum this weekend?", "C. What about go to the museum this weekend?", "D. Let's going to the museum this weekend."], ans: 0, exp: "Cấu trúc rủ rê: Let's + V = How about + V-ing." },
@@ -670,11 +532,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ English now.", opts: ["A. study", "B. are studying", "C. studies", "D. studying"], ans: 1, exp: "Có 'now' -> HT Tiếp diễn." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. She has a _______ face.", opts: ["A. round", "B. long black", "C. tall", "D. short"], ans: 0, exp: "Mô tả khuôn mặt dùng 'round' (tròn)." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION", q: "21. Where does Mai live?", opts: ["A. In a townhouse", "B. In a villa", "C. In a stilt house", "D. In an apartment"], ans: 2, exp: "Bài đọc: 'I live in a stilt house'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "22. What is her house made of?", opts: ["A. Brick and stone", "B. Wood and bamboo", "C. Glass and steel", "D. Plastic"], ans: 1, exp: "Bài đọc: 'made of wood and bamboo'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "23. How is the house in the summer?", opts: ["A. Very hot", "B. Very warm", "C. Very cool", "D. Very cold"], ans: 2, exp: "Bài đọc: 'It is very cool in the summer'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "24. What does her family keep under the house?", opts: ["A. Dogs and cats", "B. Chickens and ducks", "C. Cows and pigs", "D. Birds"], ans: 1, exp: "Bài đọc: 'keeps some chickens and ducks'." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "25. What do they do in the big living room?", opts: ["A. Only sleeping", "B. Only eating", "C. Everything (eating, sleeping, watching TV)", "D. Cooking"], ans: 2, exp: "Bài đọc: 'We do everything there'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Where does Mai live?", opts: ["A. In a townhouse", "B. In a villa", "C. In a stilt house", "D. In an apartment"], ans: 2, exp: "Bài đọc: 'I live in a stilt house'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. What is her house made of?", opts: ["A. Brick and stone", "B. Wood and bamboo", "C. Glass and steel", "D. Plastic"], ans: 1, exp: "Bài đọc: 'made of wood and bamboo'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. How is the house in the summer?", opts: ["A. Very hot", "B. Very warm", "C. Very cool", "D. Very cold"], ans: 2, exp: "Bài đọc: 'It is very cool in the summer'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What does her family keep under the house?", opts: ["A. Dogs and cats", "B. Chickens and ducks", "C. Cows and pigs", "D. Birds"], ans: 1, exp: "Bài đọc: 'keeps some chickens and ducks'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What do they do in the big living room?", opts: ["A. Only sleeping", "B. Only eating", "C. Everything (eating, sleeping, watching TV)", "D. Cooking"], ans: 2, exp: "Bài đọc: 'We do everything there'." },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'My brother has short curly hair.'", opts: ["A. My brother's hair is short and curly.", "B. My brother is short curly hair.", "C. My brother hair is short and curly.", "D. My brother has hair short curly."], ans: 0, exp: "Đổi cấu trúc S + have + Adj + Noun thành S's Noun + is + Adj." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'The cat is behind the computer.'", opts: ["A. The computer is next to the cat.", "B. The computer is in front of the cat.", "C. The computer is under the cat.", "D. The computer is behind the cat."], ans: 1, exp: "A ở sau B -> B ở trước A." },
@@ -706,11 +568,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. Find the mistake: She <u>always</u> <u>brushs</u> her <u>teeth</u> <u>before</u> going to bed.", opts: ["A. always", "B. brushs", "C. teeth", "D. before"], ans: 1, exp: "Động từ tận cùng bằng 'sh' phải thêm 'es' -> brushes." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. These are the _______ notebooks.", opts: ["A. childrens", "B. children's", "C. childrens'", "D. children"], ans: 1, exp: "Danh từ số nhiều bất quy tắc không có 's' (children) thì sở hữu cách vẫn thêm 's bình thường." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION", q: "21. Why is a stilt house cool in the summer?", opts: ["A. Because it is near a river.", "B. Because it has air conditioners.", "C. Because it is built on high posts and made of wood.", "D. The text does not say."], ans: 2, exp: "Suy luận từ bài: Nhà sàn xây trên cột cao, làm từ gỗ/tre nên mát mẻ." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "22. Which statement is NOT TRUE about Mai's house?", opts: ["A. It is in a small village.", "B. It has many small rooms.", "C. Animals are kept under the house.", "D. It keeps people safe from wild animals."], ans: 1, exp: "Bài đọc ghi: 'we have a big living room. We do everything there' -> Không có nhiều phòng nhỏ." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "23. The word 'there' in line 5 refers to:", opts: ["A. Under the house", "B. In the small village", "C. In the big living room", "D. Outside the house"], ans: 2, exp: "'We do everything there' -> 'there' thay thế cho 'a big living room' ở câu trước." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "24. What can be inferred about the lifestyle of Mai's family?", opts: ["A. They are very rich.", "B. They have a communal and peaceful lifestyle.", "C. They live a modern city life.", "D. They don't like animals."], ans: 1, exp: "Suy luận: Sống chung 1 phòng lớn, nuôi gà vịt, yêu làng quê -> lối sống cộng đồng, thanh bình." },
-                                        { part: "PART IV: READING COMPREHENSION", q: "25. What is the main material of the stilt house?", opts: ["A. Brick", "B. Concrete", "C. Wood and bamboo", "D. Plastic"], ans: 2, exp: "Bài đọc: 'It is usually made of wood and bamboo'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Why is a stilt house cool in the summer?", opts: ["A. Because it is near a river.", "B. Because it has air conditioners.", "C. Because it is built on high posts and made of wood.", "D. The text does not say."], ans: 2, exp: "Suy luận từ bài: Nhà sàn xây trên cột cao, làm từ gỗ/tre nên mát mẻ." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. Which statement is NOT TRUE about Mai's house?", opts: ["A. It is in a small village.", "B. It has many small rooms.", "C. Animals are kept under the house.", "D. It keeps people safe from wild animals."], ans: 1, exp: "Bài đọc ghi: 'we have a big living room. We do everything there' -> Không có nhiều phòng nhỏ." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. The word 'there' in line 5 refers to:", opts: ["A. Under the house", "B. In the small village", "C. In the big living room", "D. Outside the house"], ans: 2, exp: "'We do everything there' -> 'there' thay thế cho 'a big living room' ở câu trước." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What can be inferred about the lifestyle of Mai's family?", opts: ["A. They are very rich.", "B. They have a communal and peaceful lifestyle.", "C. They live a modern city life.", "D. They don't like animals."], ans: 1, exp: "Suy luận: Sống chung 1 phòng lớn, nuôi gà vịt, yêu làng quê -> lối sống cộng đồng, thanh bình." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What is the main material of the stilt house?", opts: ["A. Brick", "B. Concrete", "C. Wood and bamboo", "D. Plastic"], ans: 2, exp: "Bài đọc: 'It is usually made of wood and bamboo'." },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'He is a creative and kind boy.'", opts: ["A. What does he look like?", "B. What is his personality like?", "C. How is he?", "D. Who is he?"], ans: 1, exp: "Hỏi về tính cách: 'What is his personality like?' hoặc 'What is he like?'." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'There are twenty desks in my classroom.'", opts: ["A. My classroom has twenty desks.", "B. My classroom have twenty desks.", "C. Twenty desks are my classroom.", "D. My classroom is twenty desks."], ans: 0, exp: "Đổi cấu trúc There is/are -> S + have/has." },
@@ -809,55 +671,41 @@
                             }
                         ]
                     }
-                    // ⬇️ DÁN CODE BÀI HỌC MỚI (NEW UNIT) VÀO ĐÂY ⬇️
                 ]
             }
         };
 
         let currentClass = "class-6";
         let currentModule = null;
+        let userAnswers = {};
+        let userListeningAnswers = {};
         let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
-        
-        window.userPracticeAnswers = {};
-        window.userListeningAnswers = {};
-        window.adminUsersData = [];
 
-        // --- Core UI Functions ---
-        function renderDashboardMenu() {
-            const menu = document.getElementById('nav-menu');
-            let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>`;
-            dashHTML += `<button onclick="showMyProgress()" id="nav-progress" class="module-nav-btn bg-sky-50 text-sky-700 border border-sky-200">📈 My Progress</button>`;
-            dashHTML += `<button onclick="showLeaderboard()" id="nav-leaderboard" class="module-nav-btn bg-amber-50 text-amber-700 border border-amber-200 mt-2">🏆 Leaderboard</button>`;
-            
-            if (window.isAdmin) {
-                dashHTML += `<button onclick="showTeacherDashboard()" id="nav-admin" class="module-nav-btn bg-emerald-50 text-emerald-700 border-2 border-emerald-300 mt-2">👨‍🏫 User Management</button>`;
+        function initApp() {
+            const selector = document.getElementById('class-selector');
+            selector.innerHTML = '';
+            for (let cId in database) {
+                selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`;
             }
-            
-            if(!menu.innerHTML.includes('DASHBOARD')) {
-                menu.innerHTML += dashHTML;
+            renderMenu();
+            if(database[currentClass].modules.length > 0) {
+                loadModule(database[currentClass].modules[0].id);
             }
         }
 
         function renderMenu() {
             const menu = document.getElementById('nav-menu');
-            menu.innerHTML = '';
-            
-            let lessonsHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 px-2">LESSONS</p>';
-            let testsHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">EXAMS</p>';
+            menu.innerHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 px-2">LESSONS & EXAMS</p>';
             
             database[currentClass].modules.forEach(mod => {
                 let html = '';
                 if(mod.type === 'lesson') {
                     html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn">📖 ${mod.title}</button>`;
-                    lessonsHTML += html;
                 } else if (mod.type === 'exam_module') {
-                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn exam-btn">📝 ${mod.title}</button>`;
-                    testsHTML += html;
+                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn exam-btn mt-4">📝 ${mod.title}</button>`;
                 }
+                menu.innerHTML += html;
             });
-            
-            menu.innerHTML = lessonsHTML + testsHTML;
-            renderDashboardMenu();
         }
 
         function toggleMenu() {
@@ -885,30 +733,29 @@
             if(navBtn) navBtn.classList.add('active');
             
             document.getElementById('header-title').innerText = mod.title;
-            
-            const printClassTitle = document.getElementById('print-class-title');
-            if (printClassTitle) printClassTitle.innerText = database[currentClass].name;
-            
-            const printModuleTitle = document.getElementById('print-module-title');
-            if (printModuleTitle) printModuleTitle.innerText = mod.title;
+            document.getElementById('print-class-title').innerText = database[currentClass].name;
+            document.getElementById('print-module-title').innerText = mod.title;
 
             const contentArea = document.getElementById('content-area');
             contentArea.innerHTML = '';
             
+            // Clear exam timer if active
             if(currentExam.timer) clearInterval(currentExam.timer);
-            document.getElementById('test-timer-display')?.remove(); // Cleanup inline timer if any
             
-            if (mod.type === 'lesson') renderLessonView(mod, contentArea);
-            else if (mod.type === 'exam_module') renderExamSetupView(mod, contentArea);
+            if (mod.type === 'lesson') {
+                renderLessonView(mod, contentArea);
+            } else if (mod.type === 'exam_module') {
+                renderExamSetupView(mod, contentArea);
+            }
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- Render Views ---
         function renderLessonView(mod, container) {
             let html = '';
+            
             mod.sections.forEach((sec, sIdx) => {
-                html += `<section><h2 class="text-2xl font-bold text-slate-800 baloo-font mt-6 mb-4">${sec.title}</h2>`;
+                html += `<section><h2 class="text-2xl font-bold text-slate-800 baloo-font">${sec.title}</h2>`;
 
                 if (sec.type === 'objectives') {
                     html += `<div class="glass-card bg-indigo-50 border-indigo-200 note-box-print">${sec.content}</div>`;
@@ -925,18 +772,21 @@
                                  </div>`;
                     });
                     html += `</div>`;
+                    
                     if(sec.collocations) {
                         html += `<div class="glass-card bg-slate-50 border-slate-300 note-box-print p-4">
-                                    <h3 class="font-bold text-slate-800 mb-3 text-lg">🎯 Collocations:</h3>
+                                    <h3 class="font-bold text-slate-800 mb-3 text-lg">🎯 Collocations & Word Webs:</h3>
                                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-medium">`;
-                        sec.collocations.forEach(c => { html += `<div><b class="text-indigo-700 uppercase">${c.word}</b>:<br> ${c.items}</div>`; });
+                        sec.collocations.forEach(c => {
+                            html += `<div><b class="text-indigo-700 uppercase">${c.word}</b>:<br> ${c.items}</div>`;
+                        });
                         html += `</div></div>`;
                     }
                 } 
                 else if (sec.type === 'grammar' || sec.type === 'pronunciation') {
                     html += sec.content;
                 }
-                else if (sec.type === 'listening' || sec.type === 'dialogue') {
+                else if (sec.type === 'listening') {
                     html += `<div class="glass-card border-t-4 border-sky-500 bg-sky-50/30">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-sky-200 pb-4 print:border-none no-print">
                                     <span class="text-sm text-sky-600 font-bold bg-sky-100 px-3 py-1.5 rounded-full shadow-sm">👇 TAP TO LISTEN & ROLE-PLAY</span>
@@ -947,40 +797,39 @@
                                     </div>
                                 </div>
                                 <div class="space-y-3 mb-8">`;
+                    
                     sec.lines.forEach((l, i) => {
                         let isRev = i % 2 !== 0 ? 'flex-row-reverse print:flex-row' : '';
                         let align = i % 2 !== 0 ? 'text-right print:text-left' : '';
                         let bg = i % 2 !== 0 ? 'bg-sky-50 border-sky-200' : 'bg-white border-slate-200';
                         let safeText = encodeURIComponent(l.t).replace(/'/g, "%27"); 
+                        
                         html += `<div class="audio-row flex gap-3 p-2 ${isRev}" onclick="playDialogueLine('${safeText}', '${l.gender}')">
                                     <div class="chat-avatar w-10 h-10 rounded-full bg-sky-200 flex items-center justify-center text-xl shrink-0 no-print">${l.a}</div>
                                     <div class="${align} w-full"><div class="text-xs font-bold text-sky-600 mb-1 mx-1 no-print">${l.c}</div>
                                     <div class="p-3 rounded-2xl border ${bg} inline-block max-w-[85%] text-[15px] font-medium shadow-sm"><span class="hidden print:inline chat-name-print">${l.c}: </span>${l.t}</div></div>
                                  </div>`;
                     });
-                    html += `</div>`;
-                    
-                    if (sec.questions) {
-                        html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item">
-                                    <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">🎧 Choose the correct answer:</h4>
-                                    <div class="space-y-5">`;
-                        sec.questions.forEach(q => {
-                            html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
-                            q.opts.forEach((opt, idx) => {
-                                html += `<div onclick="selectListening(this, '${q.id}', ${idx}, ${q.ans})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-sky-100">${opt}</div>`;
-                            });
-                            html += `</div><div id="res-${q.id}" class="hidden mt-2 font-bold text-sm"></div></div>`;
+                    html += `</div>
+                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item">
+                                <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">🎧 Choose the correct answer:</h4>
+                                <div class="space-y-5">`;
+                    sec.questions.forEach(q => {
+                        html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
+                        q.opts.forEach((opt, idx) => {
+                            html += `<div onclick="selectListening(this, '${q.id}', ${idx}, ${q.ans})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-sky-100">${opt}</div>`;
                         });
-                        html += `</div></div>`;
-                    }
-                    html += `</div>`;
+                        html += `</div><div id="res-${q.id}" class="hidden mt-2 font-bold text-sm"></div></div>`;
+                    });
+                    html += `</div></div></div>`;
                 }
                 else if (sec.type === 'speaking') {
                     let safeSample = encodeURIComponent(sec.sample).replace(/'/g, "%27");
+                    
                     html += `<div class="glass-card border-t-4 border-rose-500 note-box-print">
                                 <h3 class="font-bold text-slate-800 text-lg mb-2">${sec.topic}</h3>
                                 <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 mb-4 print:bg-white print:border-slate-300">
-                                    <p class="text-sm font-bold text-rose-800 mb-2 print:text-black">Prompts:</p>
+                                    <p class="text-sm font-bold text-rose-800 mb-2 print:text-black">Prompts (Gợi ý):</p>
                                     <ul class="text-sm text-slate-700 space-y-2 pl-2">`;
                     sec.prompts.forEach(p => html += `<li>${p}</li>`);
                     html += `</ul></div>
@@ -999,10 +848,10 @@
                     let safeScript = encodeURIComponent(sec.audioScript).replace(/'/g, "%27");
                     html += `<div class="glass-card border-t-4 border-teal-500 bg-teal-50/30 note-box-print mb-6">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-teal-200 pb-4 print:border-none no-print">
-                                    <span class="text-sm text-teal-600 font-bold bg-teal-100 px-3 py-1.5 rounded-full shadow-sm">🎧 TAP TO LISTEN</span>
+                                    <span class="text-sm text-teal-600 font-bold bg-teal-100 px-3 py-1.5 rounded-full shadow-sm">🎧 TAP TO LISTEN (KỸ NĂNG NGHE)</span>
                                     <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                                         <button onclick="playAudio('${safeScript}', 'en-US')" class="flex-1 sm:flex-none bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
-                                            ▶️ Play
+                                            ▶️ Phát Audio (Play)
                                         </button>
                                         <button onclick="toggleTranscript(this)" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
                                             📝 Transcript
@@ -1031,41 +880,76 @@
                              </div>
                              </div></div>`;
                 }
-                else if (sec.type === 'reading_practice' || sec.type === 'practice' || sec.type === 'reading') {
-                    if (sec.readingText || sec.text) {
-                        let textContent = sec.readingText || sec.text;
-                        let rawReading = textContent.replace(/<[^>]*>?/gm, ''); 
-                        let safeReading = encodeURIComponent(rawReading).replace(/'/g, "%27");
-                        html += `<div class="glass-card border-t-4 border-amber-500 mb-6 note-box-print">
-                                    <h3 class="text-lg font-bold text-slate-800 mb-3">🌎 Reading</h3>
-                                    <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:border-none print:p-0" onclick="playReadingText('${safeReading}')">
-                                        ${textContent}
-                                    </div>
-                                 </div>`;
-                    }
-                    if (sec.exercises) {
-                        html += `<div class="glass-card border-t-4 border-indigo-500" id="practice-container">`;
-                        sec.exercises.forEach(ex => {
-                            html += `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4 exercise-item print:border-none print:p-0 print:mb-4" id="ex-${ex.id}">
-                                        <p class="text-[15px] font-bold text-slate-800 mb-3">${ex.q}</p>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 print:grid-cols-3" id="opts-${ex.id}">`;
+                else if (sec.type === 'reading_practice') {
+                    let rawReading = sec.readingText.replace(/<[^>]*>?/gm, ''); 
+                    let safeReading = encodeURIComponent(rawReading).replace(/'/g, "%27");
+                    
+                    html += `<div class="glass-card border-t-4 border-amber-500 note-box-print mb-6">
+                                <h3 class="text-lg font-bold text-slate-800 mb-3">🌎 Reading</h3>
+                                <p class="text-xs font-bold text-amber-600 bg-amber-100 px-3 py-1 rounded-full mb-3 inline-block no-print">👇 TAP TO LISTEN TO THE TEXT</p>
+                                <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:bg-white print:border-none print:p-0" onclick="playReadingText('${safeReading}')">
+                                    ${sec.readingText}
+                                </div>
+                             </div>
+                             <div class="glass-card border-t-4 border-indigo-500" id="practice-container">`;
+                             
+                    sec.exercises.forEach(ex => {
+                        html += `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl print:bg-transparent print:border-none print:p-0 print:mb-4 mb-4 exercise-item" id="ex-${ex.id}">
+                                    <p class="text-[15px] font-bold text-slate-800 mb-3 print:mb-1">${ex.q}</p>`;
+                        
+                        if(ex.type === 'choice' || ex.type === 'grammar') {
+                            html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-2 print:grid-cols-3" id="opts-${ex.id}">`;
                             ex.opts.forEach((opt, idx) => {
                                 html += `<div onclick="selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 print:border-none print:p-1 print:inline">${opt}</div>`;
                             });
-                            html += `</div><div id="exp-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"><b>💡 Explanation:</b> ${ex.exp}</div></div>`;
-                        });
-                        html += `<div class="text-center mt-6 no-print" id="action-buttons">
-                                    <button onclick="submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">✅ Submit & Explain</button>
-                                 </div></div>`;
-                    }
-                    window.userPracticeAnswers = {}; 
+                            html += `</div>`;
+                        } else if (ex.type === 'fill') {
+                            html += `<div class="flex gap-2 no-print"><input type="text" id="input-${ex.id}" placeholder="Type here..." class="flex-1 p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"></div><div class="print-only border-b border-black w-32 h-6 inline-block mt-2"></div>`;
+                        }
+                        
+                        html += `<div id="exp-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"><b>💡 Explanation:</b> ${ex.exp}</div></div>`;
+                    });
+                    
+                    html += `<div class="text-center mt-6 no-print" id="action-buttons">
+                                <button onclick="submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">✅ Submit & Explain</button>
+                             </div></div>`;
+                    userAnswers = {}; 
                 }
+                
                 html += `</section>`;
             });
+            
             container.innerHTML = html;
         }
 
-        window.startExam = function(modId) {
+        function renderExamSetupView(mod, container) {
+            let html = `
+                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
+                    <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
+                    <p class="text-slate-500 mb-8 font-medium">Review 1: Comprehensive test for Units 1 to 3</p>
+                    
+                    <div class="max-w-md mx-auto space-y-4">
+                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="test1">${mod.tests.test1.name}</option>
+                            <option value="test2">${mod.tests.test2.name}</option>
+                        </select>
+                        
+                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        
+                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
+                            🚀 START EXAM
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function startExam(modId) {
             const mod = database[currentClass].modules.find(m => m.id === modId);
             const testId = document.getElementById('exam-test-selector').value;
             const level = document.getElementById('exam-level-selector').value;
@@ -1074,55 +958,59 @@
             currentExam.level = level;
             currentExam.questions = mod.tests[testId].levels[level];
             currentExam.answers = {};
-            currentExam.flagged = {};
-            currentExam.timeLeft = 45 * 60;
+            currentExam.flagged = {}; // Quản lý trạng thái gắn cờ đỏ
+            currentExam.timeLeft = 45 * 60; // 45 minutes
 
             const testData = mod.tests[testId];
-            let safeAudio = encodeURIComponent(testData.listeningScript || "").replace(/'/g, "%27");
+            let safeAudio = encodeURIComponent(testData.listeningScript).replace(/'/g, "%27");
 
+            // Tạo thanh Tab ngang dính (Sticky Tabs) để chuyển phần nhanh
             let html = `
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center sticky top-0 z-50 no-print">
-                    <h2 class="text-xl font-bold text-slate-800 baloo-font uppercase text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
-                    <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold text-lg border border-rose-200 shadow-inner tracking-widest" id="exam-timer-display">45:00</div>
-                </div>
-                
-                <div class="sticky top-[70px] z-[40] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">
-                    <button onclick="document.getElementById('part-PART-I-LISTENING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">🎧 Listening</button>
-                    <button onclick="document.getElementById('part-PART-II-PHONETICS').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">🗣️ Phonetics</button>
-                    <button onclick="document.getElementById('part-PART-III-VOCABULARY-GRAMMAR').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📚 Grammar</button>
-                    <button onclick="document.getElementById('part-PART-IV-READING-COMPREHENSION').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📖 Reading</button>
-                    <button onclick="document.getElementById('part-PART-V-WRITING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">✍️ Writing</button>
+                <div class="sticky top-0 z-[60] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">
+                    <button onclick="document.getElementById('part-PART-I:-LISTENING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">🎧 Listening</button>
+                    <button onclick="document.getElementById('part-PART-II:-PHONETICS').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">🗣️ Phonetics</button>
+                    <button onclick="document.getElementById('part-PART-III:-VOCABULARY-&-GRAMMAR').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">📚 Vocab & Grammar</button>
+                    <button onclick="document.getElementById('part-PART-IV:-READING-COMPREHENSION-(Based-on-the-text-above)').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">📖 Reading</button>
+                    <button onclick="document.getElementById('part-PART-V:-WRITING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">✍️ Writing</button>
                 </div>
 
                 <div class="flex flex-col lg:flex-row gap-6 relative">
+                    <!-- MAIN COLUMN: QUESTIONS -->
                     <div class="flex-1 space-y-6">
-                        <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-32" id="part-PART-I-LISTENING">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center">
+                            <h2 class="text-xl font-bold text-slate-800 baloo-font uppercase text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
+                        </div>
+                        
+                        <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-24" id="part-PART-I:-LISTENING">
                             <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
-                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio</button>
+                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio (Listen only)</button>
                             <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
                         </div>
             `;
 
             let currentPart = "";
             currentExam.questions.forEach((q, idx) => {
+                // Xử lý tiêu đề phần và Chèn đoạn Reading trực tiếp vào Part IV
                 if (q.part !== currentPart) {
-                    let partId = 'part-' + q.part.replace(/[^a-zA-Z0-9-]/g, '-');
+                    let partId = 'part-' + q.part.replace(/\s+/g, '-');
+                    
                     if (q.part.includes("READING COMPREHENSION")) {
-                        partId = "part-PART-IV-READING-COMPREHENSION";
                         html += `
-                        <div class="glass-card bg-amber-50 border-amber-200 mt-8 mb-6 p-5 scroll-mt-32" id="${partId}">
+                        <div class="glass-card bg-amber-50 border-amber-200 mt-8 mb-6 p-5 scroll-mt-24" id="${partId}">
                             <h3 class="font-bold text-amber-800 mb-3 text-lg">📚 READING TEXT</h3>
                             <div class="bg-white p-4 rounded-xl border border-amber-100 text-slate-800 leading-relaxed text-[15px]">
                                 ${testData.readingText}
                             </div>
                         </div>`;
                     } else if (q.part !== "PART I: LISTENING") {
-                        html += `<h3 id="${partId}" class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2 scroll-mt-32">${q.part}</h3>`;
+                        // Tránh duplicate tiêu đề Listening vì đã có thẻ riêng ở trên
+                        html += `<h3 id="${partId}" class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2 scroll-mt-24">${q.part}</h3>`;
                     }
                     currentPart = q.part;
                 }
                 
-                html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-32" id="exam-q-${idx}">
+                // Khối câu hỏi
+                html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-24" id="exam-q-${idx}">
                             <div class="flex justify-between items-start mb-4 gap-4">
                                 <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Q${idx+1}.</span> ${q.q}</p>
                                 <button onclick="toggleExamFlag(${idx})" id="flag-btn-${idx}" class="shrink-0 text-slate-300 hover:text-rose-500 transition-colors p-2 rounded-lg hover:bg-rose-50 bg-slate-50 border border-slate-200 no-print" title="Flag for review">
@@ -1146,77 +1034,52 @@
                         </div>
                     </div> <!-- End Left Column -->
 
-                    <!-- RIGHT COLUMN: NAVIGATOR -->
+                    <!-- RIGHT COLUMN: NAVIGATOR PANEL -->
                     <div class="w-full lg:w-72 shrink-0 no-print order-first lg:order-last">
-                        <div class="sticky top-32 bg-white p-5 rounded-2xl border border-slate-200 shadow-md max-h-[60vh] lg:max-h-[75vh] overflow-y-auto">
+                        <div class="sticky top-20 bg-white p-5 rounded-2xl border border-slate-200 shadow-md max-h-[60vh] lg:max-h-[85vh] overflow-y-auto">
                             <div class="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
                                 <h3 class="font-bold text-slate-800 baloo-font text-lg">Question Board</h3>
+                                <div class="font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg text-base border border-rose-200 shadow-inner flex items-center gap-1">
+                                    ⏱️ <span id="timer-countdown">45:00</span>
+                                </div>
                             </div>
+                            
+                            <!-- Legend -->
                             <div class="flex flex-wrap gap-3 mb-5 text-[11px] font-bold text-slate-600 justify-center">
                                 <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded border-2 border-rose-300 bg-white"></span> Unanswered</div>
                                 <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-emerald-500 border-2 border-emerald-600"></span> Answered</div>
-                                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-rose-100 border-2 border-rose-500 text-rose-600 flex items-center justify-center font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"></path></svg></span> Flagged</div>
+                                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-rose-100 border-2 border-rose-500 text-rose-600 flex items-center justify-center font-bold">⚑</span> Flagged</div>
                             </div>
-                            <div class="grid grid-cols-5 gap-2" id="exam-navigator"></div>
+
+                            <div class="grid grid-cols-5 gap-2" id="exam-navigator">
+                                <!-- Navigator buttons will be generated here -->
+                            </div>
                         </div>
-                    </div>
+                    </div> <!-- End Right Column -->
                 </div>
             `;
 
             document.getElementById('content-area').innerHTML = html;
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            window.renderExamNavigator();
-
-            const timerDisplay = document.getElementById('test-timer');
-            const timeVal = document.getElementById('time-display');
-            const inlineTimeVal = document.getElementById('exam-timer-display');
-            
-            if(timerDisplay) timerDisplay.classList.remove('hidden');
+            renderExamNavigator();
 
             if(currentExam.timer) clearInterval(currentExam.timer);
-            
             currentExam.timer = setInterval(() => {
                 currentExam.timeLeft--;
                 let m = Math.floor(currentExam.timeLeft / 60);
                 let s = currentExam.timeLeft % 60;
-                let displayStr = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-                if(timeVal) timeVal.innerText = displayStr;
-                if(inlineTimeVal) inlineTimeVal.innerText = displayStr;
+                document.getElementById('timer-countdown').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
                 
                 if (currentExam.timeLeft <= 0) {
                     clearInterval(currentExam.timer);
+                    showCustomAlert("Time's up!", "45 minutes are over! The system has automatically submitted your exam.");
                     submitExam(true);
                 }
             }, 1000);
         }
 
-        window.renderExamSetupView = function(mod, container) {
-            let html = `
-                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
-                    <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
-                    <p class="text-slate-500 mb-8 font-medium">Review & Test</p>
-                    
-                    <div class="max-w-md mx-auto space-y-4">
-                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
-                            <option value="test1">${mod.tests.test1.name}</option>
-                            <option value="test2">${mod.tests.test2 ? mod.tests.test2.name : 'Test 2'}</option>
-                        </select>
-                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
-                            <option value="normal">Level: Normal</option>
-                            <option value="hard">Level: Hard</option>
-                        </select>
-                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
-                            🚀 START EXAM
-                        </button>
-                    </div>
-                </div>
-            `;
-            container.innerHTML = html;
-        }
-
-        window.renderExamNavigator = function() {
+        function renderExamNavigator() {
             let navHtml = '';
             currentExam.questions.forEach((_, idx) => {
                 navHtml += `<button onclick="document.getElementById('exam-q-${idx}').scrollIntoView({behavior: 'smooth', block: 'center'})" id="nav-btn-${idx}" class="w-full aspect-square rounded-lg border-2 border-rose-300 text-rose-500 bg-white flex items-center justify-center font-bold text-[15px] hover:scale-105 hover:bg-rose-50 transition-all shadow-sm">${idx + 1}</button>`;
@@ -1224,61 +1087,70 @@
             document.getElementById('exam-navigator').innerHTML = navHtml;
         }
 
-        window.updateExamNavigator = function(idx) {
+        function updateExamNavigator(idx) {
             let btn = document.getElementById('nav-btn-' + idx);
             if (!btn) return;
+            
             let hasAnswer = currentExam.answers[idx] !== undefined;
             let isFlagged = currentExam.flagged[idx];
 
+            // Reset base classes
             btn.className = "w-full aspect-square rounded-lg border-2 flex items-center justify-center font-bold text-[15px] hover:scale-105 transition-all shadow-sm cursor-pointer";
+
             if (isFlagged) {
+                // Trạng thái cờ đỏ nổi bật
                 btn.classList.add("bg-rose-100", "border-rose-500", "text-rose-600");
                 btn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"></path></svg>`;
             } else if (hasAnswer) {
+                // Đã làm: Xanh lá
                 btn.classList.add("bg-emerald-500", "border-emerald-600", "text-white");
                 btn.innerHTML = idx + 1;
             } else {
+                // Chưa làm: Viền đỏ nhạt
                 btn.classList.add("bg-white", "border-rose-300", "text-rose-500", "hover:bg-rose-50");
                 btn.innerHTML = idx + 1;
             }
         }
 
-        window.toggleExamFlag = function(idx) {
+        function toggleExamFlag(idx) {
             currentExam.flagged[idx] = !currentExam.flagged[idx];
             let flagBtn = document.getElementById('flag-btn-' + idx);
             if(currentExam.flagged[idx]) {
-                flagBtn.classList.add('text-rose-600', 'bg-rose-100', 'border-rose-300');
                 flagBtn.classList.remove('text-slate-300', 'bg-slate-50', 'border-slate-200');
+                flagBtn.classList.add('text-rose-600', 'bg-rose-100', 'border-rose-300');
             } else {
-                flagBtn.classList.remove('text-rose-600', 'bg-rose-100', 'border-rose-300');
                 flagBtn.classList.add('text-slate-300', 'bg-slate-50', 'border-slate-200');
+                flagBtn.classList.remove('text-rose-600', 'bg-rose-100', 'border-rose-300');
             }
             updateExamNavigator(idx);
         }
 
-        window.selectExamChoice = function(btn, qIdx, choiceIdx) {
+        function selectExamChoice(btn, qIdx, choiceIdx) {
             currentExam.answers[qIdx] = choiceIdx;
             const parent = document.getElementById('exam-opts-' + qIdx);
             parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
             btn.classList.add('q-selected');
+            
+            // Tự động cập nhật bảng Navigator bên phải
             updateExamNavigator(qIdx);
         }
 
-        window.submitExam = async function(isTimeout = false) {
+        function submitExam(isTimeout = false) {
             let unanswered = currentExam.questions.length - Object.keys(currentExam.answers).length;
             if(!isTimeout && unanswered > 0) {
-                if(!confirm(`You have ${unanswered} unanswered questions! Submit anyway?`)) return;
+                if(!confirm(`You have ${unanswered} unanswered questions! Are you sure you want to submit?`)) return;
+            } else if (!isTimeout) {
+                if(!confirm("Are you sure you want to submit your exam?")) return;
             }
 
             clearInterval(currentExam.timer);
-            const timerDisplay = document.getElementById('test-timer');
-            if(timerDisplay) timerDisplay.classList.add('hidden');
             
             let score = 0;
             currentExam.questions.forEach((q, idx) => {
                 let userAns = currentExam.answers[idx];
                 let parent = document.getElementById('exam-opts-' + idx);
                 let btns = parent.querySelectorAll('.q-btn');
+                
                 btns.forEach(b => b.classList.add('disabled'));
 
                 if (userAns === q.ans) {
@@ -1293,30 +1165,8 @@
                 }
             });
 
-            // [LEADERBOARD SAVE]
-            let percentage = (score / currentExam.questions.length) * 10;
-            let timeTaken = 45 * 60 - currentExam.timeLeft;
-            if (window.currentUser && !window.isAdmin) {
-                try {
-                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid,
-                        email: window.currentUser.email,
-                        nickname: window.currentUser.nickname,
-                        testId: currentModule.id,
-                        subTestId: currentExam.testId,
-                        level: currentExam.level,
-                        testName: currentModule.title,
-                        score: score,
-                        total: currentExam.questions.length,
-                        percentage: percentage,
-                        timeTaken: timeTaken,
-                        timestamp: Date.now(),
-                        isLesson: false
-                    });
-                } catch(e) { console.error(e); }
-            }
-
             const actionContainer = document.getElementById('exam-action-buttons');
+            let percentage = (score / currentExam.questions.length) * 10;
             let resultColor = percentage >= 8 ? "emerald" : (percentage >= 5 ? "amber" : "rose");
 
             actionContainer.innerHTML = `
@@ -1324,305 +1174,252 @@
                     <h2 class="text-2xl font-bold text-slate-800 mb-2 baloo-font">EXAM RESULT</h2>
                     <div class="text-5xl font-extrabold text-${resultColor}-600 mb-2">${score} / ${currentExam.questions.length}</div>
                     <p class="text-slate-500 font-medium">Your score: ${percentage.toFixed(1)} / 10</p>
-                    ${!window.currentUser ? '<p class="text-xs text-rose-500 mt-2">Not signed in. Score will not be saved on Leaderboard.</p>' : ''}
                 </div>
                 <div class="flex flex-col md:flex-row justify-center gap-4">
-                    <button onclick="loadModule('${currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md">🔄 Try Again</button>
-                    <button onclick="explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md">💡 Show Answers & Explanation</button>
+                    <button onclick="loadModule('${currentModule.id}')" class="bg-slate-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-slate-700 shadow-md transition-transform transform active:scale-95 w-full md:w-auto">
+                        🔄 Try Again
+                    </button>
+                    <button onclick="explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95 w-full md:w-auto">
+                        💡 Show Answers & Explanation
+                    </button>
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        window.explainExam = function() {
+        function explainExam() {
+            document.getElementById('exam-audio-script').classList.remove('hidden');
+
             currentExam.questions.forEach((q, idx) => {
                 let parent = document.getElementById('exam-opts-' + idx);
                 let btns = parent.querySelectorAll('.q-btn');
+                
                 btns[q.ans].classList.remove('q-wrong'); 
                 btns[q.ans].classList.add('q-correct');
                 btns[q.ans].style.backgroundColor = ""; 
                 btns[q.ans].style.borderColor = "";
+
                 document.getElementById('exam-exp-' + idx).classList.remove('hidden');
+
+                // Cập nhật lại màu sắc cho Navigator Panel để học sinh dễ soi lại câu sai
+                let navBtn = document.getElementById('nav-btn-' + idx);
+                if(navBtn) {
+                    navBtn.className = "w-full aspect-square rounded-lg border-2 flex items-center justify-center font-bold text-[15px] transition-all shadow-sm cursor-pointer hover:scale-105";
+                    if(currentExam.answers[idx] === q.ans) {
+                        navBtn.classList.add("bg-emerald-100", "border-emerald-500", "text-emerald-700");
+                    } else {
+                        navBtn.classList.add("bg-rose-100", "border-rose-500", "text-rose-700");
+                    }
+                    navBtn.innerHTML = idx + 1; 
+                }
             });
-            const scriptDiv = document.getElementById('exam-audio-script');
-            if(scriptDiv) scriptDiv.classList.remove('hidden');
+            
+            showCustomAlert("Success", "Correct answers (green) and detailed explanations have been unlocked below each question!", "✅");
         }
 
-        window.toggleTranscript = function(btn) {
+        function toggleTranscript(btn) {
             const container = btn.closest('.glass-card');
             const el = container.querySelector('.audio-transcript');
-            if(el) {
-                if(el.classList.contains('hidden')) {
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                }
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
             }
         }
 
-        window.selectListeningChoice = function(btn, qId, choiceIdx) {
-            window.userListeningAnswers[qId] = choiceIdx;
+        function selectListeningChoice(btn, qId, choiceIdx) {
+            userListeningAnswers[qId] = choiceIdx;
             const parent = document.getElementById('opts-' + qId);
-            if(parent) {
-                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
-                btn.classList.add('q-selected');
-            }
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            btn.classList.add('q-selected');
         }
 
-        window.submitListeningTask = async function(firstQid) {
+        function submitListeningTask(firstQid) {
             let score = 0;
-            let questions = [];
             const section = currentModule.sections.find(s => s.type === 'listening_task');
-            if(section && section.questions) questions = section.questions;
+            const questions = section.questions;
 
             questions.forEach(q => {
                 const parent = document.getElementById('opts-' + q.id);
-                if(!parent) return;
                 const btns = parent.querySelectorAll('.q-btn');
-                const userAns = window.userListeningAnswers[q.id];
+                const userAns = userListeningAnswers[q.id];
                 
                 btns.forEach(b => b.classList.add('disabled'));
 
                 if (userAns === q.ans) {
-                    if(btns[userAns]) {
-                        btns[userAns].classList.remove('q-selected');
-                        btns[userAns].classList.add('q-correct');
-                    }
+                    btns[userAns].classList.remove('q-selected', 'q-wrong');
+                    btns[userAns].classList.add('q-correct');
                     score++;
                 } else {
-                    if (userAns !== undefined && btns[userAns]) {
+                    if (userAns !== undefined) {
                         btns[userAns].classList.remove('q-selected');
                         btns[userAns].classList.add('q-wrong');
                     }
-                    if(btns[q.ans]) btns[q.ans].classList.add('q-correct');
+                    btns[q.ans].classList.add('q-correct');
                 }
             });
 
-            // [PROGRESS SAVE]
-            if (window.currentUser && !window.isAdmin) {
-                try {
-                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid,
-                        email: window.currentUser.email,
-                        nickname: window.currentUser.nickname,
-                        testId: currentModule.id, 
-                        level: "Listening",
-                        testName: currentModule.title,
-                        score: score,
-                        total: questions.length,
-                        percentage: (score/questions.length)*10,
-                        timeTaken: 0,
-                        timestamp: Date.now(),
-                        isLesson: true
-                    });
-                } catch(e) { console.log(e); }
-            }
-
             const actionContainer = document.querySelector('.listening-action-buttons');
-            if(actionContainer) {
-                actionContainer.innerHTML = `
-                    <div class="text-xl font-bold text-teal-600 mb-4 bg-teal-50 inline-block px-6 py-2 rounded-xl border border-teal-200">🎉 Score: ${score} / ${questions.length}</div>
-                    <br>
-                    <button onclick="loadModule('${currentModule.id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">
-                        🔄 Try Again
-                    </button>
-                `;
-            }
+            actionContainer.innerHTML = `
+                <div class="text-xl font-bold text-teal-600 mb-4 bg-teal-50 inline-block px-6 py-2 rounded-xl border border-teal-200">🎉 Score: ${score} / ${questions.length}</div>
+                <br><button onclick="loadModule('${currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>
+            `;
         }
 
-        window.selectListening = function(btn, qId, selectedIdx, ansIdx) {
+        function selectListening(btn, qId, selectedIdx, ansIdx) {
             const parent = document.getElementById('opts-' + qId);
-            if(parent) parent.querySelectorAll('.q-btn').forEach(b => { b.classList.add('disabled'); b.classList.remove('q-selected');});
+            parent.querySelectorAll('.q-btn').forEach(b => { b.classList.add('disabled'); b.classList.remove('q-selected');});
             const resultDiv = document.getElementById('res-' + qId);
-            if(resultDiv) resultDiv.classList.remove('hidden');
+            resultDiv.classList.remove('hidden');
 
             if(selectedIdx === ansIdx) {
                 btn.classList.add('q-correct');
-                if(resultDiv) { resultDiv.innerText = "✅ Correct!"; resultDiv.className = "mt-2 font-bold text-sm text-emerald-600"; }
+                resultDiv.innerText = "✅ Correct!";
+                resultDiv.className = "mt-2 font-bold text-sm text-emerald-600";
             } else {
                 btn.classList.add('q-wrong');
-                if(parent && parent.children[ansIdx]) parent.children[ansIdx].classList.add('q-correct');
-                if(resultDiv) { resultDiv.innerText = "❌ Incorrect."; resultDiv.className = "mt-2 font-bold text-sm text-rose-600"; }
+                parent.children[ansIdx].classList.add('q-correct');
+                resultDiv.innerText = "❌ Incorrect. Listen again!";
+                resultDiv.className = "mt-2 font-bold text-sm text-rose-600";
             }
         }
 
-        window.selectChoice = function(btn, exId, choiceIdx) {
-            window.userPracticeAnswers[exId] = choiceIdx;
+        function selectChoice(btn, exId, choiceIdx) {
+            userAnswers[exId] = choiceIdx;
             const parent = document.getElementById('opts-' + exId);
-            if(parent) {
-                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
-                btn.classList.add('q-selected');
-            }
-        };
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            btn.classList.add('q-selected');
+        }
 
-        window.submitExercises = async function() {
+        function submitExercises() {
             let score = 0;
-            let exercises = [];
-            currentModule.sections.forEach(s => {
-                if(s.type === 'reading_practice' || s.type === 'practice') {
-                    if (s.exercises) exercises = exercises.concat(s.exercises);
-                }
-            });
-
-            if (exercises.length === 0) return;
+            const exercises = currentModule.sections.find(s => s.type === 'reading_practice').exercises;
 
             exercises.forEach(ex => {
                 const expDiv = document.getElementById('exp-' + ex.id);
-                if(expDiv) expDiv.classList.remove('hidden');
+                expDiv.classList.remove('hidden');
 
-                const parent = document.getElementById('opts-' + ex.id);
-                if(!parent) return;
-                const btns = parent.querySelectorAll('.q-btn');
-                const userAns = window.userPracticeAnswers[ex.id];
-                
-                btns.forEach(b => b.classList.add('disabled'));
+                if (ex.type === 'choice' || ex.type === 'grammar') {
+                    const parent = document.getElementById('opts-' + ex.id);
+                    const btns = parent.querySelectorAll('.q-btn');
+                    const userAns = userAnswers[ex.id];
+                    btns.forEach(b => b.classList.add('disabled'));
 
-                if (userAns === ex.ans) {
-                    if(btns[userAns]) {
-                        btns[userAns].classList.remove('q-selected');
+                    if (userAns === ex.ans) {
+                        btns[userAns].classList.remove('q-selected', 'q-wrong');
                         btns[userAns].classList.add('q-correct');
+                        score++;
+                    } else {
+                        if (userAns !== undefined) {
+                            btns[userAns].classList.remove('q-selected');
+                            btns[userAns].classList.add('q-wrong');
+                        }
+                        btns[ex.ans].classList.add('q-correct');
                     }
-                    score++;
-                } else {
-                    if (userAns !== undefined && btns[userAns]) {
-                        btns[userAns].classList.remove('q-selected');
-                        btns[userAns].classList.add('q-wrong');
+                } else if (ex.type === 'fill') {
+                    const input = document.getElementById('input-' + ex.id);
+                    const val = input.value.trim().toLowerCase();
+                    input.readOnly = true;
+                    if (val === ex.ans) { input.classList.add('q-input-correct'); score++; } 
+                    else {
+                        input.classList.add('q-input-wrong');
+                        expDiv.innerHTML = `<span class="text-rose-600 block mb-2 text-[15px]">❌ Đáp án đúng là: <b class="bg-rose-100 px-2 py-0.5 rounded">${ex.ans}</b></span>` + expDiv.innerHTML;
                     }
-                    if(btns[ex.ans]) btns[ex.ans].classList.add('q-correct');
                 }
             });
 
-            // [PROGRESS SAVE]
-            if (window.currentUser && !window.isAdmin) {
-                try {
-                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid,
-                        email: window.currentUser.email,
-                        nickname: window.currentUser.nickname,
-                        testId: currentModule.id,
-                        level: "Practice",
-                        testName: currentModule.title,
-                        score: score,
-                        total: exercises.length,
-                        percentage: (score/exercises.length)*10,
-                        timeTaken: 0,
-                        timestamp: Date.now(),
-                        isLesson: true
-                    });
-                } catch(e) {}
-            }
-
             const actionContainer = document.getElementById('action-buttons');
-            if(actionContainer) {
-                actionContainer.innerHTML = `
-                    <div class="text-xl font-bold text-indigo-600 mb-4 bg-indigo-50 inline-block px-6 py-2 rounded-xl border border-indigo-200">🎉 Score: ${score} / ${exercises.length}</div>
-                    <br>
-                    <button onclick="loadModule('${currentModule.id}')" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">
-                        🔄 Try Again
-                    </button>
-                `;
-            }
-        };
+            actionContainer.innerHTML = `
+                <div class="text-xl font-bold text-emerald-600 mb-4 bg-emerald-50 inline-block px-6 py-2 rounded-xl border border-emerald-200">🎉 Score: ${score} / ${exercises.length}</div>
+                <br><button onclick="loadModule('${currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>
+            `;
+            actionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
 
-        // --- Audio System ---
-        window.voices = [];
-        window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
+        const synth = window.speechSynthesis;
+        let availableVoices = [];
 
-        window.getVoiceByGender = function(gender, lang = 'en-US') {
-            if (window.voices.length === 0) window.voices = window.speechSynthesis.getVoices();
+        function loadVoices() { availableVoices = synth.getVoices(); }
+        if (typeof synth.onvoiceschanged !== 'undefined') { synth.onvoiceschanged = loadVoices; }
+        loadVoices();
+
+        function getVoiceByGender(gender, lang = 'en-US') {
+            if (availableVoices.length === 0) availableVoices = synth.getVoices();
             const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
             const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
-            
-            let selectedVoice = null;
-            if (gender === 'female') {
-                selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
-            } else if (gender === 'male') {
-                selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
-            }
-            
-            if (!selectedVoice) {
-                selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-            }
-            return selectedVoice;
-        };
+            let voice = null;
+            if (gender === 'female') { voice = availableVoices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
+            else if (gender === 'male') { voice = availableVoices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
+            if (!voice) { voice = availableVoices.find(v => v.lang.startsWith('en')); }
+            return voice;
+        }
 
-        window.highlightAudioRow = function(event) {
+        function highlightAudioRow() {
             document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
             if(event && event.currentTarget && event.currentTarget.classList.contains('audio-row')) {
                 event.currentTarget.classList.add('active-audio');
             }
-        };
-        window.removeHighlight = function() {
-            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
-        };
+        }
+        function removeHighlight() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); }
 
-        window.playAudio = function(encodedText, lang = 'en-US') {
-            window.highlightAudioRow(window.event);
-            window.speechSynthesis.cancel();
+        function playAudio(encodedText, lang = 'en-US', pitch = 1) {
+            highlightAudioRow();
+            synth.cancel();
             let text = "";
             try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
             
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = 0.85;
+            let chunks = text.match(/[^.!?]+[.!?]+/g);
+            if (!chunks || chunks.length === 0) chunks = [text];
+            let currentChunk = 0;
             
-            let voices = window.speechSynthesis.getVoices();
-            let voice = voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
-            if(voice) utterance.voice = voice;
-
-            utterance.onend = window.removeHighlight;
-            utterance.onerror = window.removeHighlight;
-            window.speechSynthesis.speak(utterance);
-        };
-
-        window.playDialogueLine = function(encodedText, gender) {
-            window.highlightAudioRow(window.event);
-            window.speechSynthesis.cancel();
-            let text = "";
-            try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voice = window.getVoiceByGender(gender, 'en-US');
-            if(voice) utterance.voice = voice;
-            utterance.lang = 'en-US';
-            utterance.rate = 0.85;
-            utterance.onend = window.removeHighlight;
-            utterance.onerror = window.removeHighlight;
-            window.speechSynthesis.speak(utterance);
-        };
-
-        window.playSpeakingSample = function(encodedText) {
-            window.playAudio(encodedText, 'en-US');
-        };
-
-        window.playReadingText = function(encodedText) {
-            window.playAudio(encodedText, 'en-US');
-        };
-
-        window.playAllDialogue = function() {
-            window.speechSynthesis.cancel();
-            window.removeHighlight();
-            
-            let listeningSec = null;
-            if (currentModule && currentModule.sections) {
-                listeningSec = currentModule.sections.find(s => s.type === 'listening' || s.type === 'dialogue');
+            function speakNextChunk() {
+                if (currentChunk >= chunks.length) { removeHighlight(); return; }
+                let utterance = new SpeechSynthesisUtterance(chunks[currentChunk].trim());
+                utterance.lang = lang; utterance.rate = 0.85; utterance.pitch = pitch;
+                utterance.onend = () => { currentChunk++; speakNextChunk(); };
+                utterance.onerror = () => removeHighlight();
+                synth.speak(utterance);
             }
-            if(!listeningSec || !listeningSec.lines) return;
+            speakNextChunk();
+        }
 
+        function playDialogueLine(encodedText, gender) {
+            highlightAudioRow();
+            synth.cancel();
+            let text = "";
+            try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = getVoiceByGender(gender, 'en-US');
+            if(voice) utterance.voice = voice;
+            utterance.lang = 'en-US'; utterance.rate = 0.85;
+            utterance.onend = () => removeHighlight();
+            utterance.onerror = () => removeHighlight();
+            synth.speak(utterance);
+        }
+        
+        function playSpeakingSample(encodedText) { playAudio(encodedText, 'en-US'); }
+        function playReadingText(encodedText) { playAudio(encodedText, 'en-US'); }
+
+        function playAllDialogue() {
+            synth.cancel(); 
+            const sec = currentModule.sections.find(s => s.type === 'listening');
+            if(!sec) return;
+            removeHighlight();
+            showCustomAlert("Playing All", "Đang phát toàn bộ bài hội thoại. (Playing the full dialogue).", "▶️");
             let currentLine = 0;
             function speakNextLine() {
-                if(currentLine >= listeningSec.lines.length) return;
-                let l = listeningSec.lines[currentLine];
-                let utterance = new SpeechSynthesisUtterance(l.t || l.text);
-                const voice = window.getVoiceByGender(l.gender, l.loc || 'en-US');
+                if(currentLine >= sec.lines.length) return;
+                let l = sec.lines[currentLine];
+                let utterance = new SpeechSynthesisUtterance(l.t);
+                const voice = getVoiceByGender(l.gender, l.loc || 'en-US');
                 if(voice) utterance.voice = voice;
-                utterance.lang = l.loc || 'en-US'; 
-                utterance.rate = 0.85;
+                utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
                 utterance.onend = () => { currentLine++; speakNextLine(); };
-                window.speechSynthesis.speak(utterance);
+                synth.speak(utterance);
             }
             speakNextLine();
-        };
+        }
 
         function showCustomAlert(title, message, icon="🔔") {
             document.getElementById('alertIcon').innerText = icon;
@@ -1630,264 +1427,28 @@
             document.getElementById('alertMessage').innerText = message;
             document.getElementById('customAlert').classList.add('active');
         }
-        window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
-        window.alert = function(msg) { showCustomAlert("Notification", msg); };
+        function closeCustomAlert() { document.getElementById('customAlert').classList.remove('active'); }
 
-        window.saveNickname = async function() {
-            const input = document.getElementById('nicknameInput').value.trim();
-            if (!input) return showCustomAlert("Error", "Please enter a nickname.", "⚠️");
+        window.onload = initApp;
 
-            if (window.pendingUser) {
-                const userRef = window.fDoc(window.fdb, "users", window.pendingUser.uid);
-                await window.fSetDoc(userRef, { 
-                    email: window.pendingUser.email, 
-                    nickname: input, 
-                    status: 'active', 
-                    lastLogin: Date.now(),
-                    joinDate: Date.now(),
-                    plan: 'trial',
-                    expiryDate: Date.now() + (7 * 24 * 60 * 60 * 1000)
-                });
-                window.location.reload();
-            } else if (window.currentUser) {
-                const userRef = window.fDoc(window.fdb, "users", window.currentUser.uid);
-                await window.fUpdateDoc(userRef, { nickname: input });
-                window.location.reload();
-            }
-        }
-
-        window.showNicknameModal = function() {
-            document.getElementById('nicknameInput').value = window.currentUser.nickname;
-            document.getElementById('cancelNicknameBtn').classList.remove('hidden');
-            document.getElementById('nicknameOverlay').classList.add('active');
-        }
-
-        window.showMyProgress = async function() {
-            if (!window.currentUser) { showCustomAlert("Notice", "Please sign in to view your progress.", "🔒"); return; }
-            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-            if(document.getElementById('nav-progress')) document.getElementById('nav-progress').classList.add('active');
-            document.getElementById('header-title').innerText = "My Progress";
-            if (window.innerWidth < 1024) toggleMenu();
-
-            const container = document.getElementById('content-area');
-            container.innerHTML = `<div class="text-center py-10">Loading progress...</div>`;
-
-            try {
-                // Tự lọc bằng JS để tránh yêu cầu tạo Firebase Index
-                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-                let completedModules = {};
-                snapshot.forEach(doc => {
-                    let d = doc.data();
-                    if(d.email === window.currentUser.email && d.isLesson) {
-                        completedModules[d.testId] = true;
-                    }
-                });
-
-                let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
-                
-                database[currentClass].modules.forEach(mod => {
-                    if(mod.type === 'lesson') {
-                        let isCompleted = completedModules[mod.id];
-                        let statusUI = isCompleted 
-                            ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
-                            : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
-                            
-                        html += `<div class="p-4 border border-slate-200 rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
-                            <p class="font-bold text-slate-800">${mod.title}</p>
-                            ${statusUI}
-                        </div>`;
-                    }
-                });
-
-                html += `</div></div>`;
-                container.innerHTML = html;
-            } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
-        }
-
-        window.showLeaderboard = async function() {
-            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-            if(document.getElementById('nav-leaderboard')) document.getElementById('nav-leaderboard').classList.add('active');
-            document.getElementById('header-title').innerText = "Leaderboard";
-            if (window.innerWidth < 1024) toggleMenu();
-
-            let html = `
-                <div class="glass-card border-t-4 border-amber-500 mb-6">
-                    <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
-                            <option value="test1">Test 1</option>
-                            <option value="test2">Test 2</option>
-                        </select>
-                        <select id="lb-level-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
-                            <option value="normal">Level: Normal</option>
-                            <option value="hard">Level: Hard</option>
-                        </select>
-                        <button onclick="fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
-                    </div>
-                </div>
-                <div id="lb-results"></div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-            window.fetchLeaderboardData(); // Auto fetch default
-        }
-
-        window.fetchLeaderboardData = async function() {
-            const testId = document.getElementById('lb-test-select').value;
-            const level = document.getElementById('lb-level-select').value;
-            const resContainer = document.getElementById('lb-results');
-            resContainer.innerHTML = `<div class="text-center py-10">Loading...</div>`;
-
-            try {
-                // Tải toàn bộ và lọc bằng JS để tránh yêu cầu tạo Firebase Index
-                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-                let results = [];
-                snapshot.forEach(doc => {
-                    let d = doc.data();
-                    if(d.subTestId === testId && d.level === level && !d.isLesson) results.push(d);
-                });
-
-                // Sắp xếp: Điểm cao trước, thời gian ngắn trước
-                results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
-
-                let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm border border-slate-200 shadow-sm">
-                    <tr class="bg-amber-50 text-amber-800 border-b border-amber-200"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
-                
-                if (results.length === 0) {
-                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
-                } else {
-                    results.slice(0, 10).forEach((r, idx) => {
-                        let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
-                        let isMe = (window.currentUser && r.email === window.currentUser.email) ? "bg-amber-100 font-bold" : "";
-                        html += `<tr class="border-b border-slate-100 ${isMe}">
-                            <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
-                            <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
-                            <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
-                        </tr>`;
-                    });
-                }
-                html += `</table></div>`;
-                resContainer.innerHTML = html;
-            } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
-        }
-
-        window.showTeacherDashboard = async function() {
-            if(!window.isAdmin) return;
-            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-            if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.add('active');
-            document.getElementById('header-title').innerText = "Admin Dashboard";
-            if (window.innerWidth < 1024) toggleMenu();
-
-            let html = `
-                <div class="glass-card border-t-4 border-indigo-500 mb-8">
-                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4 border-b pb-4">
-                        <h2 class="text-2xl font-bold baloo-font text-indigo-700">👥 User Management</h2>
-                        <button onclick="exportUsersToCSV()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center gap-2">
-                            📥 Export to Excel (CSV)
-                        </button>
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div id="admin-users-list" class="space-y-3 max-h-[600px] overflow-y-auto">Loading...</div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('content-area').innerHTML = html;
-            window.loadAdminUsers();
-        }
-
-        window.adminUsersData = [];
-
-        window.loadAdminUsers = async function() {
-            const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
-            let users = [];
-            snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
-            users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
-            window.adminUsersData = users;
-
-            let uHtml = "";
-            users.forEach(data => {
-                const isBlocked = data.status === 'blocked';
-                const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
-                let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
-                
-                let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
-                let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Blocked</span>` : 
-                                  (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Expired</span>` : 
-                                  `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Active</span>`);
-
-                uHtml += `
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
-                    <div>
-                        <div class="font-bold text-slate-800 text-lg">${data.nickname} <span class="text-sm font-normal text-slate-500">(${data.email})</span></div>
-                        <div class="text-xs text-slate-500 mt-1">Joined: ${joinDate} | Expires: <b class="text-indigo-600">${expStr}</b></div>
-                        <div class="mt-2">${statusBadge}</div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 items-center">
-                        <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-2 bg-slate-50 text-indigo-700 outline-none cursor-pointer">
-                            <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Trial (7 days)</option>
-                            <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Months</option>
-                            <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Months</option>
-                            <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Lifetime</option>
-                        </select>
-                        <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">${isBlocked ? 'Unblock' : 'Block'}</button>
-                        <button onclick="deleteUser('${data.id}')" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700">Delete</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('admin-users-list').innerHTML = uHtml || "No users found.";
-        }
-
-        window.updateUserPlan = async function(uid, plan) {
-            let expiryDate = null;
-            let now = Date.now();
-            if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
-            else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
-            else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
-            
-            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
-            window.loadAdminUsers();
-        }
-
-        window.toggleUserStatus = async function(uid, status) {
-            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { status: status });
-            window.loadAdminUsers();
-        }
-
-        window.deleteUser = async function(uid) {
-            if(confirm("PERMANENTLY DELETE USER?\nAre you sure you want to delete this user data?")) {
-                await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
-                window.loadAdminUsers();
-            }
-        }
-
-        window.exportUsersToCSV = function() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "Nickname,Email,Join Date,Plan,Expiry Date,Status\n";
-            
-            window.adminUsersData.forEach(user => {
-                let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
-                let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
-                let row = `"${user.nickname}","${user.email}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"`;
-                csvContent += row + "\n";
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "students_list.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        window.onload = function() {
-            if (typeof initApp === 'function') initApp();
-            
-            // Safari unlock
-            document.body.addEventListener('touchstart', function() {
+        // Force Safari activation on iOS
+        document.body.addEventListener('touchstart', function() {
+            if (!synth.speaking) {
                 const s = new SpeechSynthesisUtterance("");
-                window.speechSynthesis.speak(s);
-            }, {once: true});
-        };
+                synth.speak(s);
+            }
+        }, {once: true});
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) { return false; } 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) { return false; } 
+        }
+        document.addEventListener('selectstart', event => event.preventDefault());
     </script>
 </body>
 </html>
