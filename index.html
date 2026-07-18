@@ -1529,6 +1529,14 @@
             speakNextLine();
         };
 
+        window.playSpeakingSample = function(encodedText) {
+            window.playAudio(encodedText, 'en-US');
+        };
+
+        window.playReadingText = function(encodedText) {
+            window.playAudio(encodedText, 'en-US');
+        };
+
         window.selectListeningChoice = function(btn, qId, choiceIdx) {
             window.userListeningAnswers[qId] = choiceIdx;
             const parent = document.getElementById('opts-' + qId);
@@ -1539,7 +1547,7 @@
         }
 
         window.submitListeningTask = async function(firstQid) {
-            let score = 0; let questions = [];
+            let score = 0; let questions = []; let detailedResults = [];
             const section = window.currentModule.sections.find(s => s.type === 'listening_task');
             if(section && section.questions) questions = section.questions;
 
@@ -1549,8 +1557,14 @@
                 const btns = parent.querySelectorAll('.q-btn');
                 const userAns = window.userListeningAnswers[q.id];
                 btns.forEach(b => b.classList.add('disabled'));
+                
+                let userAnsText = userAns !== undefined && q.opts[userAns] ? q.opts[userAns] : "Bỏ trống";
+                let correctAnsText = q.opts[q.ans];
+                let isCorrect = userAns === q.ans;
+                
+                detailedResults.push({ q: q.q, userAns: userAnsText, correctAns: correctAnsText, isCorrect: isCorrect });
 
-                if (userAns === q.ans) {
+                if (isCorrect) {
                     if(btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-correct'); }
                     score++;
                 } else {
@@ -1569,7 +1583,8 @@
                         level: "Listening",
                         testName: window.currentModule.title,
                         score: score, total: questions.length, percentage: (score/questions.length)*10,
-                        timeTaken: 0, timestamp: Date.now(), isLesson: true
+                        timeTaken: 0, timestamp: Date.now(), isLesson: true,
+                        detailedResults: detailedResults
                     });
                 } catch(e) {}
             }
@@ -1593,7 +1608,7 @@
         };
 
         window.submitExercises = async function() {
-            let score = 0; let exercises = [];
+            let score = 0; let exercises = []; let detailedResults = [];
             window.currentModule.sections.forEach(s => {
                 if(s.type === 'reading_practice' || s.type === 'practice') {
                     if (s.exercises) exercises = exercises.concat(s.exercises);
@@ -1610,8 +1625,13 @@
                 const btns = parent.querySelectorAll('.q-btn');
                 const userAns = window.userPracticeAnswers[ex.id];
                 btns.forEach(b => b.classList.add('disabled'));
+                
+                let userAnsText = userAns !== undefined && ex.opts[userAns] ? ex.opts[userAns] : "Bỏ trống";
+                let correctAnsText = ex.opts[ex.ans];
+                let isCorrect = userAns === ex.ans;
+                detailedResults.push({ q: ex.q, userAns: userAnsText, correctAns: correctAnsText, isCorrect: isCorrect });
 
-                if (userAns === ex.ans) {
+                if (isCorrect) {
                     if(btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-correct'); }
                     score++;
                 } else {
@@ -1630,7 +1650,8 @@
                         level: "Practice",
                         testName: window.currentModule.title,
                         score: score, total: exercises.length, percentage: (score/exercises.length)*10,
-                        timeTaken: 0, timestamp: Date.now(), isLesson: true
+                        timeTaken: 0, timestamp: Date.now(), isLesson: true,
+                        detailedResults: detailedResults
                     });
                 } catch(e) {}
             }
@@ -2075,10 +2096,16 @@
             document.getElementById('studentReportModal').classList.add('active');
 
             try {
-                const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
-                const snapshot = await window.fGetDocs(q);
+                // Tải về và lọc bằng JavaScript bộ nhớ RAM để đảm bảo không bị chặn bởi luật Firebase Index
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
                 let results = [];
-                snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
+                snapshot.forEach(doc => { 
+                    let d = doc.data(); 
+                    if (d.uid === uid) {
+                        d.docId = doc.id; 
+                        results.push(d); 
+                    }
+                });
                 results.sort((a,b) => b.timestamp - a.timestamp); // Mới nhất lên đầu
 
                 window.currentStudentResultsCache = results;
