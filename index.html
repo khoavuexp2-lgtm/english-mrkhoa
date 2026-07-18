@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -45,7 +45,7 @@
 
         .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);}
         .custom-alert-overlay.active { display: flex; opacity: 1;}
-        .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s;}
+        .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s; max-height: 90vh; display: flex; flex-direction: column;}
         .custom-alert-overlay.active .custom-alert-box { transform: scale(1);}
 
         @media print {
@@ -126,7 +126,7 @@
             window.fQuery = query;
             window.fWhere = where;
 
-            const ADMIN_EMAILS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
+            const SUPER_ADMINS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
 
             window.loginWithGoogle = async function() {
                 const provider = new GoogleAuthProvider();
@@ -140,6 +140,12 @@
 
             window.logoutGoogle = async function() {
                 await signOut(auth);
+                // Redirect back to home/lesson view to prevent test access without login
+                if (window.currentModule && window.currentModule.type === 'exam_module') {
+                    if (window.database && window.database[window.currentClass].modules.length > 0) {
+                        window.loadModule(window.database[window.currentClass].modules[0].id);
+                    }
+                }
                 window.location.reload();
             }
 
@@ -153,6 +159,8 @@
                     const userSnap = await getDoc(userRef);
                     
                     let nickname = user.displayName || user.email.split('@')[0];
+                    let role = SUPER_ADMINS.includes(user.email) ? 'super_admin' : 'student';
+                    let classId = 'Unassigned';
                     let isNewUser = false;
 
                     if (userSnap.exists()) {
@@ -171,36 +179,43 @@
                             }
                         }
                         nickname = data.nickname || nickname;
+                        role = SUPER_ADMINS.includes(user.email) ? 'super_admin' : (data.role || 'student');
+                        classId = data.classId || 'Unassigned';
                     } else {
                         isNewUser = true;
                         window.pendingUser = user;
+                        window.pendingUserRole = role;
                         nicknameOverlay.classList.add('active');
                         return; 
                     }
 
-                    window.currentUser = { uid: user.uid, email: user.email, nickname: nickname };
-                    window.isAdmin = ADMIN_EMAILS.includes(user.email);
+                    window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: role, classId: classId };
+                    window.isSuperAdmin = role === 'super_admin';
+                    window.isTeacher = role === 'teacher' || role === 'super_admin';
+
+                    let roleBadge = role === 'super_admin' ? '👑 Admin' : (role === 'teacher' ? '👨‍🏫 Teacher' : '🎓 Student');
 
                     authContainer.innerHTML = `
                         <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
                             <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
-                            <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
+                            <div class="flex flex-col items-start leading-none">
+                                <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[150px]">${nickname}</span>
+                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">${roleBadge}</span>
+                            </div>
                         </div>
-                        <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Sign out</button>
+                        <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1 bg-rose-50 px-2 py-1 rounded">Thoát</button>
                     `;
 
-                    if (window.isAdmin && printBtn) {
-                        printBtn.classList.remove('hidden');
-                    }
+                    if (window.isTeacher && printBtn) printBtn.classList.remove('hidden');
 
-                    if (!isNewUser) {
-                        await updateDoc(userRef, { lastLogin: Date.now() });
-                    }
+                    if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
                     if (window.renderMenu) window.renderMenu();
 
                 } else {
                     window.currentUser = null;
-                    window.isAdmin = false;
+                    window.isSuperAdmin = false;
+                    window.isTeacher = false;
+                    
                     authContainer.innerHTML = `
                         <button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign in
@@ -208,11 +223,16 @@
                     `;
                     if(printBtn) printBtn.classList.add('hidden');
                     if (window.renderMenu) window.renderMenu();
+                    
+                    // Kích học sinh ra khỏi phòng thi nếu đăng xuất
+                    if (window.currentModule && window.currentModule.type === 'exam_module') {
+                        if (window.database && window.database[window.currentClass].modules.length > 0) {
+                            window.loadModule(window.database[window.currentClass].modules[0].id);
+                        }
+                    }
                 }
             });
-        } catch (e) {
-            console.error("Firebase Init Error:", e);
-        }
+        } catch (e) { console.error("Firebase Init Error:", e); }
     </script>
 </head>
 <body>
@@ -232,23 +252,23 @@
 
     <!-- NICKNAME MODAL -->
     <div id="nicknameOverlay" class="custom-alert-overlay no-print">
-        <div class="custom-alert-box bg-white p-8 rounded-3xl w-[90%] max-w-sm text-center shadow-2xl">
+        <div class="custom-alert-box bg-white p-8 rounded-3xl w-[90%] max-w-sm text-center shadow-2xl justify-center">
             <div class="text-5xl mb-4">📛</div>
-            <h2 class="text-2xl font-bold baloo-font text-indigo-900 mb-2">Create Nickname</h2>
-            <p class="text-slate-500 mb-6 text-sm">Displayed on Leaderboard.</p>
-            <input type="text" id="nicknameInput" placeholder="Enter nickname..." class="w-full p-4 border-2 border-slate-200 rounded-xl mb-4 text-center font-bold focus:border-indigo-500 outline-none" maxlength="20">
-            <button onclick="saveNickname()" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-700 shadow-md">Confirm</button>
-            <button onclick="document.getElementById('nicknameOverlay').classList.remove('active')" class="w-full text-slate-400 font-bold py-2 mt-2 text-sm hover:text-slate-600 hidden" id="cancelNicknameBtn">Cancel</button>
+            <h2 class="text-2xl font-bold baloo-font text-indigo-900 mb-2">Tạo Biệt Danh</h2>
+            <p class="text-slate-500 mb-6 text-sm">Biệt danh này sẽ hiển thị trên Bảng xếp hạng và Báo cáo học tập.</p>
+            <input type="text" id="nicknameInput" placeholder="Nhập biệt danh..." class="w-full p-4 border-2 border-slate-200 rounded-xl mb-4 text-center font-bold focus:border-indigo-500 outline-none" maxlength="20">
+            <button onclick="saveNickname()" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-700 shadow-md">Xác nhận</button>
+            <button onclick="document.getElementById('nicknameOverlay').classList.remove('active')" class="w-full text-slate-400 font-bold py-2 mt-2 text-sm hover:text-slate-600 hidden" id="cancelNicknameBtn">Hủy</button>
         </div>
     </div>
 
     <!-- NOTIFICATION ALERT -->
     <div id="customAlert" class="custom-alert-overlay no-print">
-        <div class="custom-alert-box">
-            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4" id="alertIcon">🔔</div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2" id="alertTitle">Notification</h3>
-            <p class="text-slate-600 mb-6 font-medium" id="alertMessage">Content</p>
-            <button onclick="closeCustomAlert()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl w-full hover:bg-indigo-700 transition-colors shadow-md">Got it</button>
+        <div class="custom-alert-box justify-center !w-[90%] !max-w-[400px]">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shrink-0" id="alertIcon">🔔</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2" id="alertTitle">Thông báo</h3>
+            <div class="text-slate-600 mb-6 font-medium text-left max-h-[50vh] overflow-y-auto pr-2" id="alertMessage">Content</div>
+            <button onclick="closeCustomAlert()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl w-full hover:bg-indigo-700 transition-colors shadow-md mt-auto">Đã hiểu</button>
         </div>
     </div>
 
@@ -809,27 +829,54 @@
                             }
                         ]
                     }
-                    // ⬇️ DÁN CODE BÀI HỌC MỚI (NEW UNIT) VÀO ĐÂY ⬇️
+                    // ⬇️ DÁN CODE BÀI HỌC MỚI VÀO ĐÂY ⬇️
                 ]
             }
         };
 
         let currentClass = "class-6";
         let currentModule = null;
-        let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
+        let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0, startTime: 0 };
         
         window.userPracticeAnswers = {};
         window.userListeningAnswers = {};
         window.adminUsersData = [];
 
-        // --- Core UI Functions ---
+        // Utilities
+        function showCustomAlert(title, message, icon="🔔") {
+            document.getElementById('alertIcon').innerText = icon;
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.add('active');
+        }
+        window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
+        window.alert = function(msg) { showCustomAlert("Notification", msg); };
+
+        function initApp() {
+            const selector = document.getElementById('class-selector');
+            selector.innerHTML = '';
+            for (let cId in database) {
+                selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`;
+            }
+            renderMenu();
+            if(database[currentClass].modules.length > 0) {
+                loadModule(database[currentClass].modules[0].id);
+            }
+            // Unlock audio on iOS
+            document.body.addEventListener('touchstart', function() {
+                const s = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(s);
+            }, {once: true});
+        }
+
+        // --- DASHBOARD RENDERING ---
         function renderDashboardMenu() {
             const menu = document.getElementById('nav-menu');
             let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>`;
             dashHTML += `<button onclick="showMyProgress()" id="nav-progress" class="module-nav-btn bg-sky-50 text-sky-700 border border-sky-200">📈 My Progress</button>`;
             dashHTML += `<button onclick="showLeaderboard()" id="nav-leaderboard" class="module-nav-btn bg-amber-50 text-amber-700 border border-amber-200 mt-2">🏆 Leaderboard</button>`;
             
-            if (window.isAdmin) {
+            if (window.isTeacher) {
                 dashHTML += `<button onclick="showTeacherDashboard()" id="nav-admin" class="module-nav-btn bg-emerald-50 text-emerald-700 border-2 border-emerald-300 mt-2">👨‍🏫 User Management</button>`;
             }
             
@@ -879,6 +926,12 @@
             const mod = database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
 
+            // Security check for exams
+            if (mod.type === 'exam_module' && !window.currentUser) {
+                alert("Please sign in to access the examination room.");
+                return;
+            }
+
             currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
             const navBtn = document.getElementById('nav-' + moduleId);
@@ -896,7 +949,6 @@
             contentArea.innerHTML = '';
             
             if(currentExam.timer) clearInterval(currentExam.timer);
-            document.getElementById('test-timer-display')?.remove(); // Cleanup inline timer if any
             
             if (mod.type === 'lesson') renderLessonView(mod, contentArea);
             else if (mod.type === 'exam_module') renderExamSetupView(mod, contentArea);
@@ -904,7 +956,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- Render Views ---
         function renderLessonView(mod, container) {
             let html = '';
             mod.sections.forEach((sec, sIdx) => {
@@ -1065,6 +1116,34 @@
             container.innerHTML = html;
         }
 
+        // --- EXAM ENGINE ---
+        function safeId(str) { return str.replace(/[^a-zA-Z0-9]/g, '-'); }
+
+        window.renderExamSetupView = function(mod, container) {
+            let html = `
+                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
+                    <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
+                    <p class="text-slate-500 mb-8 font-medium">Review & Test</p>
+                    
+                    <div class="max-w-md mx-auto space-y-4">
+                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="test1">${mod.tests.test1.name}</option>
+                            <option value="test2">${mod.tests.test2 ? mod.tests.test2.name : 'Test 2'}</option>
+                        </select>
+                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
+                            🚀 START EXAM
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
         window.startExam = function(modId) {
             const mod = database[currentClass].modules.find(m => m.id === modId);
             const testId = document.getElementById('exam-test-selector').value;
@@ -1076,9 +1155,15 @@
             currentExam.answers = {};
             currentExam.flagged = {};
             currentExam.timeLeft = 45 * 60;
+            currentExam.startTime = Date.now();
 
             const testData = mod.tests[testId];
             let safeAudio = encodeURIComponent(testData.listeningScript || "").replace(/'/g, "%27");
+
+            // Xử lý Tabs Động
+            let partsSet = new Set();
+            currentExam.questions.forEach(q => partsSet.add(q.part));
+            let partsArr = Array.from(partsSet);
 
             let html = `
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center sticky top-0 z-50 no-print">
@@ -1086,38 +1171,44 @@
                     <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold text-lg border border-rose-200 shadow-inner tracking-widest" id="exam-timer-display">45:00</div>
                 </div>
                 
-                <div class="sticky top-[70px] z-[40] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">
-                    <button onclick="document.getElementById('part-PART-I-LISTENING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">🎧 Listening</button>
-                    <button onclick="document.getElementById('part-PART-II-PHONETICS').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">🗣️ Phonetics</button>
-                    <button onclick="document.getElementById('part-PART-III-VOCABULARY-GRAMMAR').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📚 Grammar</button>
-                    <button onclick="document.getElementById('part-PART-IV-READING-COMPREHENSION').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📖 Reading</button>
-                    <button onclick="document.getElementById('part-PART-V-WRITING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">✍️ Writing</button>
-                </div>
+                <div class="sticky top-[70px] z-[40] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">`;
+            
+            partsArr.forEach((p, i) => {
+                let shortName = p.split(':')[0] || p;
+                if(p.includes("LISTENING")) shortName = "🎧 " + shortName;
+                else if(p.includes("PHONETICS")) shortName = "🗣️ " + shortName;
+                else if(p.includes("READING")) shortName = "📖 " + shortName;
+                else if(p.includes("WRITING")) shortName = "✍️ " + shortName;
+                else shortName = "📚 " + shortName;
+                html += `<button onclick="document.getElementById('part-${i}').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent transition-colors">${shortName}</button>`;
+            });
 
+            html += `</div>
                 <div class="flex flex-col lg:flex-row gap-6 relative">
-                    <div class="flex-1 space-y-6">
-                        <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-32" id="part-PART-I-LISTENING">
-                            <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
-                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio</button>
-                            <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
-                        </div>
-            `;
+                    <div class="flex-1 space-y-6">`;
+
+            if(partsArr.some(p => p.includes("LISTENING"))) {
+                html += `
+                <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-32" id="part-audio-player">
+                    <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
+                    <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio</button>
+                    <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
+                </div>`;
+            }
 
             let currentPart = "";
             currentExam.questions.forEach((q, idx) => {
                 if (q.part !== currentPart) {
-                    let partId = 'part-' + q.part.replace(/[^a-zA-Z0-9-]/g, '-');
+                    let partIndex = partsArr.indexOf(q.part);
+                    html += `<h3 id="part-${partIndex}" class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2 scroll-mt-32">${q.part}</h3>`;
+                    
                     if (q.part.includes("READING COMPREHENSION")) {
-                        partId = "part-PART-IV-READING-COMPREHENSION";
                         html += `
-                        <div class="glass-card bg-amber-50 border-amber-200 mt-8 mb-6 p-5 scroll-mt-32" id="${partId}">
-                            <h3 class="font-bold text-amber-800 mb-3 text-lg">📚 READING TEXT</h3>
+                        <div class="glass-card bg-amber-50 border-amber-200 mt-4 mb-6 p-5">
                             <div class="bg-white p-4 rounded-xl border border-amber-100 text-slate-800 leading-relaxed text-[15px]">
                                 ${testData.readingText}
                             </div>
                         </div>`;
-                    } else if (q.part !== "PART I: LISTENING") {
-                        html += `<h3 id="${partId}" class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2 scroll-mt-32">${q.part}</h3>`;
                     }
                     currentPart = q.part;
                 }
@@ -1168,12 +1259,6 @@
 
             window.renderExamNavigator();
 
-            const timerDisplay = document.getElementById('test-timer');
-            const timeVal = document.getElementById('time-display');
-            const inlineTimeVal = document.getElementById('exam-timer-display');
-            
-            if(timerDisplay) timerDisplay.classList.remove('hidden');
-
             if(currentExam.timer) clearInterval(currentExam.timer);
             
             currentExam.timer = setInterval(() => {
@@ -1181,39 +1266,13 @@
                 let m = Math.floor(currentExam.timeLeft / 60);
                 let s = currentExam.timeLeft % 60;
                 let displayStr = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-                if(timeVal) timeVal.innerText = displayStr;
-                if(inlineTimeVal) inlineTimeVal.innerText = displayStr;
+                document.getElementById('exam-timer-display').innerText = displayStr;
                 
                 if (currentExam.timeLeft <= 0) {
                     clearInterval(currentExam.timer);
                     submitExam(true);
                 }
             }, 1000);
-        }
-
-        window.renderExamSetupView = function(mod, container) {
-            let html = `
-                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
-                    <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
-                    <p class="text-slate-500 mb-8 font-medium">Review & Test</p>
-                    
-                    <div class="max-w-md mx-auto space-y-4">
-                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
-                            <option value="test1">${mod.tests.test1.name}</option>
-                            <option value="test2">${mod.tests.test2 ? mod.tests.test2.name : 'Test 2'}</option>
-                        </select>
-                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
-                            <option value="normal">Level: Normal</option>
-                            <option value="hard">Level: Hard</option>
-                        </select>
-                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
-                            🚀 START EXAM
-                        </button>
-                    </div>
-                </div>
-            `;
-            container.innerHTML = html;
         }
 
         window.renderExamNavigator = function() {
@@ -1271,17 +1330,17 @@
             }
 
             clearInterval(currentExam.timer);
-            const timerDisplay = document.getElementById('test-timer');
-            if(timerDisplay) timerDisplay.classList.add('hidden');
             
             let score = 0;
+            let detailedResults = [];
             currentExam.questions.forEach((q, idx) => {
                 let userAns = currentExam.answers[idx];
                 let parent = document.getElementById('exam-opts-' + idx);
                 let btns = parent.querySelectorAll('.q-btn');
                 btns.forEach(b => b.classList.add('disabled'));
 
-                if (userAns === q.ans) {
+                let isCorrect = (userAns === q.ans);
+                if (isCorrect) {
                     score++;
                     btns[userAns].style.backgroundColor = "#e0e7ff"; 
                     btns[userAns].style.borderColor = "#4f46e5";
@@ -1291,17 +1350,27 @@
                         btns[userAns].classList.add('q-wrong'); 
                     }
                 }
+                
+                detailedResults.push({
+                    q: q.q,
+                    userAnsText: userAns !== undefined ? q.opts[userAns] : "Not answered",
+                    correctAnsText: q.opts[q.ans],
+                    isCorrect: isCorrect,
+                    exp: q.exp
+                });
             });
 
-            // [LEADERBOARD SAVE]
             let percentage = (score / currentExam.questions.length) * 10;
             let timeTaken = 45 * 60 - currentExam.timeLeft;
-            if (window.currentUser && !window.isAdmin) {
+            
+            // [DETAILED LEADERBOARD SAVE]
+            if (window.currentUser && !window.isSuperAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
                         uid: window.currentUser.uid,
                         email: window.currentUser.email,
                         nickname: window.currentUser.nickname,
+                        classId: window.currentUser.classId,
                         testId: currentModule.id,
                         subTestId: currentExam.testId,
                         level: currentExam.level,
@@ -1311,7 +1380,8 @@
                         percentage: percentage,
                         timeTaken: timeTaken,
                         timestamp: Date.now(),
-                        isLesson: false
+                        isLesson: false,
+                        details: detailedResults
                     });
                 } catch(e) { console.error(e); }
             }
@@ -1348,16 +1418,11 @@
             if(scriptDiv) scriptDiv.classList.remove('hidden');
         }
 
+        // --- Event Listeners and Audio Functions ---
         window.toggleTranscript = function(btn) {
             const container = btn.closest('.glass-card');
             const el = container.querySelector('.audio-transcript');
-            if(el) {
-                if(el.classList.contains('hidden')) {
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                }
-            }
+            if(el) el.classList.toggle('hidden');
         }
 
         window.selectListeningChoice = function(btn, qId, choiceIdx) {
@@ -1380,7 +1445,6 @@
                 if(!parent) return;
                 const btns = parent.querySelectorAll('.q-btn');
                 const userAns = window.userListeningAnswers[q.id];
-                
                 btns.forEach(b => b.classList.add('disabled'));
 
                 if (userAns === q.ans) {
@@ -1398,22 +1462,12 @@
                 }
             });
 
-            // [PROGRESS SAVE]
-            if (window.currentUser && !window.isAdmin) {
+            if (window.currentUser && !window.isSuperAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid,
-                        email: window.currentUser.email,
-                        nickname: window.currentUser.nickname,
-                        testId: currentModule.id, 
-                        level: "Listening",
-                        testName: currentModule.title,
-                        score: score,
-                        total: questions.length,
-                        percentage: (score/questions.length)*10,
-                        timeTaken: 0,
-                        timestamp: Date.now(),
-                        isLesson: true
+                        uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname, classId: window.currentUser.classId,
+                        testId: currentModule.id, level: "Listening", testName: currentModule.title,
+                        score: score, total: questions.length, percentage: (score/questions.length)*10, timeTaken: 0, timestamp: Date.now(), isLesson: true
                     });
                 } catch(e) { console.log(e); }
             }
@@ -1422,11 +1476,7 @@
             if(actionContainer) {
                 actionContainer.innerHTML = `
                     <div class="text-xl font-bold text-teal-600 mb-4 bg-teal-50 inline-block px-6 py-2 rounded-xl border border-teal-200">🎉 Score: ${score} / ${questions.length}</div>
-                    <br>
-                    <button onclick="loadModule('${currentModule.id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">
-                        🔄 Try Again
-                    </button>
-                `;
+                    <br><button onclick="loadModule('${currentModule.id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>`;
             }
         }
 
@@ -1469,7 +1519,6 @@
             exercises.forEach(ex => {
                 const expDiv = document.getElementById('exp-' + ex.id);
                 if(expDiv) expDiv.classList.remove('hidden');
-
                 const parent = document.getElementById('opts-' + ex.id);
                 if(!parent) return;
                 const btns = parent.querySelectorAll('.q-btn');
@@ -1478,36 +1527,22 @@
                 btns.forEach(b => b.classList.add('disabled'));
 
                 if (userAns === ex.ans) {
-                    if(btns[userAns]) {
-                        btns[userAns].classList.remove('q-selected');
-                        btns[userAns].classList.add('q-correct');
-                    }
+                    if(btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-correct'); }
                     score++;
                 } else {
                     if (userAns !== undefined && btns[userAns]) {
-                        btns[userAns].classList.remove('q-selected');
-                        btns[userAns].classList.add('q-wrong');
+                        btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-wrong');
                     }
                     if(btns[ex.ans]) btns[ex.ans].classList.add('q-correct');
                 }
             });
 
-            // [PROGRESS SAVE]
-            if (window.currentUser && !window.isAdmin) {
+            if (window.currentUser && !window.isSuperAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid,
-                        email: window.currentUser.email,
-                        nickname: window.currentUser.nickname,
-                        testId: currentModule.id,
-                        level: "Practice",
-                        testName: currentModule.title,
-                        score: score,
-                        total: exercises.length,
-                        percentage: (score/exercises.length)*10,
-                        timeTaken: 0,
-                        timestamp: Date.now(),
-                        isLesson: true
+                        uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname, classId: window.currentUser.classId,
+                        testId: currentModule.id, level: "Practice", testName: currentModule.title,
+                        score: score, total: exercises.length, percentage: (score/exercises.length)*10, timeTaken: 0, timestamp: Date.now(), isLesson: true
                     });
                 } catch(e) {}
             }
@@ -1516,15 +1551,10 @@
             if(actionContainer) {
                 actionContainer.innerHTML = `
                     <div class="text-xl font-bold text-indigo-600 mb-4 bg-indigo-50 inline-block px-6 py-2 rounded-xl border border-indigo-200">🎉 Score: ${score} / ${exercises.length}</div>
-                    <br>
-                    <button onclick="loadModule('${currentModule.id}')" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">
-                        🔄 Try Again
-                    </button>
-                `;
+                    <br><button onclick="loadModule('${currentModule.id}')" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">🔄 Try Again</button>`;
             }
         };
 
-        // --- Audio System ---
         window.voices = [];
         window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
 
@@ -1534,15 +1564,10 @@
             const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
             
             let selectedVoice = null;
-            if (gender === 'female') {
-                selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
-            } else if (gender === 'male') {
-                selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
-            }
+            if (gender === 'female') selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
+            else if (gender === 'male') selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
             
-            if (!selectedVoice) {
-                selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-            }
+            if (!selectedVoice) selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0]));
             return selectedVoice;
         };
 
@@ -1552,26 +1577,18 @@
                 event.currentTarget.classList.add('active-audio');
             }
         };
-        window.removeHighlight = function() {
-            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
-        };
+        window.removeHighlight = function() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); };
 
         window.playAudio = function(encodedText, lang = 'en-US') {
             window.highlightAudioRow(window.event);
             window.speechSynthesis.cancel();
             let text = "";
             try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
-            
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = 0.85;
-            
-            let voices = window.speechSynthesis.getVoices();
-            let voice = voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
+            utterance.lang = lang; utterance.rate = 0.85;
+            let voice = window.speechSynthesis.getVoices().find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
             if(voice) utterance.voice = voice;
-
-            utterance.onend = window.removeHighlight;
-            utterance.onerror = window.removeHighlight;
+            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
             window.speechSynthesis.speak(utterance);
         };
 
@@ -1580,33 +1597,20 @@
             window.speechSynthesis.cancel();
             let text = "";
             try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
-            
             const utterance = new SpeechSynthesisUtterance(text);
             const voice = window.getVoiceByGender(gender, 'en-US');
             if(voice) utterance.voice = voice;
-            utterance.lang = 'en-US';
-            utterance.rate = 0.85;
-            utterance.onend = window.removeHighlight;
-            utterance.onerror = window.removeHighlight;
+            utterance.lang = 'en-US'; utterance.rate = 0.85;
+            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
             window.speechSynthesis.speak(utterance);
         };
 
-        window.playSpeakingSample = function(encodedText) {
-            window.playAudio(encodedText, 'en-US');
-        };
-
-        window.playReadingText = function(encodedText) {
-            window.playAudio(encodedText, 'en-US');
-        };
+        window.playSpeakingSample = function(encodedText) { window.playAudio(encodedText, 'en-US'); };
+        window.playReadingText = function(encodedText) { window.playAudio(encodedText, 'en-US'); };
 
         window.playAllDialogue = function() {
-            window.speechSynthesis.cancel();
-            window.removeHighlight();
-            
-            let listeningSec = null;
-            if (currentModule && currentModule.sections) {
-                listeningSec = currentModule.sections.find(s => s.type === 'listening' || s.type === 'dialogue');
-            }
+            window.speechSynthesis.cancel(); window.removeHighlight();
+            let listeningSec = currentModule?.sections?.find(s => s.type === 'listening' || s.type === 'dialogue');
             if(!listeningSec || !listeningSec.lines) return;
 
             let currentLine = 0;
@@ -1616,8 +1620,7 @@
                 let utterance = new SpeechSynthesisUtterance(l.t || l.text);
                 const voice = window.getVoiceByGender(l.gender, l.loc || 'en-US');
                 if(voice) utterance.voice = voice;
-                utterance.lang = l.loc || 'en-US'; 
-                utterance.rate = 0.85;
+                utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
                 utterance.onend = () => { currentLine++; speakNextLine(); };
                 window.speechSynthesis.speak(utterance);
             }
@@ -1627,7 +1630,7 @@
         function showCustomAlert(title, message, icon="🔔") {
             document.getElementById('alertIcon').innerText = icon;
             document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('alertMessage').innerHTML = message;
             document.getElementById('customAlert').classList.add('active');
         }
         window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
@@ -1640,13 +1643,7 @@
             if (window.pendingUser) {
                 const userRef = window.fDoc(window.fdb, "users", window.pendingUser.uid);
                 await window.fSetDoc(userRef, { 
-                    email: window.pendingUser.email, 
-                    nickname: input, 
-                    status: 'active', 
-                    lastLogin: Date.now(),
-                    joinDate: Date.now(),
-                    plan: 'trial',
-                    expiryDate: Date.now() + (7 * 24 * 60 * 60 * 1000)
+                    email: window.pendingUser.email, nickname: input, status: 'active', role: window.pendingUserRole || 'student', classId: 'Unassigned', lastLogin: Date.now(), joinDate: Date.now(), plan: 'trial', expiryDate: Date.now() + (7 * 24 * 60 * 60 * 1000)
                 });
                 window.location.reload();
             } else if (window.currentUser) {
@@ -1673,35 +1670,25 @@
             container.innerHTML = `<div class="text-center py-10">Loading progress...</div>`;
 
             try {
-                // Tự lọc bằng JS để tránh yêu cầu tạo Firebase Index
                 const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
                 let completedModules = {};
                 snapshot.forEach(doc => {
                     let d = doc.data();
-                    if(d.email === window.currentUser.email && d.isLesson) {
-                        completedModules[d.testId] = true;
-                    }
+                    if(d.email === window.currentUser.email && d.isLesson) completedModules[d.testId] = true;
                 });
 
                 let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
-                
                 database[currentClass].modules.forEach(mod => {
                     if(mod.type === 'lesson') {
                         let isCompleted = completedModules[mod.id];
-                        let statusUI = isCompleted 
-                            ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
-                            : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
-                            
+                        let statusUI = isCompleted ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>` : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
                         html += `<div class="p-4 border border-slate-200 rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
-                            <p class="font-bold text-slate-800">${mod.title}</p>
-                            ${statusUI}
-                        </div>`;
+                            <p class="font-bold text-slate-800">${mod.title}</p>${statusUI}</div>`;
                     }
                 });
-
                 html += `</div></div>`;
                 container.innerHTML = html;
-            } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
+            } catch(e) { container.innerHTML = "Error loading data."; }
         }
 
         window.showLeaderboard = async function() {
@@ -1728,7 +1715,7 @@
                 <div id="lb-results"></div>
             `;
             document.getElementById('content-area').innerHTML = html;
-            window.fetchLeaderboardData(); // Auto fetch default
+            window.fetchLeaderboardData();
         }
 
         window.fetchLeaderboardData = async function() {
@@ -1738,15 +1725,16 @@
             resContainer.innerHTML = `<div class="text-center py-10">Loading...</div>`;
 
             try {
-                // Tải toàn bộ và lọc bằng JS để tránh yêu cầu tạo Firebase Index
                 const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
                 let results = [];
                 snapshot.forEach(doc => {
                     let d = doc.data();
-                    if(d.subTestId === testId && d.level === level && !d.isLesson) results.push(d);
+                    if(d.subTestId === testId && d.level === level && !d.isLesson) {
+                        // Bỏ qua lọc lớp nếu là SuperAdmin, nhưng Leaderboard public thì có thể lọc lớp hiện tại hoặc hiển thị chung
+                        results.push(d);
+                    }
                 });
 
-                // Sắp xếp: Điểm cao trước, thời gian ngắn trước
                 results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
 
                 let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm border border-slate-200 shadow-sm">
@@ -1758,90 +1746,173 @@
                     results.slice(0, 10).forEach((r, idx) => {
                         let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
                         let isMe = (window.currentUser && r.email === window.currentUser.email) ? "bg-amber-100 font-bold" : "";
-                        html += `<tr class="border-b border-slate-100 ${isMe}">
-                            <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
-                            <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
-                            <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
-                        </tr>`;
+                        html += `<tr class="border-b border-slate-100 ${isMe}"><td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td><td class="p-3 text-slate-800 font-bold">${r.nickname} <span class="text-xs text-slate-400 font-normal">(${r.classId || ''})</span></td><td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td></tr>`;
                     });
                 }
                 html += `</table></div>`;
                 resContainer.innerHTML = html;
-            } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
+            } catch(e) { resContainer.innerHTML = "Error loading data."; }
         }
 
         window.showTeacherDashboard = async function() {
-            if(!window.isAdmin) return;
+            if(!window.isTeacher) return;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
             if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.add('active');
-            document.getElementById('header-title').innerText = "Admin Dashboard";
+            document.getElementById('header-title').innerText = "Management Dashboard";
             if (window.innerWidth < 1024) toggleMenu();
 
+            let titleStr = window.isSuperAdmin ? "System Management (Super Admin)" : `Class Management (${window.currentUser.classId})`;
+
             let html = `
-                <div class="glass-card border-t-4 border-indigo-500 mb-8">
+                <div class="flex gap-2 mb-6 overflow-x-auto">
+                    <button onclick="switchAdminTab('users')" id="admin-tab-users" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold">User Management</button>
+                    <button onclick="switchAdminTab('reports')" id="admin-tab-reports" class="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold">Detailed Reports</button>
+                </div>
+                
+                <div id="admin-view-users" class="glass-card border-t-4 border-indigo-500 mb-8">
                     <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4 border-b pb-4">
-                        <h2 class="text-2xl font-bold baloo-font text-indigo-700">👥 User Management</h2>
-                        <button onclick="exportUsersToCSV()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center gap-2">
-                            📥 Export to Excel (CSV)
-                        </button>
+                        <h2 class="text-xl font-bold baloo-font text-indigo-700">${titleStr}</h2>
+                        ${window.isSuperAdmin ? `<button onclick="exportUsersToCSV()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center gap-2">📥 Export CSV</button>` : ''}
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div id="admin-users-list" class="space-y-3 max-h-[600px] overflow-y-auto">Loading...</div>
+                        <div id="admin-users-list" class="space-y-3 max-h-[600px] overflow-y-auto">Loading users...</div>
+                    </div>
+                </div>
+
+                <div id="admin-view-reports" class="glass-card border-t-4 border-emerald-500 mb-8 hidden">
+                    <h2 class="text-xl font-bold baloo-font text-emerald-700 mb-4">Detailed Exam Reports</h2>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div id="admin-reports-list" class="space-y-3 max-h-[600px] overflow-y-auto">Loading reports...</div>
                     </div>
                 </div>
             `;
             document.getElementById('content-area').innerHTML = html;
             window.loadAdminUsers();
+            window.loadAdminReports();
+        }
+
+        window.switchAdminTab = function(tab) {
+            document.getElementById('admin-tab-users').className = tab === 'users' ? "px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold" : "px-6 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold";
+            document.getElementById('admin-tab-reports').className = tab === 'reports' ? "px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold" : "px-6 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold";
+            
+            document.getElementById('admin-view-users').classList.toggle('hidden', tab !== 'users');
+            document.getElementById('admin-view-reports').classList.toggle('hidden', tab !== 'reports');
         }
 
         window.adminUsersData = [];
+        window.adminReportsData = [];
 
         window.loadAdminUsers = async function() {
             const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
             let users = [];
-            snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+            snapshot.forEach(doc => { 
+                let d = doc.data(); d.id = doc.id; 
+                // Teacher chỉ thấy user trong lớp của mình. Super Admin thấy hết.
+                if (window.isSuperAdmin || (window.isTeacher && d.classId === window.currentUser.classId && d.role === 'student')) {
+                    users.push(d); 
+                }
+            });
             users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
             window.adminUsersData = users;
 
             let uHtml = "";
             users.forEach(data => {
                 const isBlocked = data.status === 'blocked';
-                const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
-                let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                let roleColor = data.role === 'teacher' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-700';
                 
-                let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
-                let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Blocked</span>` : 
-                                  (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Expired</span>` : 
-                                  `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Active</span>`);
+                let controlsHtml = '';
+                if (window.isSuperAdmin) {
+                    controlsHtml = `
+                        <input type="text" placeholder="Class (e.g. 6A1)" value="${data.classId || ''}" onchange="updateUserField('${data.id}', 'classId', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 w-24">
+                        <select onchange="updateUserField('${data.id}', 'role', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-slate-50 outline-none">
+                            <option value="student" ${data.role === 'student' ? 'selected' : ''}>Student</option>
+                            <option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>Teacher</option>
+                        </select>
+                        <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-slate-50 outline-none">
+                            <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Trial</option>
+                            <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3M</option>
+                            <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Life</option>
+                        </select>
+                        <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500' : 'bg-rose-500'} text-white px-3 py-1.5 rounded-lg text-sm font-bold">${isBlocked ? 'Unblock' : 'Block'}</button>
+                    `;
+                } else if (window.isTeacher) {
+                     controlsHtml = `<span class="text-sm font-bold text-slate-500">Class: ${data.classId}</span>`;
+                }
 
                 uHtml += `
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-3">
                     <div>
-                        <div class="font-bold text-slate-800 text-lg">${data.nickname} <span class="text-sm font-normal text-slate-500">(${data.email})</span></div>
-                        <div class="text-xs text-slate-500 mt-1">Joined: ${joinDate} | Expires: <b class="text-indigo-600">${expStr}</b></div>
-                        <div class="mt-2">${statusBadge}</div>
+                        <div class="font-bold text-slate-800 text-base">${data.nickname} <span class="text-xs font-normal text-slate-500">(${data.email})</span></div>
+                        <div class="mt-1"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${roleColor}">${data.role}</span></div>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
-                        <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-2 bg-slate-50 text-indigo-700 outline-none cursor-pointer">
-                            <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Trial (7 days)</option>
-                            <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Months</option>
-                            <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Months</option>
-                            <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Lifetime</option>
-                        </select>
-                        <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">${isBlocked ? 'Unblock' : 'Block'}</button>
-                        <button onclick="deleteUser('${data.id}')" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700">Delete</button>
+                        ${controlsHtml}
                     </div>
                 </div>`;
             });
             document.getElementById('admin-users-list').innerHTML = uHtml || "No users found.";
         }
 
+        window.loadAdminReports = async function() {
+            const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+            let reports = [];
+            snapshot.forEach(doc => { 
+                let d = doc.data(); d.id = doc.id; 
+                // Lọc theo lớp
+                if (window.isSuperAdmin || (window.isTeacher && d.classId === window.currentUser.classId)) {
+                    reports.push(d); 
+                }
+            });
+            reports.sort((a, b) => b.timestamp - a.timestamp);
+            window.adminReportsData = reports;
+
+            let rHtml = "";
+            reports.forEach(r => {
+                let dateStr = new Date(r.timestamp).toLocaleString('en-GB');
+                rHtml += `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-bold text-slate-800">${r.nickname} <span class="text-xs text-slate-500">(${r.email})</span></div>
+                        <div class="font-bold text-emerald-600 text-lg">${r.percentage.toFixed(1)}/10</div>
+                    </div>
+                    <div class="text-sm text-slate-500 mb-3">${r.testName} | Class: ${r.classId || 'N/A'} | Time: ${dateStr}</div>
+                    <button onclick="showResultDetails('${r.id}')" class="text-xs bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-200">View Detailed Mistakes</button>
+                </div>`;
+            });
+            document.getElementById('admin-reports-list').innerHTML = rHtml || "No reports found.";
+        }
+
+        window.showResultDetails = function(docId) {
+            const r = window.adminReportsData.find(d => d.id === docId);
+            if(!r || !r.details) { alert("No detailed data for this record."); return; }
+            
+            let listHtml = '<ul class="text-left space-y-4">';
+            r.details.forEach((d, i) => {
+                if(!d.isCorrect) {
+                    listHtml += `
+                    <li class="bg-rose-50 p-3 rounded-lg border border-rose-200">
+                        <p class="font-bold text-sm text-slate-800 mb-1">Q${i+1}: ${d.q}</p>
+                        <p class="text-xs text-rose-600 font-bold mb-1">Student chose: <span class="line-through">${d.userAnsText}</span></p>
+                        <p class="text-xs text-emerald-600 font-bold">Correct: ${d.correctAnsText}</p>
+                    </li>`;
+                }
+            });
+            listHtml += '</ul>';
+            
+            if(listHtml === '<ul class="text-left space-y-4"></ul>') listHtml = "<p class='font-bold text-emerald-600'>Perfect score! No mistakes.</p>";
+
+            showCustomAlert(`Mistakes for ${r.nickname}`, listHtml, "📝");
+        }
+
+        window.updateUserField = async function(uid, field, value) {
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { [field]: value });
+            window.loadAdminUsers();
+        }
+
         window.updateUserPlan = async function(uid, plan) {
-            let expiryDate = null;
-            let now = Date.now();
+            let expiryDate = null; let now = Date.now();
             if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
             else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
-            else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
             
             await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
             window.loadAdminUsers();
@@ -1852,41 +1923,21 @@
             window.loadAdminUsers();
         }
 
-        window.deleteUser = async function(uid) {
-            if(confirm("PERMANENTLY DELETE USER?\nAre you sure you want to delete this user data?")) {
-                await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
-                window.loadAdminUsers();
-            }
-        }
-
         window.exportUsersToCSV = function() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "Nickname,Email,Join Date,Plan,Expiry Date,Status\n";
-            
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFNickname,Email,Role,Class,Join Date,Plan,Status\n";
             window.adminUsersData.forEach(user => {
                 let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
-                let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
-                let row = `"${user.nickname}","${user.email}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"`;
-                csvContent += row + "\n";
+                csvContent += `"${user.nickname}","${user.email}","${user.role}","${user.classId || ''}","${joinDate}","${user.plan || 'trial'}","${user.status || 'active'}"\n`;
             });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "students_list.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "users_list.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // HÀM KHỞI TẠO APP (Tự động tải Unit 1 khi mở Web)
         window.initApp = function() {
             const selector = document.getElementById('class-selector');
             if (selector) {
                 selector.innerHTML = '';
-                for (let cId in database) {
-                    selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`;
-                }
+                for (let cId in database) { selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`; }
             }
             if (typeof renderMenu === 'function') renderMenu();
             if(database[currentClass] && database[currentClass].modules.length > 0) {
@@ -1895,9 +1946,7 @@
         };
 
         window.onload = function() {
-            initApp(); // Gọi lệnh khởi tạo giao diện
-            
-            // Bật tính năng Audio của Safari khi chạm vào màn hình
+            initApp();
             document.body.addEventListener('touchstart', function() {
                 const s = new SpeechSynthesisUtterance("");
                 window.speechSynthesis.speak(s);
