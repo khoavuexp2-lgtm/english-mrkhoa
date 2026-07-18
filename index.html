@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -108,107 +108,111 @@
             measurementId: "G-X3MK9XTMR8"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
 
-        window.fauth = auth;
-        window.fdb = db;
-        window.fCollection = collection;
-        window.fAddDoc = addDoc;
-        window.fDoc = doc;
-        window.fSetDoc = setDoc;
-        window.fGetDoc = getDoc;
-        window.fGetDocs = getDocs;
-        window.fUpdateDoc = updateDoc;
-        window.fDeleteDoc = deleteDoc;
-        window.fQuery = query;
-        window.fWhere = where;
+            window.fauth = auth;
+            window.fdb = db;
+            window.fCollection = collection;
+            window.fAddDoc = addDoc;
+            window.fDoc = doc;
+            window.fSetDoc = setDoc;
+            window.fGetDoc = getDoc;
+            window.fGetDocs = getDocs;
+            window.fUpdateDoc = updateDoc;
+            window.fDeleteDoc = deleteDoc;
+            window.fQuery = query;
+            window.fWhere = where;
 
-        const ADMIN_EMAILS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
+            const ADMIN_EMAILS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
 
-        window.loginWithGoogle = async function() {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error(error);
-                alert("Sign in failed. Please check if domain is authorized in Firebase.");
+            window.loginWithGoogle = async function() {
+                const provider = new GoogleAuthProvider();
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error(error);
+                    alert("Sign in failed. Please check if domain is authorized in Firebase.");
+                }
             }
-        }
 
-        window.logoutGoogle = async function() {
-            await signOut(auth);
-            window.location.reload();
-        }
+            window.logoutGoogle = async function() {
+                await signOut(auth);
+                window.location.reload();
+            }
 
-        onAuthStateChanged(auth, async (user) => {
-            const authContainer = document.getElementById('auth-container');
-            const nicknameOverlay = document.getElementById('nicknameOverlay');
-            const printBtn = document.getElementById('print-btn');
+            onAuthStateChanged(auth, async (user) => {
+                const authContainer = document.getElementById('auth-container');
+                const nicknameOverlay = document.getElementById('nicknameOverlay');
+                const printBtn = document.getElementById('print-btn');
 
-            if (user) {
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
-                
-                let nickname = user.displayName || user.email.split('@')[0];
-                let isNewUser = false;
-
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-                    if (data.status === 'blocked') {
-                        alert("Account suspended by Administrator.");
-                        await signOut(auth);
-                        return;
-                    }
+                if (user) {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
                     
-                    if (data.plan !== 'lifetime' && data.expiryDate) {
-                        if (Date.now() > data.expiryDate) {
-                            alert("Subscription expired. Please contact Admin.");
+                    let nickname = user.displayName || user.email.split('@')[0];
+                    let isNewUser = false;
+
+                    if (userSnap.exists()) {
+                        const data = userSnap.data();
+                        if (data.status === 'blocked') {
+                            alert("Account suspended by Administrator.");
                             await signOut(auth);
                             return;
                         }
+                        
+                        if (data.plan !== 'lifetime' && data.expiryDate) {
+                            if (Date.now() > data.expiryDate) {
+                                alert("Subscription expired. Please contact Admin.");
+                                await signOut(auth);
+                                return;
+                            }
+                        }
+                        nickname = data.nickname || nickname;
+                    } else {
+                        isNewUser = true;
+                        window.pendingUser = user;
+                        nicknameOverlay.classList.add('active');
+                        return; 
                     }
-                    nickname = data.nickname || nickname;
+
+                    window.currentUser = { uid: user.uid, email: user.email, nickname: nickname };
+                    window.isAdmin = ADMIN_EMAILS.includes(user.email);
+
+                    authContainer.innerHTML = `
+                        <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
+                            <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
+                            <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
+                        </div>
+                        <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Sign out</button>
+                    `;
+
+                    if (window.isAdmin && printBtn) {
+                        printBtn.classList.remove('hidden');
+                    }
+
+                    if (!isNewUser) {
+                        await updateDoc(userRef, { lastLogin: Date.now() });
+                    }
+                    if (window.renderMenu) window.renderMenu();
+
                 } else {
-                    isNewUser = true;
-                    window.pendingUser = user;
-                    nicknameOverlay.classList.add('active');
-                    return; 
+                    window.currentUser = null;
+                    window.isAdmin = false;
+                    authContainer.innerHTML = `
+                        <button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign in
+                        </button>
+                    `;
+                    if(printBtn) printBtn.classList.add('hidden');
+                    if (window.renderMenu) window.renderMenu();
                 }
-
-                window.currentUser = { uid: user.uid, email: user.email, nickname: nickname };
-                window.isAdmin = ADMIN_EMAILS.includes(user.email);
-
-                authContainer.innerHTML = `
-                    <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
-                        <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
-                        <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
-                    </div>
-                    <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Sign out</button>
-                `;
-
-                if (window.isAdmin && printBtn) {
-                    printBtn.classList.remove('hidden');
-                }
-
-                if (!isNewUser) {
-                    await updateDoc(userRef, { lastLogin: Date.now() });
-                }
-                renderMenu();
-
-            } else {
-                window.currentUser = null;
-                window.isAdmin = false;
-                authContainer.innerHTML = `
-                    <button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign in
-                    </button>
-                `;
-                if(printBtn) printBtn.classList.add('hidden');
-                renderMenu();
-            }
-        });
+            });
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+        }
     </script>
 </head>
 <body>
@@ -551,7 +555,7 @@
                         ]
                     },
                     // ==========================================
-                    // REVIEW 1: EXAM MODULE (NEW)
+                    // REVIEW 1: EXAM MODULE
                     // ==========================================
                     {
                         id: "rev1",
@@ -587,11 +591,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ a maths test tomorrow. My teacher told me yesterday.", opts: ["A. have", "B. are having", "C. has", "D. having"], ans: 1, exp: "Kế hoạch chắc chắn trong tương lai dùng Hiện tại tiếp diễn (are having)." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. This is my _______ bedroom. They love it.", opts: ["A. parent's", "B. parents'", "C. parents", "D. parent"], ans: 1, exp: "Danh từ số nhiều có 's' (parents) chỉ cần thêm dấu nháy đơn ' ở cuối." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Do students in Finland wear uniforms?", opts: ["A. Yes, they do.", "B. No, they don't.", "C. Only on Mondays.", "D. Sometimes."], ans: 1, exp: "Bài đọc: 'Students in Finland do not wear uniforms.'" },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. What clothes can they wear to school?", opts: ["A. Formal clothes", "B. Uniforms", "C. Jeans and T-shirts", "D. Hats"], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. Do they have a lot of homework?", opts: ["A. Yes, a lot.", "B. No, they don't have much.", "C. Only at weekends.", "D. The text doesn't say."], ans: 1, exp: "Bài đọc: 'They also do not have much homework'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What do they do after school?", opts: ["A. Play sports or learn music", "B. Do homework", "C. Clean the school", "D. Go to the cinema"], ans: 0, exp: "Bài đọc: 'After school, they play sports or learn music'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What are Finnish students like?", opts: ["A. Lazy and shy", "B. Creative and hard-working", "C. Funny and active", "D. Kind and clever"], ans: 1, exp: "Bài đọc: 'Finnish students are very creative and hard-working.'" },
+                                        { part: "PART IV: READING COMPREHENSION", q: "21. Do students in Finland wear uniforms?", opts: ["A. Yes, they do.", "B. No, they don't.", "C. Only on Mondays.", "D. Sometimes."], ans: 1, exp: "Bài đọc: 'Students in Finland do not wear uniforms.'" },
+                                        { part: "PART IV: READING COMPREHENSION", q: "22. What clothes can they wear to school?", opts: ["A. Formal clothes", "B. Uniforms", "C. Jeans and T-shirts", "D. Hats"], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "23. Do they have a lot of homework?", opts: ["A. Yes, a lot.", "B. No, they don't have much.", "C. Only at weekends.", "D. The text doesn't say."], ans: 1, exp: "Bài đọc: 'They also do not have much homework'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "24. What do they do after school?", opts: ["A. Play sports or learn music", "B. Do homework", "C. Clean the school", "D. Go to the cinema"], ans: 0, exp: "Bài đọc: 'After school, they play sports or learn music'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "25. What are Finnish students like?", opts: ["A. Lazy and shy", "B. Creative and hard-working", "C. Funny and active", "D. Kind and clever"], ans: 1, exp: "Bài đọc: 'Finnish students are very creative and hard-working.'" },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'My house has four rooms.'", opts: ["A. There are four rooms in my house.", "B. There is four rooms in my house.", "C. My house have four rooms.", "D. Four rooms are my house."], ans: 0, exp: "Sử dụng cấu trúc 'There is/are' để viết lại câu sở hữu chỉ số lượng." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'The lamp is behind the TV.'", opts: ["A. The TV is next to the lamp.", "B. The TV is in front of the lamp.", "C. The TV is under the lamp.", "D. The TV is behind the lamp."], ans: 1, exp: "Nếu A ở sau B, thì B ở trước A (in front of)." },
@@ -623,11 +627,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ an English club meeting this weekend. Don't forget!", opts: ["A. have", "B. are having", "C. has", "D. having"], ans: 1, exp: "Kế hoạch đã định trước trong tương lai gần -> HT Tiếp diễn (are having)." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. Find the mistake: This <u>is</u> my <u>sister</u> <u>bicycle</u>.", opts: ["A. is", "B. sister", "C. bicycle", "D. This"], ans: 1, exp: "Phải dùng sở hữu cách 's để chỉ sự sở hữu -> my sister's bicycle." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. The word 'They' in line 2 refers to:", opts: ["A. Schools", "B. Uniforms", "C. Students", "D. Countries"], ans: 2, exp: "'They' thay thế cho danh từ 'Students' ở câu trước đó." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. Which statement is TRUE about Finnish students?", opts: ["A. They wear uniforms every day.", "B. They feel stressed about homework.", "C. They can wear whatever they feel comfortable in.", "D. They don't like playing sports."], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. What can be inferred about the education system in Finland?", opts: ["A. It is very strict.", "B. It focuses on rote learning.", "C. It encourages creativity and well-being.", "D. It forces students to study all day."], ans: 2, exp: "Suy luận: Không mặc đồng phục, ít bài tập, được chơi thể thao/âm nhạc -> Khuyến khích sự sáng tạo và sức khỏe (creativity and well-being)." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What does the word 'hard-working' mean in the text?", opts: ["A. Lazy", "B. Putting a lot of effort into doing things", "C. Working in a difficult place", "D. Being very smart"], ans: 1, exp: "Định nghĩa của hard-working là chăm chỉ, nỗ lực nhiều." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. Which statement is NOT TRUE?", opts: ["A. Students wear jeans to school.", "B. They have a lot of homework.", "C. They play sports after school.", "D. They learn music."], ans: 1, exp: "Bài đọc ghi: 'They also do not have much homework'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "21. The word 'They' in line 2 refers to:", opts: ["A. Schools", "B. Uniforms", "C. Students", "D. Countries"], ans: 2, exp: "'They' thay thế cho danh từ 'Students' ở câu trước đó." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "22. Which statement is TRUE about Finnish students?", opts: ["A. They wear uniforms every day.", "B. They feel stressed about homework.", "C. They can wear whatever they feel comfortable in.", "D. They don't like playing sports."], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "23. What can be inferred about the education system in Finland?", opts: ["A. It is very strict.", "B. It focuses on rote learning.", "C. It encourages creativity and well-being.", "D. It forces students to study all day."], ans: 2, exp: "Suy luận: Không mặc đồng phục, ít bài tập, được chơi thể thao/âm nhạc -> Khuyến khích sự sáng tạo và sức khỏe (creativity and well-being)." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "24. What does the word 'hard-working' mean in the text?", opts: ["A. Lazy", "B. Putting a lot of effort into doing things", "C. Working in a difficult place", "D. Being very smart"], ans: 1, exp: "Định nghĩa của hard-working là chăm chỉ, nỗ lực nhiều." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "25. Which statement is NOT TRUE?", opts: ["A. Students wear jeans to school.", "B. They have a lot of homework.", "C. They play sports after school.", "D. They learn music."], ans: 1, exp: "Bài đọc ghi: 'They also do not have much homework'." },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'The garden is in front of the building.'", opts: ["A. The building is next to the garden.", "B. The building is behind the garden.", "C. The building is in front of the garden.", "D. The building is under the garden."], ans: 1, exp: "Vườn ở trước tòa nhà -> Tòa nhà ở sau (behind) khu vườn." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'Let's go to the museum this weekend.'", opts: ["A. How about going to the museum this weekend?", "B. Why don't we going to the museum this weekend?", "C. What about go to the museum this weekend?", "D. Let's going to the museum this weekend."], ans: 0, exp: "Cấu trúc rủ rê: Let's + V = How about + V-ing." },
@@ -666,11 +670,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ English now.", opts: ["A. study", "B. are studying", "C. studies", "D. studying"], ans: 1, exp: "Có 'now' -> HT Tiếp diễn." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. She has a _______ face.", opts: ["A. round", "B. long black", "C. tall", "D. short"], ans: 0, exp: "Mô tả khuôn mặt dùng 'round' (tròn)." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Where does Mai live?", opts: ["A. In a townhouse", "B. In a villa", "C. In a stilt house", "D. In an apartment"], ans: 2, exp: "Bài đọc: 'I live in a stilt house'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. What is her house made of?", opts: ["A. Brick and stone", "B. Wood and bamboo", "C. Glass and steel", "D. Plastic"], ans: 1, exp: "Bài đọc: 'made of wood and bamboo'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. How is the house in the summer?", opts: ["A. Very hot", "B. Very warm", "C. Very cool", "D. Very cold"], ans: 2, exp: "Bài đọc: 'It is very cool in the summer'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What does her family keep under the house?", opts: ["A. Dogs and cats", "B. Chickens and ducks", "C. Cows and pigs", "D. Birds"], ans: 1, exp: "Bài đọc: 'keeps some chickens and ducks'." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What do they do in the big living room?", opts: ["A. Only sleeping", "B. Only eating", "C. Everything (eating, sleeping, watching TV)", "D. Cooking"], ans: 2, exp: "Bài đọc: 'We do everything there'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "21. Where does Mai live?", opts: ["A. In a townhouse", "B. In a villa", "C. In a stilt house", "D. In an apartment"], ans: 2, exp: "Bài đọc: 'I live in a stilt house'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "22. What is her house made of?", opts: ["A. Brick and stone", "B. Wood and bamboo", "C. Glass and steel", "D. Plastic"], ans: 1, exp: "Bài đọc: 'made of wood and bamboo'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "23. How is the house in the summer?", opts: ["A. Very hot", "B. Very warm", "C. Very cool", "D. Very cold"], ans: 2, exp: "Bài đọc: 'It is very cool in the summer'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "24. What does her family keep under the house?", opts: ["A. Dogs and cats", "B. Chickens and ducks", "C. Cows and pigs", "D. Birds"], ans: 1, exp: "Bài đọc: 'keeps some chickens and ducks'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "25. What do they do in the big living room?", opts: ["A. Only sleeping", "B. Only eating", "C. Everything (eating, sleeping, watching TV)", "D. Cooking"], ans: 2, exp: "Bài đọc: 'We do everything there'." },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'My brother has short curly hair.'", opts: ["A. My brother's hair is short and curly.", "B. My brother is short curly hair.", "C. My brother hair is short and curly.", "D. My brother has hair short curly."], ans: 0, exp: "Đổi cấu trúc S + have + Adj + Noun thành S's Noun + is + Adj." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'The cat is behind the computer.'", opts: ["A. The computer is next to the cat.", "B. The computer is in front of the cat.", "C. The computer is under the cat.", "D. The computer is behind the cat."], ans: 1, exp: "A ở sau B -> B ở trước A." },
@@ -702,11 +706,11 @@
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "19. Find the mistake: She <u>always</u> <u>brushs</u> her <u>teeth</u> <u>before</u> going to bed.", opts: ["A. always", "B. brushs", "C. teeth", "D. before"], ans: 1, exp: "Động từ tận cùng bằng 'sh' phải thêm 'es' -> brushes." },
                                         { part: "PART III: VOCABULARY & GRAMMAR", q: "20. These are the _______ notebooks.", opts: ["A. childrens", "B. children's", "C. childrens'", "D. children"], ans: 1, exp: "Danh từ số nhiều bất quy tắc không có 's' (children) thì sở hữu cách vẫn thêm 's bình thường." },
                                         
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Why is a stilt house cool in the summer?", opts: ["A. Because it is near a river.", "B. Because it has air conditioners.", "C. Because it is built on high posts and made of wood.", "D. The text does not say."], ans: 2, exp: "Suy luận từ bài: Nhà sàn xây trên cột cao, làm từ gỗ/tre nên mát mẻ." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. Which statement is NOT TRUE about Mai's house?", opts: ["A. It is in a small village.", "B. It has many small rooms.", "C. Animals are kept under the house.", "D. It keeps people safe from wild animals."], ans: 1, exp: "Bài đọc ghi: 'we have a big living room. We do everything there' -> Không có nhiều phòng nhỏ." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. The word 'there' in line 5 refers to:", opts: ["A. Under the house", "B. In the small village", "C. In the big living room", "D. Outside the house"], ans: 2, exp: "'We do everything there' -> 'there' thay thế cho 'a big living room' ở câu trước." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What can be inferred about the lifestyle of Mai's family?", opts: ["A. They are very rich.", "B. They have a communal and peaceful lifestyle.", "C. They live a modern city life.", "D. They don't like animals."], ans: 1, exp: "Suy luận: Sống chung 1 phòng lớn, nuôi gà vịt, yêu làng quê -> lối sống cộng đồng, thanh bình." },
-                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What is the main material of the stilt house?", opts: ["A. Brick", "B. Concrete", "C. Wood and bamboo", "D. Plastic"], ans: 2, exp: "Bài đọc: 'It is usually made of wood and bamboo'." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "21. Why is a stilt house cool in the summer?", opts: ["A. Because it is near a river.", "B. Because it has air conditioners.", "C. Because it is built on high posts and made of wood.", "D. The text does not say."], ans: 2, exp: "Suy luận từ bài: Nhà sàn xây trên cột cao, làm từ gỗ/tre nên mát mẻ." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "22. Which statement is NOT TRUE about Mai's house?", opts: ["A. It is in a small village.", "B. It has many small rooms.", "C. Animals are kept under the house.", "D. It keeps people safe from wild animals."], ans: 1, exp: "Bài đọc ghi: 'we have a big living room. We do everything there' -> Không có nhiều phòng nhỏ." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "23. The word 'there' in line 5 refers to:", opts: ["A. Under the house", "B. In the small village", "C. In the big living room", "D. Outside the house"], ans: 2, exp: "'We do everything there' -> 'there' thay thế cho 'a big living room' ở câu trước." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "24. What can be inferred about the lifestyle of Mai's family?", opts: ["A. They are very rich.", "B. They have a communal and peaceful lifestyle.", "C. They live a modern city life.", "D. They don't like animals."], ans: 1, exp: "Suy luận: Sống chung 1 phòng lớn, nuôi gà vịt, yêu làng quê -> lối sống cộng đồng, thanh bình." },
+                                        { part: "PART IV: READING COMPREHENSION", q: "25. What is the main material of the stilt house?", opts: ["A. Brick", "B. Concrete", "C. Wood and bamboo", "D. Plastic"], ans: 2, exp: "Bài đọc: 'It is usually made of wood and bamboo'." },
                                         
                                         { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'He is a creative and kind boy.'", opts: ["A. What does he look like?", "B. What is his personality like?", "C. How is he?", "D. Who is he?"], ans: 1, exp: "Hỏi về tính cách: 'What is his personality like?' hoặc 'What is he like?'." },
                                         { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'There are twenty desks in my classroom.'", opts: ["A. My classroom has twenty desks.", "B. My classroom have twenty desks.", "C. Twenty desks are my classroom.", "D. My classroom is twenty desks."], ans: 0, exp: "Đổi cấu trúc There is/are -> S + have/has." },
@@ -805,13 +809,11 @@
                             }
                         ]
                     }
-                    // ⬇️ DÁN CODE BÀI HỌC MỚI VÀO ĐÂY ⬇️
-
+                    // ⬇️ DÁN CODE BÀI HỌC MỚI (NEW UNIT) VÀO ĐÂY ⬇️
                 ]
             }
         };
 
-        // --- Core App Logic ---
         let currentClass = "class-6";
         let currentModule = null;
         let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
@@ -820,22 +822,7 @@
         window.userListeningAnswers = {};
         window.adminUsersData = [];
 
-        function initApp() {
-            const selector = document.getElementById('class-selector');
-            selector.innerHTML = '';
-            for (let cId in database) {
-                selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`;
-            }
-            renderMenu();
-            if(database[currentClass].modules.length > 0) {
-                loadModule(database[currentClass].modules[0].id);
-            }
-            document.body.addEventListener('touchstart', function() {
-                const s = new SpeechSynthesisUtterance("");
-                window.speechSynthesis.speak(s);
-            }, {once: true});
-        }
-
+        // --- Core UI Functions ---
         function renderDashboardMenu() {
             const menu = document.getElementById('nav-menu');
             let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>`;
@@ -909,7 +896,7 @@
             contentArea.innerHTML = '';
             
             if(currentExam.timer) clearInterval(currentExam.timer);
-            document.getElementById('test-timer').classList.add('hidden');
+            document.getElementById('test-timer-display')?.remove(); // Cleanup inline timer if any
             
             if (mod.type === 'lesson') renderLessonView(mod, contentArea);
             else if (mod.type === 'exam_module') renderExamSetupView(mod, contentArea);
@@ -917,6 +904,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // --- Render Views ---
         function renderLessonView(mod, container) {
             let html = '';
             mod.sections.forEach((sec, sIdx) => {
@@ -1101,7 +1089,7 @@
                 <div class="sticky top-[70px] z-[40] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">
                     <button onclick="document.getElementById('part-PART-I-LISTENING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">🎧 Listening</button>
                     <button onclick="document.getElementById('part-PART-II-PHONETICS').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">🗣️ Phonetics</button>
-                    <button onclick="document.getElementById('part-PART-III-VOCABULARY--GRAMMAR').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📚 Grammar</button>
+                    <button onclick="document.getElementById('part-PART-III-VOCABULARY-GRAMMAR').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📚 Grammar</button>
                     <button onclick="document.getElementById('part-PART-IV-READING-COMPREHENSION').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">📖 Reading</button>
                     <button onclick="document.getElementById('part-PART-V-WRITING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent">✍️ Writing</button>
                 </div>
@@ -1110,7 +1098,7 @@
                     <div class="flex-1 space-y-6">
                         <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-32" id="part-PART-I-LISTENING">
                             <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
-                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio (Listen only)</button>
+                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio</button>
                             <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
                         </div>
             `;
@@ -1183,7 +1171,8 @@
             const timerDisplay = document.getElementById('test-timer');
             const timeVal = document.getElementById('time-display');
             const inlineTimeVal = document.getElementById('exam-timer-display');
-            timerDisplay.classList.remove('hidden');
+            
+            if(timerDisplay) timerDisplay.classList.remove('hidden');
 
             if(currentExam.timer) clearInterval(currentExam.timer);
             
@@ -1192,7 +1181,7 @@
                 let m = Math.floor(currentExam.timeLeft / 60);
                 let s = currentExam.timeLeft % 60;
                 let displayStr = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-                timeVal.innerText = displayStr;
+                if(timeVal) timeVal.innerText = displayStr;
                 if(inlineTimeVal) inlineTimeVal.innerText = displayStr;
                 
                 if (currentExam.timeLeft <= 0) {
@@ -1200,6 +1189,31 @@
                     submitExam(true);
                 }
             }, 1000);
+        }
+
+        window.renderExamSetupView = function(mod, container) {
+            let html = `
+                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
+                    <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
+                    <p class="text-slate-500 mb-8 font-medium">Review & Test</p>
+                    
+                    <div class="max-w-md mx-auto space-y-4">
+                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="test1">${mod.tests.test1.name}</option>
+                            <option value="test2">${mod.tests.test2 ? mod.tests.test2.name : 'Test 2'}</option>
+                        </select>
+                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
+                            🚀 START EXAM
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
         }
 
         window.renderExamNavigator = function() {
@@ -1257,7 +1271,8 @@
             }
 
             clearInterval(currentExam.timer);
-            document.getElementById('test-timer').classList.add('hidden');
+            const timerDisplay = document.getElementById('test-timer');
+            if(timerDisplay) timerDisplay.classList.add('hidden');
             
             let score = 0;
             currentExam.questions.forEach((q, idx) => {
@@ -1287,7 +1302,8 @@
                         uid: window.currentUser.uid,
                         email: window.currentUser.email,
                         nickname: window.currentUser.nickname,
-                        testId: currentExam.testId,
+                        testId: currentModule.id,
+                        subTestId: currentExam.testId,
                         level: currentExam.level,
                         testName: currentModule.title,
                         score: score,
@@ -1389,7 +1405,7 @@
                         uid: window.currentUser.uid,
                         email: window.currentUser.email,
                         nickname: window.currentUser.nickname,
-                        testId: currentModule.id, // Save under the same module ID so it marks the module as completed
+                        testId: currentModule.id, 
                         level: "Listening",
                         testName: currentModule.title,
                         score: score,
@@ -1508,6 +1524,7 @@
             }
         };
 
+        // --- Audio System ---
         window.voices = [];
         window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
 
@@ -1661,7 +1678,7 @@
                 let completedModules = {};
                 snapshot.forEach(doc => {
                     let d = doc.data();
-                    if(d.uid === window.currentUser.uid && d.isLesson) {
+                    if(d.email === window.currentUser.email && d.isLesson) {
                         completedModules[d.testId] = true;
                     }
                 });
@@ -1675,7 +1692,7 @@
                             ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
                             : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
                             
-                        html += `<div class="p-4 border rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
+                        html += `<div class="p-4 border border-slate-200 rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
                             <p class="font-bold text-slate-800">${mod.title}</p>
                             ${statusUI}
                         </div>`;
@@ -1726,22 +1743,22 @@
                 let results = [];
                 snapshot.forEach(doc => {
                     let d = doc.data();
-                    if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
+                    if(d.subTestId === testId && d.level === level && !d.isLesson) results.push(d);
                 });
 
                 // Sắp xếp: Điểm cao trước, thời gian ngắn trước
                 results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
 
-                let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm">
-                    <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
+                let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm border border-slate-200 shadow-sm">
+                    <tr class="bg-amber-50 text-amber-800 border-b border-amber-200"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
                 
                 if (results.length === 0) {
                     html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
                 } else {
                     results.slice(0, 10).forEach((r, idx) => {
                         let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
-                        let isMe = (window.currentUser && r.uid === window.currentUser.uid) ? "bg-amber-100 font-bold" : "";
-                        html += `<tr class="border-b ${isMe}">
+                        let isMe = (window.currentUser && r.email === window.currentUser.email) ? "bg-amber-100 font-bold" : "";
+                        html += `<tr class="border-b border-slate-100 ${isMe}">
                             <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
                             <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
                             <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
@@ -1762,7 +1779,7 @@
 
             let html = `
                 <div class="glass-card border-t-4 border-indigo-500 mb-8">
-                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4 border-b pb-4">
                         <h2 class="text-2xl font-bold baloo-font text-indigo-700">👥 User Management</h2>
                         <button onclick="exportUsersToCSV()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center gap-2">
                             📥 Export to Excel (CSV)
@@ -1836,7 +1853,7 @@
         }
 
         window.deleteUser = async function(uid) {
-            if(confirm("XÓA TÀI KHOẢN VĨNH VIỄN?\nBạn có chắc chắn muốn xóa dữ liệu người dùng này không?")) {
+            if(confirm("PERMANENTLY DELETE USER?\nAre you sure you want to delete this user data?")) {
                 await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
                 window.loadAdminUsers();
             }
@@ -1862,7 +1879,15 @@
             document.body.removeChild(link);
         }
 
-        window.onload = initApp;
+        window.onload = function() {
+            if (typeof initApp === 'function') initApp();
+            
+            // Safari unlock
+            document.body.addEventListener('touchstart', function() {
+                const s = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(s);
+            }, {once: true});
+        };
     </script>
 </body>
 </html>
