@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Success 6 - Interactive English</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { font-family: 'Nunito', sans-serif; background-color: #f1f5f9; color: #1e293b; overflow: hidden; }
+        h1, h2, h3, .baloo-font { font-family: 'Baloo 2', cursive; }
+        
+        .scroll-container { height: calc(100vh - 110px); overflow-y: auto; scroll-behavior: smooth; padding-bottom: 80px; }
+        .scroll-container::-webkit-scrollbar { width: 6px; }
+        .scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .glass-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; }
+        
+        .audio-row { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; border-radius: 12px; }
+        .audio-row:hover { background-color: #f8fafc; border-color: #cbd5e1; transform: translateX(4px); }
+        .active-audio { background-color: #fef08a !important; border-color: #eab308 !important; }
+        
+        .q-btn { transition: all 0.2s; cursor: pointer; }
+        .q-selected { background-color: #e0e7ff !important; border-color: #4f46e5 !important; color: #3730a3 !important; font-weight: bold; border-width: 2px;}
+        .q-correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; font-weight: bold;}
+        .q-wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; text-decoration: line-through;}
+        .disabled { pointer-events: none; opacity: 0.9;}
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #e2e8f0; text-align: left;}
+        th { background-color: #f8fafc; font-weight: 700; }
+
+        .sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100%; background-color: white; z-index: 100; transition: left 0.3s ease-in-out; box-shadow: 4px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 90; display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .sidebar-overlay.open { display: block; opacity: 1; }
+        
+        .module-nav-btn { width: 100%; text-align: left; padding: 12px 16px; border-radius: 12px; font-weight: 600; color: #475569; transition: all 0.2s; margin-bottom: 8px;}
+        .module-nav-btn:hover { background-color: #f1f5f9; }
+        .module-nav-btn.active { background-color: #e0e7ff; color: #4338ca; border-left: 4px solid #4f46e5; }
+        .module-nav-btn.exam-btn { border: 1px solid #fecdd3; background-color: #fff1f2; color: #be123c; }
+        .module-nav-btn.exam-btn:hover { background-color: #ffe4e6; }
+        .module-nav-btn.exam-btn.active { background-color: #fecdd3; color: #9f1239; border-left: 4px solid #e11d48; }
+
+        .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);}
+        .custom-alert-overlay.active { display: flex; opacity: 1;}
+        .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s;}
+        .custom-alert-overlay.active .custom-alert-box { transform: scale(1);}
+
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { size: A4 portrait; margin: 18mm 15mm 20mm 15mm; } 
+            
+            body { background: white !important; font-size: 11.5pt !important; font-family: 'Georgia', 'Times New Roman', serif !important; color: #111 !important; line-height: 1.5 !important; overflow: visible !important; }
+            .scroll-container { height: auto !important; overflow: visible !important; padding: 0 !important; }
+            
+            .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .audio-row:hover, .glass-card > p.text-xs.font-bold, #listening-action-buttons { display: none !important; }
+            
+            #content-area { padding: 0 !important; max-width: 100% !important; }
+            .glass-card { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; margin-bottom: 18pt !important; background: transparent !important; page-break-inside: auto !important; }
+            section { page-break-inside: auto !important; margin-bottom: 15pt !important; }
+            
+            .unit-header-print { text-align: right; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; margin-bottom: 25px; }
+            .unit-header-print h1 { font-family: 'Arial', sans-serif !important; font-size: 24pt !important; font-weight: 900 !important; color: #4f46e5 !important; margin: 0; text-transform: uppercase; }
+            .unit-header-print h2 { font-family: 'Arial', sans-serif !important; font-size: 12pt !important; font-weight: normal !important; color: #64748b !important; margin: 5px 0 0 0; letter-spacing: 2px; text-transform: uppercase; }
+
+            h2.baloo-font { font-family: 'Arial', sans-serif !important; font-size: 14pt !important; color: #ffffff !important; background-color: #4f46e5 !important; padding: 6px 12px !important; border-radius: 6px !important; margin: 20pt 0 10pt 0 !important; font-weight: bold !important; text-transform: uppercase; display: inline-block; page-break-after: avoid !important; }
+            h3 { font-family: 'Arial', sans-serif !important; font-size: 12pt !important; font-weight: bold !important; margin-bottom: 8pt !important; page-break-after: avoid !important; color: #1e3a8a !important;}
+            
+            .vocab-item-print, table, .exercise-item { page-break-inside: avoid !important; }
+            
+            .print-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12pt !important; }
+            .vocab-item-print { border: 1px solid #e2e8f0 !important; padding: 10pt !important; border-radius: 8px !important; background: #f8fafc !important; border-left: 4px solid #4f46e5 !important;}
+            
+            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 12pt !important; }
+            th, td { border: 1px solid #cbd5e1 !important; padding: 8pt !important; font-family: 'Arial', sans-serif !important; font-size: 10.5pt !important;}
+            th { background-color: #e2e8f0 !important; color: #0f172a !important;}
+            .note-box-print { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; padding: 12pt !important; margin-bottom: 12pt !important; border-radius: 8px !important; }
+
+            .audio-row { border: none !important; padding: 0 !important; display: block !important; margin-bottom: 8pt !important;}
+            .chat-avatar { display: none !important; } 
+            .chat-left, .chat-right, .p-3.rounded-2xl { display: inline !important; background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; max-width: 100% !important; color: #1e293b !important; font-family: 'Georgia', serif !important; font-size: 11.5pt !important;}
+            .text-right { text-align: left !important; }
+            .flex-row-reverse { flex-direction: row !important; }
+            .chat-name-print { font-weight: bold !important; color: #4f46e5 !important; display: inline-block !important; min-width: 75px !important; font-family: 'Arial', sans-serif !important;}
+            
+            .exercise-item { margin-bottom: 12pt !important; }
+            .q-btn { display: inline-block !important; border: none !important; padding: 0 !important; margin-right: 18pt !important; background: transparent !important; font-family: 'Arial', sans-serif !important;}
+            
+            .body-parts-visual { border: 1px solid #cbd5e1 !important; border-radius: 8px !important; padding: 15pt !important; background: #f8fafc !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay" class="sidebar-overlay no-print" onclick="toggleMenu()"></div>
+    <aside id="sidebar" class="sidebar no-print">
+        <div class="p-6 border-b border-slate-100 bg-indigo-50 flex justify-between items-center">
+            <div>
+                <select id="class-selector" class="bg-transparent font-bold text-xl text-slate-800 baloo-font outline-none cursor-pointer" onchange="changeClass()">
+                </select>
+            </div>
+            <button onclick="toggleMenu()" class="text-slate-500 text-2xl font-bold">×</button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1" id="nav-menu"></div>
+    </aside>
+
+    <div id="customAlert" class="custom-alert-overlay no-print">
+        <div class="custom-alert-box">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4" id="alertIcon">🔔</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2" id="alertTitle">Notification</h3>
+            <p class="text-slate-600 mb-6 font-medium" id="alertMessage">Content</p>
+            <button onclick="closeCustomAlert()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl w-full hover:bg-indigo-700 transition-colors shadow-md">Got it</button>
+        </div>
+    </div>
+
+    <div class="flex flex-col h-screen">
+        <header class="flex justify-between items-center bg-white px-4 py-4 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50">☰ Menu</button>
+                <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate">Loading...</h2>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-slate-800 text-white font-bold py-2 px-5 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm">
+                    🖨️ Print Book
+                </button>
+            </div>
+        </header>
+
+        <main class="scroll-container w-full bg-slate-50" id="main-scroll">
+            <div class="max-w-4xl mx-auto p-4 md:p-8">
+                <div class="hidden print:block unit-header-print">
+                    <h1 id="print-module-title">Unit Title</h1>
+                    <h2 id="print-class-title">ENGLISH 6</h2>
+                </div>
+                <div id="content-area"></div>
+            </div>
+        </main>
+
+        <footer class="bg-slate-800 text-white text-center py-2.5 text-sm font-bold no-print z-50 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.1)] border-t border-slate-700 tracking-wide">
+            Giáo án điện tử bởi Mr. Khoa - Zalo: 0901-637-827
+        </footer>
+    </div>
+
+    <script>
+        const database = {
+            "class-6": {
+                name: "English 6",
+                modules: [
+                    // ==========================================
+                    // UNIT 1: MY NEW SCHOOL
+                    // ==========================================
+                    {
+                        id: "u1",
+                        type: "lesson",
+                        title: "Unit 1: My New School",
+                        sections: [
+                            {
+                                type: "objectives", title: "I. Objectives",
+                                content: `<ul class="list-disc pl-5 text-slate-700 space-y-2"><li><b>Vocabulary:</b> School things and activities.</li><li><b>Grammar:</b> Present Simple vs Present Continuous.</li><li><b>Pronunciation:</b> Sounds /ɑː/ and /ʌ/.</li></ul>`
+                            },
+                            {
+                                type: "vocab", title: "II. Vocabulary",
+                                words: [
+                                    { w: "boarding school", p: "/ˈbɔː.dɪŋ ˌskuːl/", m: "Trường nội trú" },
+                                    { w: "international school", p: "/ˌɪn.təˈnæʃ.ən.əl skuːl/", m: "Trường quốc tế" },
+                                    { w: "equipment", p: "/ɪˈkwɪp.mənt/", m: "Thiết bị (Uncountable/Không đếm được)" },
+                                    { w: "compass", p: "/ˈkʌm.pəs/", m: "Compa" },
+                                    { w: "calculator", p: "/ˈkæl.kjə.leɪ.tər/", m: "Máy tính bỏ túi" },
+                                    { w: "uniform", p: "/ˈjuː.nɪ.fɔːm/", m: "Đồng phục" },
+                                    { w: "rubber", p: "/ˈrʌb.ər/", m: "Cục tẩy" },
+                                    { w: "backpack", p: "/ˈbæk.pæk/", m: "Ba lô" }
+                                ],
+                                collocations: [
+                                    { word: "PLAY", items: "football, sports, games" },
+                                    { word: "DO", items: "homework, judo, exercise" },
+                                    { word: "HAVE", items: "lunch, a lesson, a uniform" },
+                                    { word: "STUDY", items: "English, maths, science" }
+                                ]
+                            },
+                            {
+                                type: "grammar", title: "III. Grammar",
+                                content: `<div class="glass-card note-box-print border-l-4 border-l-emerald-500 mb-6"><h3 class="font-bold text-lg text-emerald-800 mb-2 print:text-black">1. Present Simple (Thì Hiện Tại Đơn)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage (Cách dùng):</b><br>• Diễn tả thói quen, hành động lặp đi lặp lại (Habits, routines).<br>• Diễn tả sự thật hiển nhiên, chân lý (General truths).<br>• Diễn tả lịch trình, thời gian biểu cố định của tàu xe, phim ảnh (Timetables).</div><table class="mb-4 bg-white text-sm w-full"><tr><th class="w-1/4 bg-emerald-50 text-emerald-800">(+) Affirmative</th><td><b>I/You/We/They + V</b> <br> <b>He/She/It + V(s/es)</b></td></tr><tr><th class="bg-rose-50 text-rose-800">(-) Negative</th><td>S + <b>don't / doesn't</b> + V(infinitive/nguyên mẫu)</td></tr><tr><th class="bg-amber-50 text-amber-800">(?) Interrogative</th><td><b>Do / Does</b> + S + V(infinitive/nguyên mẫu)?</td></tr></table><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="bg-rose-50 border border-rose-200 p-4 rounded-xl w-full"><h4 class="font-bold text-rose-800 text-sm mb-2 print:text-black">📝 Adding -s / -es (Quy tắc thêm s/es)</h4><ul class="text-sm space-y-1"><li>• End in <b class="text-rose-600 print:text-black">o, s, x, z, ch, sh</b> ➔ add <b>-es</b> (go ➔ goes)</li><li>• Consonant + <b class="text-rose-600 print:text-black">y</b> ➔ change to <b>-ies</b> (study ➔ studies)</li><li>• Others ➔ add <b>-s</b> (play ➔ plays)</li></ul></div><div class="bg-amber-50 border border-amber-200 p-4 rounded-xl w-full"><h4 class="font-bold text-amber-800 text-sm mb-2 print:text-black">⏳ Adverbs of Frequency (Trạng từ tần suất)</h4><p class="text-sm"><i>always, usually, often, sometimes, never</i></p><p class="text-sm mt-1">• <b>Before normal verbs:</b> I <i>always get</i> up early.</p><p class="text-sm">• <b>After To-Be:</b> He <i>is usually</i> late.</p></div></div></div><div class="glass-card note-box-print border-l-4 border-l-blue-500 mb-6"><h3 class="font-bold text-lg text-blue-800 mb-2 print:text-black">2. Present Continuous (Thì Hiện Tại Tiếp Diễn)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage (Cách dùng):</b><br>• Diễn tả hành động đang xảy ra ngay lúc nói (Happening right now).<br>• Diễn tả một kế hoạch chắc chắn sẽ xảy ra trong tương lai gần (Future arrangements).</div><table class="mb-4 bg-white text-sm w-full"><tr><th class="w-1/4 bg-blue-50 text-blue-800">(+) Affirmative</th><td>S + <b>am/is/are + V-ing</b></td></tr><tr><th class="bg-rose-50 text-rose-800">(-) Negative</th><td>S + <b>am/is/are + NOT + V-ing</b></td></tr><tr><th class="bg-amber-50 text-amber-800">(?) Interrogative</th><td><b>Am/Is/Are</b> + S + <b>V-ing?</b></td></tr></table><div class="bg-cyan-50 border border-cyan-200 p-4 rounded-xl text-sm"><h4 class="font-bold text-cyan-800 mb-2 print:text-black">📝 Adding -ing (Quy tắc thêm -ing):</h4><p>• Remove "e" ➔ add "-ing" (make ➔ making) <br> • 1 vowel between 2 consonants ➔ <b>Double last consonant</b> (run ➔ running).</p></div></div><div class="glass-card note-box-print border-t-4 border-t-purple-500 bg-purple-50/30"><h3 class="font-bold text-lg text-purple-800 mb-2 print:text-black">💡 Distinction (Phân Biệt Nhanh Để Làm Bài Thi)</h3><table class="w-full text-sm bg-white border border-slate-200 shadow-sm"><tr><th class="w-1/2 bg-emerald-100 text-emerald-800 p-3 border-r">Present Simple (HT Đơn)</th><th class="w-1/2 bg-blue-100 text-blue-800 p-3">Present Continuous (HT Tiếp Diễn)</th></tr><tr><td class="p-3 align-top border-r"><b>Dấu hiệu:</b> always, usually, often, sometimes, never, every (day/week)...<br><b>Ví dụ:</b> I <i>play</i> football every Sunday.</td><td class="p-3 align-top"><b>Dấu hiệu:</b> now, right now, at present, at the moment, Look!, Listen!...<br><b>Ví dụ:</b> Look! They <i>are playing</i> football now.</td></tr></table></div>`
+                            },
+                            {
+                                type: "pronunciation", title: "IV. Pronunciation",
+                                content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/ɑː/</div><p class="text-sm text-slate-500 mb-4">Long sound, open your mouth wide. (Âm a dài)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('smart, art, class')}', 'en-US')">sm<span class="text-indigo-600">ar</span>t, <span class="text-indigo-600">ar</span>t, cl<span class="text-indigo-600">a</span>ss</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/ʌ/</div><p class="text-sm text-slate-500 mb-4">Short, quick sound. (Âm á ngắn)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('subject, study, compass')}', 'en-US')">s<span class="text-rose-500">u</span>bject, st<span class="text-rose-500">u</span>dy, c<span class="text-rose-500">o</span>mpass</div></div></div>`
+                            },
+                            {
+                                type: "listening", title: "V. Listening & Role-play",
+                                lines: [
+                                    { c: "Emma", a: "👩🏻", t: "Hi Alex! Are you ready for our first day at the new school? You look smart in your uniform!", loc: "en-US", gender: "female" },
+                                    { c: "Alex", a: "👦🏻", t: "Thanks, Emma! I am putting on my backpack. Oh, look! Ben is coming.", loc: "en-US", gender: "male" },
+                                    { c: "Emma", a: "👩🏻", t: "He is carrying a heavy backpack.", loc: "en-US", gender: "female" },
+                                    { c: "Ben", a: "👦🏼", t: "Good morning guys! I always pack my school bag carefully. Do you have your compass and calculator?", loc: "en-US", gender: "male" },
+                                    { c: "Alex", a: "👦🏻", t: "Yes, I do. I heard our school has modern equipment.", loc: "en-US", gender: "male" },
+                                    { c: "Ben", a: "👦🏼", t: "That's right! We can play football and do judo after lessons.", loc: "en-US", gender: "male" },
+                                    { c: "Emma", a: "👩🏻", t: "Awesome! By the way, my cousin studies at a boarding school. He only goes home on weekends.", loc: "en-US", gender: "female" },
+                                    { c: "Alex", a: "👦🏻", t: "Really? Let's go now, we have an English lesson.", loc: "en-US", gender: "male" }
+                                ],
+                                questions: [
+                                    { id: "l1", q: "1. What is Ben carrying?", opts: ["A. A compass", "B. A heavy backpack", "C. A new uniform"], ans: 1 },
+                                    { id: "l2", q: "2. What can they do after lessons?", opts: ["A. Go home", "B. Study at a boarding school", "C. Play football and do judo"], ans: 2 },
+                                    { id: "l3", q: "3. Who studies at a boarding school?", opts: ["A. Emma's cousin", "B. Ben's sister", "C. Alex"], ans: 0 }
+                                ]
+                            },
+                            {
+                                type: "speaking", title: "VI. Speaking", topic: "Topic: Describe your new school",
+                                prompts: [
+                                    "1. General: What is the name of your school? Is it a boarding or international school?",
+                                    "2. Equipment: What equipment does it have? (e.g., smart boards, modern computer room, library)",
+                                    "3. Activities: What do you always/usually do at break time or after lessons? (e.g., play football, do judo)",
+                                    "4. Uniform: Do you wear a uniform every day?"
+                                ],
+                                sample: "Hello everyone. My name is Nam. I study at Global Secondary School. It is very big. My school has modern equipment like smart boards and a large library. I usually wear my uniform on Mondays and Thursdays. At break time, I always play football with my friends in the schoolyard. Sometimes, I do judo in the gym after lessons. I love my new school very much!"
+                            },
+                            {
+                                type: "listening_task", title: "VII. Listening Comprehension",
+                                audioScript: "Hello, my name is Minh. I am very happy today because it is my first day at Global International School. My school is very large and it has modern equipment. Look! Some students are playing football in the playground. I always wear my new uniform on Mondays and Wednesdays. Right now, I am standing in the library. I have my compass, calculator, and a notebook in my backpack. I am waiting for my new friends. We are studying maths next.",
+                                questions: [
+                                    { id: "u1_lt1", q: "1. What kind of school does Minh go to?", opts: ["A. A boarding school", "B. An international school", "C. A small school"], ans: 1 },
+                                    { id: "u1_lt2", q: "2. What are some students doing in the playground?", opts: ["A. Playing football", "B. Doing judo", "C. Studying maths"], ans: 0 },
+                                    { id: "u1_lt3", q: "3. How often does Minh wear his uniform?", opts: ["A. Every day", "B. On Mondays and Wednesdays", "C. Only on Mondays"], ans: 1 },
+                                    { id: "u1_lt4", q: "4. True or False: Minh is waiting for his parents in the library.", opts: ["A. True", "B. False"], ans: 1 }
+                                ]
+                            },
+                            {
+                                type: "reading_practice", title: "VIII. Reading & Practice",
+                                readingText: "In many countries, janitors clean the schools. But in Japan, students clean their own classrooms. This activity is called <b>Osoji</b>. Every day after classes, students put away their books, sweep the floor, and clean the desks. They usually spend 15 minutes doing this. Teachers also join the students. Osoji teaches students to respect their school and work together as a team.",
+                                exercises: [
+                                    { id: '1', type: 'choice', q: "1. Based on the text, who cleans the classrooms in Japan?", opts: ["A. Janitors", "B. Teachers only", "C. Students and teachers"], ans: 2, exp: "Bài đọc ghi: 'students clean their own classrooms' và 'Teachers also join the students'." },
+                                    { id: '2', type: 'grammar', q: "2. Fill in the blank: We _______ uniform on Mondays.", opts: ["A. wear always", "B. always wear", "C. are wearing"], ans: 1, exp: "Trạng từ tần suất (always) đứng TRƯỚC động từ thường (wear)." },
+                                    { id: '3', type: 'grammar', q: "3. Look! The boys _______ football.", opts: ["A. play", "B. plays", "C. are playing"], ans: 2, exp: "Dấu hiệu 'Look!' -> Hiện tại tiếp diễn (are playing)." },
+                                    { id: '4', type: 'choice', q: "4. Choose the correct word: We use a _____ to draw a circle.", opts: ["A. calculator", "B. compass", "C. rubber"], ans: 1, exp: "Compass (compa) dùng để vẽ hình tròn." }
+                                ]
+                            }
+                        ]
+                    },
+                    // ==========================================
+                    // UNIT 2: MY HOUSE
+                    // ==========================================
+                    {
+                        id: "u2",
+                        type: "lesson",
+                        title: "Unit 2: My House",
+                        sections: [
+                            {
+                                type: "objectives", title: "I. Objectives",
+                                content: `<ul class="list-disc pl-5 text-slate-700 space-y-2"><li><b>Vocabulary:</b> Types of houses, rooms and furniture.</li><li><b>Grammar:</b> Possessive case ('s) and Prepositions of place.</li><li><b>Pronunciation:</b> Final sounds /s/, /z/, and /ɪz/.</li></ul>`
+                            },
+                            {
+                                type: "vocab", title: "II. Vocabulary",
+                                words: [
+                                    { w: "townhouse", p: "/ˈtaʊn.haʊs/", m: "Nhà phố" },
+                                    { w: "stilt house", p: "/stɪlt haʊs/", m: "Nhà sàn" },
+                                    { w: "villa", p: "/ˈvɪl.ə/", m: "Biệt thự" },
+                                    { w: "cupboard", p: "/ˈkʌb.əd/", m: "Tủ đựng bát đĩa" },
+                                    { w: "wardrobe", p: "/ˈwɔː.drəʊb/", m: "Tủ quần áo" },
+                                    { w: "dishwasher", p: "/ˈdɪʃˌwɒʃ.ər/", m: "Máy rửa bát" },
+                                    { w: "fridge", p: "/frɪdʒ/", m: "Tủ lạnh" },
+                                    { w: "chest of drawers", p: "/ˌtʃest əv ˈdrɔːz/", m: "Tủ ngăn kéo" }
+                                ],
+                                collocations: [
+                                    { word: "LIVING ROOM", items: "lamp, sofa, picture, television" },
+                                    { word: "KITCHEN", items: "fridge, cupboard, sink, dishwasher" },
+                                    { word: "BEDROOM", items: "bed, wardrobe, desk" },
+                                    { word: "BATHROOM", items: "shower, toilet, sink" }
+                                ]
+                            },
+                            {
+                                type: "grammar", title: "III. Grammar",
+                                content: `<div class="glass-card note-box-print border-l-4 border-l-emerald-500 mb-6"><h3 class="font-bold text-lg text-emerald-800 mb-2 print:text-black">1. Possessive Case (Sở hữu cách 's)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage (Cách dùng):</b> Dùng để chỉ sự sở hữu (Cái gì thuộc về ai). Thường dùng cho người hoặc động vật.</div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl w-full"><h4 class="font-bold text-emerald-800 text-sm mb-2 print:text-black">📝 Danh từ số ít / Tên riêng</h4><p class="text-sm text-slate-700">Thêm <b class="text-emerald-600 text-base print:text-black">'s</b> vào sau danh từ sở hữu.</p><ul class="text-sm mt-2 space-y-1"><li>• Emma<b>'s</b> room <i>(Phòng của Emma)</i></li><li>• My mother<b>'s</b> book <i>(Sách của mẹ tôi)</i></li></ul></div><div class="bg-blue-50 border border-blue-200 p-4 rounded-xl w-full"><h4 class="font-bold text-blue-800 text-sm mb-2 print:text-black">📝 Danh từ số nhiều có sẵn "s"</h4><p class="text-sm text-slate-700">Chỉ thêm dấu nháy đơn <b class="text-blue-600 text-base print:text-black">'</b> vào cuối.</p><ul class="text-sm mt-2 space-y-1"><li>• The students<b>'</b> bags <i>(Cặp của các học sinh)</i></li><li>• My parents<b>'</b> bedroom <i>(Phòng của bố mẹ)</i></li></ul></div></div></div><div class="glass-card note-box-print border-l-4 border-l-blue-500 mb-6"><h3 class="font-bold text-lg text-blue-800 mb-2 print:text-black">2. Prepositions of Place (Giới từ chỉ nơi chốn)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage:</b> Dùng để chỉ vị trí của người hoặc vật.</div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4 font-medium text-slate-800"><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('in')}', 'en-US')"><b>in</b><br><span class="text-slate-500 font-normal">ở trong</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('on')}', 'en-US')"><b>on</b><br><span class="text-slate-500 font-normal">ở trên (bề mặt)</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('under')}', 'en-US')"><b>under</b><br><span class="text-slate-500 font-normal">ở dưới</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('behind')}', 'en-US')"><b>behind</b><br><span class="text-slate-500 font-normal">đằng sau</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('next to')}', 'en-US')"><b>next to</b><br><span class="text-slate-500 font-normal">kế bên</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('in front of')}', 'en-US')"><b>in front of</b><br><span class="text-slate-500 font-normal">phía trước</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center md:col-span-2 cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('between')}', 'en-US')"><b>between ... and ...</b><br><span class="text-slate-500 font-normal">ở giữa (2 vật)</span></div></div></div>`
+                            },
+                            {
+                                type: "pronunciation", title: "IV. Pronunciation: Final /s/, /z/, /ɪz/",
+                                content: `<div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-indigo-600 mb-2">/s/</div><p class="text-xs text-slate-500 mb-3">(Sau p, k, t, f, th)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="playAudio('${encodeURIComponent('lamps, sinks, flats')}', 'en-US')">lamp<span class="text-indigo-600">s</span>, sink<span class="text-indigo-600">s</span>, flat<span class="text-indigo-600">s</span></div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-emerald-600 mb-2">/z/</div><p class="text-xs text-slate-500 mb-3">(Các âm còn lại)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="playAudio('${encodeURIComponent('beds, wardrobes, pens')}', 'en-US')">bed<span class="text-emerald-600">s</span>, wardrobe<span class="text-emerald-600">s</span>, pen<span class="text-emerald-600">s</span></div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-rose-500 mb-2">/ɪz/</div><p class="text-xs text-slate-500 mb-3">(Sau s, x, z, ch, sh, ce, ge)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="playAudio('${encodeURIComponent('houses, boxes, watches')}', 'en-US')">hous<span class="text-rose-500">es</span>, box<span class="text-rose-500">es</span>, watch<span class="text-rose-500">es</span></div></div></div>`
+                            },
+                            {
+                                type: "listening", title: "V. Listening & Role-play",
+                                lines: [
+                                    { c: "Emma", a: "👩🏻", t: "Welcome to my new house, Alex!", loc: "en-US", gender: "female" },
+                                    { c: "Alex", a: "👦🏻", t: "Wow, it's beautiful. Is this the living room?", loc: "en-US", gender: "male" },
+                                    { c: "Emma", a: "👩🏻", t: "Yes. Look at the big sofa.", loc: "en-US", gender: "female" },
+                                    { c: "Alex", a: "👦🏻", t: "What is that behind the sofa?", loc: "en-US", gender: "male" },
+                                    { c: "Emma", a: "👩🏻", t: "It's a modern lamp. Let's go to the kitchen.", loc: "en-US", gender: "female" },
+                                    { c: "Alex", a: "👦🏻", t: "You have a big fridge! And the dishwasher is next to the sink.", loc: "en-US", gender: "male" },
+                                    { c: "Emma", a: "👩🏻", t: "Exactly. My bedroom is upstairs, between the bathroom and my brother's room.", loc: "en-US", gender: "female" },
+                                    { c: "Alex", a: "👦🏻", t: "Let's go see it!", loc: "en-US", gender: "male" }
+                                ],
+                                questions: [
+                                    { id: "l2_1", q: "1. Where is the lamp?", opts: ["A. Next to the sink", "B. Behind the sofa", "C. In the bedroom"], ans: 1 },
+                                    { id: "l2_2", q: "2. Where is the dishwasher?", opts: ["A. Next to the sink", "B. In the living room", "C. Under the fridge"], ans: 0 },
+                                    { id: "l2_3", q: "3. Where is Emma's bedroom?", opts: ["A. Downstairs", "B. Between the bathroom and her brother's room", "C. Next to the kitchen"], ans: 1 }
+                                ]
+                            },
+                            {
+                                type: "speaking", title: "VI. Speaking", topic: "Topic: Describe your house or room",
+                                prompts: [
+                                    "1. What type of house do you live in? (e.g., townhouse, villa, stilt house)",
+                                    "2. How many rooms are there in your house? What are they?",
+                                    "3. What furniture is in your bedroom? Where are they? (Use prepositions like 'next to', 'in front of')"
+                                ],
+                                sample: "I live in a townhouse. There are four rooms: a living room, a kitchen, a bathroom, and a bedroom. In my bedroom, there is a big bed next to the wardrobe. I have a desk in front of the window. I love my bedroom."
+                            },
+                            {
+                                type: "listening_task", title: "VII. Listening Comprehension",
+                                audioScript: "Welcome to my house. I live in a beautiful stilt house with my family. It is made of wood. There are four rooms: a living room, a kitchen, a bathroom, and my bedroom. The living room is very big. There is a comfortable sofa and a television in front of it. Now, I am cooking in the kitchen. The fridge is next to the cupboard. My favourite room is my bedroom. My bed is between the wardrobe and the window. I usually read books under the lamp.",
+                                questions: [
+                                    { id: "u2_lt1", q: "1. What type of house does the speaker live in?", opts: ["A. A townhouse", "B. A stilt house", "C. A villa"], ans: 1 },
+                                    { id: "u2_lt2", q: "2. Where is the television?", opts: ["A. In front of the sofa", "B. Behind the sofa", "C. Next to the cupboard"], ans: 0 },
+                                    { id: "u2_lt3", q: "3. What is the speaker doing now?", opts: ["A. Reading a book", "B. Cooking in the kitchen", "C. Sleeping in the bedroom"], ans: 1 },
+                                    { id: "u2_lt4", q: "4. True or False: The bed is between the wardrobe and the window.", opts: ["A. True", "B. False"], ans: 0 }
+                                ]
+                            },
+                            {
+                                type: "reading_practice", title: "VIII. Reading & Practice",
+                                readingText: "In Vietnam, many people live in stilt houses. A stilt house is built on high posts. It is usually made of wood and bamboo. Under the house, people often keep their animals like chickens or pigs. Inside the house, there is a large room for the family to sleep and eat. Stilt houses are cool in the summer and keep people safe from wild animals.",
+                                exercises: [
+                                    { id: 'u2_p1', type: 'choice', q: "1. What is a stilt house usually made of?", opts: ["A. Brick and stone", "B. Wood and bamboo", "C. Glass and steel"], ans: 1, exp: "Bài đọc ghi rõ: 'It is usually made of wood and bamboo.'" },
+                                    { id: 'u2_p2', type: 'choice', q: "2. Where do they often keep animals?", opts: ["A. Under the house", "B. Inside the house", "C. On the roof"], ans: 0, exp: "Bài đọc ghi: 'Under the house, people often keep their animals...'" },
+                                    { id: 'u2_p3', type: 'grammar', q: "3. Grammar: The lamp is ________ the desk.", opts: ["A. in", "B. on", "C. between"], ans: 1, exp: "Đèn thường được đặt trên mặt bàn, nên dùng giới từ 'on'." },
+                                    { id: 'u2_p4', type: 'grammar', q: "4. Grammar: This is my ________ book.", opts: ["A. sister", "B. sisters", "C. sister's"], ans: 2, exp: "Sở hữu cách của danh từ số ít 'sister' là thêm 's (sister's book)." }
+                                ]
+                            }
+                        ]
+                    },
+                    // ==========================================
+                    // UNIT 3: MY FRIENDS
+                    // ==========================================
+                    {
+                        id: "u3",
+                        type: "lesson",
+                        title: "Unit 3: My Friends",
+                        sections: [
+                            {
+                                type: "objectives", title: "I. Objectives",
+                                content: `<ul class="list-disc pl-5 text-slate-700 space-y-2"><li><b>Vocabulary:</b> Body parts, appearance, and personality.</li><li><b>Grammar:</b> Present Continuous for future plans.</li><li><b>Pronunciation:</b> Sounds /b/ and /p/.</li></ul>`
+                            },
+                            {
+                                type: "grammar", title: "II. Vocabulary: Body Parts & Appearance",
+                                content: `<div class="glass-card body-parts-visual border-l-4 border-l-indigo-500 mb-6 bg-indigo-50/30"><p class="text-sm text-indigo-600 font-bold mb-4 bg-white inline-block px-3 py-1 rounded-lg no-print shadow-sm">💡 Tap words to listen</p><div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 p-2"><div class="space-y-3 text-center md:text-right w-full md:w-auto"><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('hair')}', 'en-US')">💇‍♀️ Hair (Tóc)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('eye')}', 'en-US')">👁️ Eye (Mắt)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('nose')}', 'en-US')">👃 Nose (Mũi)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('mouth')}', 'en-US')">👄 Mouth (Miệng)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('cheek')}', 'en-US')">😊 Cheek (Má)</div></div><div class="text-[100px] md:text-[140px] leading-none drop-shadow-xl relative my-4 md:my-0">🧍‍♂️</div><div class="space-y-3 text-center md:text-left w-full md:w-auto"><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('arm')}', 'en-US')">💪 Arm (Cánh tay)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('hand')}', 'en-US')">🖐️ Hand (Bàn tay)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('leg')}', 'en-US')">🦵 Leg (Chân)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('foot')}', 'en-US')">🦶 Foot (Bàn chân)</div><div class="text-xs text-slate-500 font-medium italic p-2 no-print">* Số nhiều của foot là feet</div></div></div><div class="mt-6 bg-white p-4 rounded-xl border border-slate-200"><h4 class="font-bold text-slate-800 mb-3">🎨 Adjectives for Appearance (Tính từ miêu tả ngoại hình):</h4><div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm font-medium text-slate-700"><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('tall')}', 'en-US')">tall (cao) - short (thấp)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('fat')}', 'en-US')">fat (mập) - slim (mảnh mai)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('long')}', 'en-US')">long (dài) - short (ngắn)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('straight')}', 'en-US')">straight (thẳng)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('curly')}', 'en-US')">curly (xoăn)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('blonde')}', 'en-US')">blonde (vàng hoe)</div></div></div></div>`
+                            },
+                            {
+                                type: "vocab", title: "III. Vocabulary: Personality Adjectives",
+                                words: [
+                                    { w: "kind", p: "/kaɪnd/", m: "Tốt bụng, tử tế" },
+                                    { w: "confident", p: "/ˈkɒn.fɪ.dənt/", m: "Tự tin" },
+                                    { w: "hard-working", p: "/ˌhɑːdˈwɜː.kɪŋ/", m: "Chăm chỉ" },
+                                    { w: "funny", p: "/ˈfʌn.i/", m: "Hài hước, vui tính" },
+                                    { w: "clever", p: "/ˈklev.ər/", m: "Thông minh" },
+                                    { w: "shy", p: "/ʃaɪ/", m: "Nhút nhát, rụt rè" },
+                                    { w: "active", p: "/ˈæk.tɪv/", m: "Năng động" },
+                                    { w: "creative", p: "/kriˈeɪ.tɪv/", m: "Sáng tạo" }
+                                ],
+                                collocations: [
+                                    { word: "HAVE", items: "long hair, big eyes, a round face" },
+                                    { word: "BE", items: "tall, slim, funny, kind" }
+                                ]
+                            },
+                            {
+                                type: "grammar", title: "IV. Grammar",
+                                content: `<div class="glass-card note-box-print border-l-4 border-l-emerald-500 mb-6"><h3 class="font-bold text-lg text-emerald-800 mb-2 print:text-black">1. Asking about Appearance & Personality (Hỏi về ngoại hình & tính cách)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl w-full"><h4 class="font-bold text-emerald-800 text-sm mb-2 print:text-black">👁️ Appearance (Ngoại hình)</h4><p class="text-sm font-bold text-slate-800 mb-2">Q: What does he/she <span class="text-emerald-600">look like</span>?</p><ul class="text-sm mt-2 space-y-2 text-slate-700"><li>A: She <b>is</b> tall and slim.</li><li>A: He <b>has</b> short curly hair.</li></ul></div><div class="bg-blue-50 border border-blue-200 p-4 rounded-xl w-full"><h4 class="font-bold text-blue-800 text-sm mb-2 print:text-black">🧠 Personality (Tính cách)</h4><p class="text-sm font-bold text-slate-800 mb-2">Q: What is he/she <span class="text-blue-600">like</span>?</p><ul class="text-sm mt-2 space-y-2 text-slate-700"><li>A: She <b>is</b> very kind and funny.</li><li>A: He <b>is</b> clever but a bit shy.</li></ul></div></div></div><div class="glass-card note-box-print border-l-4 border-l-blue-500 mb-6"><h3 class="font-bold text-lg text-blue-800 mb-2 print:text-black">2. Present Continuous for Future (Hiện tại tiếp diễn mang nghĩa tương lai)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage (Cách dùng):</b><br>Chúng ta có thể dùng thì Hiện tại tiếp diễn (S + am/is/are + V-ing) để diễn tả <b>một kế hoạch hoặc dự định đã được lên lịch sẵn</b> trong tương lai gần.</div><div class="bg-cyan-50 border border-cyan-200 p-4 rounded-xl text-sm"><h4 class="font-bold text-cyan-800 mb-2 print:text-black">💡 Ví dụ (Examples):</h4><ul class="space-y-2"><li>• We <b>are going</b> to the cinema <i>tomorrow</i>. (Ngày mai chúng tôi sẽ đi xem phim - đã mua vé).</li><li>• She <b>is playing</b> tennis <i>this weekend</i>. (Cô ấy sẽ chơi tennis cuối tuần này - đã hẹn bạn).</li></ul></div></div>`
+                            },
+                            {
+                                type: "pronunciation", title: "V. Pronunciation",
+                                content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/b/</div><p class="text-sm text-slate-500 mb-4">Âm hữu thanh (Có rung dây thanh quản)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('book, blonde, biscuit')}', 'en-US')"><span class="text-indigo-600">b</span>ook, <span class="text-indigo-600">b</span>londe, <span class="text-indigo-600">b</span>iscuit</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/p/</div><p class="text-sm text-slate-500 mb-4">Âm vô thanh (Bật hơi mạnh, không rung)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('picnic, play, ponytail')}', 'en-US')"><span class="text-rose-500">p</span>icnic, <span class="text-rose-500">p</span>lay, <span class="text-rose-500">p</span>onytail</div></div></div>`
+                            },
+                            {
+                                type: "listening", title: "VI. Dialogue & Role-play",
+                                lines: [
+                                    { c: "Tom", a: "👦🏼", t: "Hi Sarah! Look at that girl over there. Who is she?", loc: "en-US", gender: "male" },
+                                    { c: "Sarah", a: "👩🏻", t: "Oh, that is Mai. She is my new friend.", loc: "en-US", gender: "female" },
+                                    { c: "Tom", a: "👦🏼", t: "She is tall. And she has long black hair.", loc: "en-US", gender: "male" },
+                                    { c: "Sarah", a: "👩🏻", t: "Yes, and big brown eyes too. She is very pretty.", loc: "en-US", gender: "female" },
+                                    { c: "Tom", a: "👦🏼", t: "What is she like?", loc: "en-US", gender: "male" },
+                                    { c: "Sarah", a: "👩🏻", t: "She is kind and very creative. She likes drawing.", loc: "en-US", gender: "female" },
+                                    { c: "Tom", a: "👦🏼", t: "Are you doing anything this weekend?", loc: "en-US", gender: "male" },
+                                    { c: "Sarah", a: "👩🏻", t: "Yes, Mai and I are going to the museum on Saturday.", loc: "en-US", gender: "female" }
+                                ],
+                                questions: [
+                                    { id: "u3_l1", q: "1. What does Mai look like?", opts: ["A. Short with blonde hair", "B. Tall with long black hair", "C. Fat with curly hair"], ans: 1 },
+                                    { id: "u3_l2", q: "2. What is Mai like?", opts: ["A. Kind and creative", "B. Shy and funny", "C. Confident and clever"], ans: 0 },
+                                    { id: "u3_l3", q: "3. What are Sarah and Mai doing on Saturday?", opts: ["A. Drawing pictures", "B. Going to the museum", "C. Playing sports"], ans: 1 }
+                                ]
+                            },
+                            {
+                                type: "speaking", title: "VII. Speaking", topic: "Topic: Describe your best friend",
+                                prompts: [
+                                    "1. Who is your best friend?",
+                                    "2. What does he/she look like? (Appearance: tall/short, hair, eyes...)",
+                                    "3. What is he/she like? (Personality: kind, funny, clever...)",
+                                    "4. Why do you like him/her?"
+                                ],
+                                sample: "My best friend is Nam. He is tall and slim. He has short black hair and big eyes. Nam is very funny and clever. He always makes me laugh. I like him because he is a kind friend."
+                            },
+                            {
+                                type: "listening_task", title: "VIII. Listening Comprehension",
+                                audioScript: "My best friend is Chau. She is a beautiful girl with long straight black hair and a round face. She is quite tall and slim. Chau is very confident and hard-working. She always does her homework before class. This Sunday, we are having a picnic in the park with our classmates. I am bringing some biscuits and fruit.",
+                                questions: [
+                                    { id: "u3_lt1", q: "1. What kind of hair does Chau have?", opts: ["A. Short curly hair", "B. Long straight black hair", "C. Long blonde hair"], ans: 1 },
+                                    { id: "u3_lt2", q: "2. What is Chau's personality?", opts: ["A. Shy and kind", "B. Funny and creative", "C. Confident and hard-working"], ans: 2 },
+                                    { id: "u3_lt3", q: "3. What are they doing this Sunday?", opts: ["A. Having a picnic", "B. Going to the cinema", "C. Doing homework"], ans: 0 },
+                                    { id: "u3_lt4", q: "4. True or False: The speaker is bringing biscuits and fruit to the picnic.", opts: ["A. True", "B. False"], ans: 0 }
+                                ]
+                            },
+                            {
+                                type: "reading_practice", title: "IX. Reading & Practice",
+                                readingText: "Hi! My name is Lucas and I am from the UK. I want to tell you about my best friend, Peter. Peter is a tall boy with short curly blonde hair and blue eyes. He is very active and loves playing sports. We are playing football together tomorrow afternoon. Peter is also very clever. He always gets good marks in Maths. However, he is a bit shy when meeting new people.",
+                                exercises: [
+                                    { id: 'u3_p1', type: 'choice', q: "1. What does Peter look like?", opts: ["A. Tall with short curly blonde hair", "B. Short with straight black hair", "C. Tall with long brown hair"], ans: 0, exp: "Bài đọc ghi: 'Peter is a tall boy with short curly blonde hair'." },
+                                    { id: 'u3_p2', type: 'choice', q: "2. What is Peter like?", opts: ["A. Active, clever, and a bit shy", "B. Funny, kind, and confident", "C. Lazy but creative"], ans: 0, exp: "Bài đọc miêu tả Peter: 'active', 'clever', và 'a bit shy'." },
+                                    { id: 'u3_p3', type: 'grammar', q: "3. Grammar: We ________ football together tomorrow afternoon.", opts: ["A. play", "B. plays", "C. are playing"], ans: 2, exp: "Kế hoạch đã định trước trong tương lai (tomorrow afternoon) dùng Hiện tại tiếp diễn (are playing)." },
+                                    { id: 'u3_p4', type: 'grammar', q: "4. Grammar: What ________ your sister look like?", opts: ["A. do", "B. does", "C. is"], ans: 1, exp: "Chủ ngữ 'your sister' (số ít) nên dùng trợ động từ 'does'." }
+                                ]
+                            }
+                        ]
+                    },
+                    // ==========================================
+                    // REVIEW 1: EXAM MODULE (NEW)
+                    // ==========================================
+                    {
+                        id: "rev1",
+                        type: "exam_module",
+                        title: "Review 1 (Units 1-3) - 45 Min Test",
+                        tests: {
+                            "test1": {
+                                name: "Test 1",
+                                listeningScript: "Hello, my name is Mary. I live in a beautiful townhouse in the city centre with my parents and my brother. It has a living room, a kitchen, two bedrooms, and two bathrooms. My favorite place is my bedroom. It has a big bed, a desk next to the window, and a wardrobe. I always do my homework at the desk. I love my house.",
+                                readingText: "Schools in Finland are very different from schools in other countries. Students in Finland do not wear uniforms. They can wear comfortable clothes like jeans and T-shirts to school. They also do not have much homework. After school, they play sports or learn music. Finnish students are very creative and hard-working. They love their schools.",
+                                levels: {
+                                    "normal": [
+                                        { part: "PART I: LISTENING", q: "1. Who does Mary live with?", opts: ["A. Her grandparents", "B. Her parents and sister", "C. Her parents and brother", "D. Her friends"], ans: 2, exp: "Script: 'with my parents and my brother'." },
+                                        { part: "PART I: LISTENING", q: "2. What type of house does Mary live in?", opts: ["A. A stilt house", "B. A townhouse", "C. A villa", "D. An apartment"], ans: 1, exp: "Script: 'I live in a beautiful townhouse'." },
+                                        { part: "PART I: LISTENING", q: "3. How many rooms are there in her house?", opts: ["A. 4", "B. 5", "C. 6", "D. 7"], ans: 2, exp: "Script: 1 living room + 1 kitchen + 2 bedrooms + 2 bathrooms = 6 rooms." },
+                                        { part: "PART I: LISTENING", q: "4. Where is her desk?", opts: ["A. Next to the bed", "B. Behind the wardrobe", "C. Next to the window", "D. Under the bed"], ans: 2, exp: "Script: 'a desk next to the window'." },
+                                        { part: "PART I: LISTENING", q: "5. What does she always do at the desk?", opts: ["A. Read books", "B. Play games", "C. Do her homework", "D. Listen to music"], ans: 2, exp: "Script: 'I always do my homework at the desk'." },
+                                        
+                                        { part: "PART II: PHONETICS", q: "6. Choose the word whose underlined part is pronounced differently:", opts: ["A. comp<u>a</u>ss", "B. sm<u>a</u>rt", "C. cl<u>a</u>ss", "D. <u>a</u>rt"], ans: 0, exp: "Compass phát âm là /ʌ/, các từ còn lại phát âm là /ɑː/." },
+                                        { part: "PART II: PHONETICS", q: "7. Choose the word whose underlined part is pronounced differently:", opts: ["A. s<u>u</u>bject", "B. l<u>u</u>nch", "C. st<u>u</u>dy", "D. unif<u>o</u>rm"], ans: 3, exp: "Uniform phát âm là /ɔː/, các từ còn lại phát âm là /ʌ/." },
+                                        { part: "PART II: PHONETICS", q: "8. Choose the word whose ending is pronounced differently:", opts: ["A. lamp<u>s</u>", "B. sink<u>s</u>", "C. flat<u>s</u>", "D. bed<u>s</u>"], ans: 3, exp: "Beds phát âm là /z/, các từ còn lại phát âm là /s/." },
+                                        { part: "PART II: PHONETICS", q: "9. Choose the word whose ending is pronounced differently:", opts: ["A. watch<u>es</u>", "B. box<u>es</u>", "C. class<u>es</u>", "D. go<u>es</u>"], ans: 3, exp: "Goes phát âm đuôi là /z/, các từ còn lại là /ɪz/." },
+                                        { part: "PART II: PHONETICS", q: "10. Choose the word whose underlined part is pronounced differently:", opts: ["A. <u>p</u>icnic", "B. <u>p</u>lay", "C. <u>b</u>iscuit", "D. <u>p</u>encil"], ans: 2, exp: "Biscuit phát âm là /b/, các từ còn lại là /p/ bật hơi." },
+                                        
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "11. We use a _______ to draw circles.", opts: ["A. calculator", "B. compass", "C. rubber", "D. backpack"], ans: 1, exp: "Compass (compa) dùng để vẽ đường tròn." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "12. Look! The girls _______ rope in the playground.", opts: ["A. are skipping", "B. is skipping", "C. skip", "D. skips"], ans: 0, exp: "Dấu hiệu 'Look!' -> Hiện tại tiếp diễn. Chủ ngữ số nhiều -> are skipping." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "13. I _______ late for school.", opts: ["A. am never", "B. never am", "C. never", "D. am"], ans: 0, exp: "Trạng từ tần suất (never) phải đứng SAU động từ To-be (am)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "14. My mother _______ shopping on Sundays.", opts: ["A. goes usually", "B. usually goes", "C. is usually go", "D. usually go"], ans: 1, exp: "Trạng từ tần suất (usually) phải đứng TRƯỚC động từ thường (goes)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "15. The cat is sleeping _______ the sofa and the armchair.", opts: ["A. in", "B. on", "C. between", "D. under"], ans: 2, exp: "Ở giữa 2 vật dùng 'between ... and ...'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "16. Find the mistake: He <u>play</u> football <u>with</u> his friends <u>every</u> afternoon.", opts: ["A. play", "B. with", "C. every", "D. afternoon"], ans: 0, exp: "Chủ ngữ 'He' (ngôi thứ 3 số ít) ở thì Hiện tại đơn thì động từ phải thêm 's' -> plays." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "17. Find the mistake: She <u>always</u> <u>watch</u> TV <u>in</u> the evening.", opts: ["A. always", "B. watch", "C. in", "D. evening"], ans: 1, exp: "Chủ ngữ 'She', động từ kết thúc bằng 'ch' phải thêm 'es' -> watches." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "18. What _______ your sister look like?", opts: ["A. do", "B. does", "C. is", "D. are"], ans: 1, exp: "Hỏi ngoại hình với chủ ngữ số ít (your sister) dùng trợ động từ 'does'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ a maths test tomorrow. My teacher told me yesterday.", opts: ["A. have", "B. are having", "C. has", "D. having"], ans: 1, exp: "Kế hoạch chắc chắn trong tương lai dùng Hiện tại tiếp diễn (are having)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "20. This is my _______ bedroom. They love it.", opts: ["A. parent's", "B. parents'", "C. parents", "D. parent"], ans: 1, exp: "Danh từ số nhiều có 's' (parents) chỉ cần thêm dấu nháy đơn ' ở cuối." },
+                                        
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Do students in Finland wear uniforms?", opts: ["A. Yes, they do.", "B. No, they don't.", "C. Only on Mondays.", "D. Sometimes."], ans: 1, exp: "Bài đọc: 'Students in Finland do not wear uniforms.'" },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. What clothes can they wear to school?", opts: ["A. Formal clothes", "B. Uniforms", "C. Jeans and T-shirts", "D. Hats"], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. Do they have a lot of homework?", opts: ["A. Yes, a lot.", "B. No, they don't have much.", "C. Only at weekends.", "D. The text doesn't say."], ans: 1, exp: "Bài đọc: 'They also do not have much homework'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What do they do after school?", opts: ["A. Play sports or learn music", "B. Do homework", "C. Clean the school", "D. Go to the cinema"], ans: 0, exp: "Bài đọc: 'After school, they play sports or learn music'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What are Finnish students like?", opts: ["A. Lazy and shy", "B. Creative and hard-working", "C. Funny and active", "D. Kind and clever"], ans: 1, exp: "Bài đọc: 'Finnish students are very creative and hard-working.'" },
+                                        
+                                        { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'My house has four rooms.'", opts: ["A. There are four rooms in my house.", "B. There is four rooms in my house.", "C. My house have four rooms.", "D. Four rooms are my house."], ans: 0, exp: "Sử dụng cấu trúc 'There is/are' để viết lại câu sở hữu chỉ số lượng." },
+                                        { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'The lamp is behind the TV.'", opts: ["A. The TV is next to the lamp.", "B. The TV is in front of the lamp.", "C. The TV is under the lamp.", "D. The TV is behind the lamp."], ans: 1, exp: "Nếu A ở sau B, thì B ở trước A (in front of)." },
+                                        { part: "PART V: WRITING", q: "28. Choose the correct question for the answer: 'He is kind and funny.'", opts: ["A. What does he look like?", "B. How is he?", "C. What is he like?", "D. Who is he?"], ans: 2, exp: "Hỏi về tính cách dùng cấu trúc 'What + be + S + like?'." },
+                                        { part: "PART V: WRITING", q: "29. Choose the sentence with the closest meaning: 'Her hair is long and black.'", opts: ["A. She has long black hair.", "B. She is long black hair.", "C. She has hair long black.", "D. She have long black hair."], ans: 0, exp: "Cấu trúc S + have/has + Adj + Danh từ." },
+                                        { part: "PART V: WRITING", q: "30. Choose the correctly ordered sentence: plan / we / to / visit / tomorrow / museum / the .", opts: ["A. We are visiting the museum tomorrow.", "B. We visit the museum tomorrow.", "C. We visiting the museum tomorrow.", "D. We is visiting the museum tomorrow."], ans: 0, exp: "Viết lại dựa trên kế hoạch tương lai dùng thì Hiện tại tiếp diễn." }
+                                    ],
+                                    "hard": [
+                                        { part: "PART I: LISTENING", q: "1. Where is Mary's townhouse located?", opts: ["A. In the suburbs", "B. In the countryside", "C. In the city centre", "D. Near a river"], ans: 2, exp: "Script: 'in the city centre'." },
+                                        { part: "PART I: LISTENING", q: "2. How many people are there in Mary's family?", opts: ["A. 2", "B. 3", "C. 4", "D. 5"], ans: 2, exp: "Script: 'with my parents and my brother' -> Mary + Parents (2) + Brother (1) = 4 people." },
+                                        { part: "PART I: LISTENING", q: "3. What furniture is NOT mentioned in her bedroom?", opts: ["A. A bed", "B. A desk", "C. A wardrobe", "D. A bookshelf"], ans: 3, exp: "Script chỉ nhắc tới bed, desk, và wardrobe." },
+                                        { part: "PART I: LISTENING", q: "4. Where is the desk located exactly?", opts: ["A. Between the bed and wardrobe", "B. Next to the window", "C. Behind the door", "D. In front of the bed"], ans: 1, exp: "Script: 'a desk next to the window'." },
+                                        { part: "PART I: LISTENING", q: "5. Why does she sit at the desk?", opts: ["A. To eat dinner", "B. To read comics", "C. To do her homework", "D. To use the computer"], ans: 2, exp: "Script: 'I always do my homework at the desk'." },
+                                        
+                                        { part: "PART II: PHONETICS", q: "6. Choose the word whose underlined part is pronounced differently:", opts: ["A. st<u>u</u>dy", "B. f<u>a</u>st", "C. sm<u>a</u>rt", "D. cl<u>a</u>ss"], ans: 0, exp: "Study phát âm là /ʌ/, các từ còn lại là /ɑː/." },
+                                        { part: "PART II: PHONETICS", q: "7. Choose the word whose underlined part is pronounced differently:", opts: ["A. br<u>o</u>ther", "B. m<u>o</u>ther", "C. c<u>o</u>mpass", "D. p<u>o</u>ster"], ans: 3, exp: "Poster phát âm là /oʊ/, các từ còn lại là /ʌ/." },
+                                        { part: "PART II: PHONETICS", q: "8. Choose the word whose ending is pronounced differently:", opts: ["A. watch<u>es</u>", "B. hous<u>es</u>", "C. fac<u>es</u>", "D. go<u>es</u>"], ans: 3, exp: "Goes phát âm đuôi là /z/, còn lại là /ɪz/." },
+                                        { part: "PART II: PHONETICS", q: "9. Choose the word whose ending is pronounced differently:", opts: ["A. month<u>s</u>", "B. book<u>s</u>", "C. map<u>s</u>", "D. bag<u>s</u>"], ans: 3, exp: "Bags phát âm là /z/, còn lại là /s/." },
+                                        { part: "PART II: PHONETICS", q: "10. Choose the word whose underlined part is pronounced differently:", opts: ["A. <u>p</u>lay", "B. <u>p</u>hone", "C. <u>b</u>iscuit", "D. <u>p</u>oster"], ans: 2, exp: "Biscuit phát âm là /b/." },
+                                        
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "11. Choose the SYNONYM (Từ đồng nghĩa) of 'clever':", opts: ["A. smart", "B. hard-working", "C. active", "D. confident"], ans: 0, exp: "Clever đồng nghĩa với Smart (thông minh)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "12. Choose the ANTONYM (Từ trái nghĩa) of 'hard-working':", opts: ["A. kind", "B. lazy", "C. active", "D. shy"], ans: 1, exp: "Hard-working (chăm chỉ) trái nghĩa với Lazy (lười biếng)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "13. Find the mistake: We <u>don't</u> <u>go usually</u> <u>to</u> the park <u>on</u> Mondays.", opts: ["A. don't", "B. go usually", "C. to", "D. on"], ans: 1, exp: "Trạng từ tần suất (usually) phải đứng TRƯỚC động từ thường. Phải sửa thành 'usually go'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "14. Find the mistake: <u>Look!</u> The boys <u>play</u> football <u>in</u> the <u>schoolyard</u>.", opts: ["A. Look!", "B. play", "C. in", "D. schoolyard"], ans: 1, exp: "Có 'Look!' phải chia Hiện tại tiếp diễn -> are playing." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "15. How often _______ to the cinema? - Twice a month.", opts: ["A. are you going", "B. you go", "C. do you go", "D. you are going"], ans: 2, exp: "Hỏi về thói quen/tần suất dùng Hiện tại đơn -> do you go." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "16. My mother _______ dinner at the moment. She _______ very well.", opts: ["A. is cooking / cooks", "B. cooks / is cooking", "C. is cooking / is cooking", "D. cooks / cooks"], ans: 0, exp: "Vế đầu có 'at the moment' -> HT Tiếp diễn. Vế sau chỉ sự thật hiển nhiên (nấu ăn ngon) -> HT Đơn." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "17. He _______ judo every Tuesday.", opts: ["A. plays", "B. makes", "C. does", "D. has"], ans: 2, exp: "Các môn võ (judo) đi với động từ 'do'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "18. The picture is _______ the wall, _______ the clock.", opts: ["A. in / next to", "B. on / next to", "C. at / between", "D. on / under"], ans: 1, exp: "Trên tường dùng 'on'. Cạnh đồng hồ dùng 'next to'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ an English club meeting this weekend. Don't forget!", opts: ["A. have", "B. are having", "C. has", "D. having"], ans: 1, exp: "Kế hoạch đã định trước trong tương lai gần -> HT Tiếp diễn (are having)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "20. Find the mistake: This <u>is</u> my <u>sister</u> <u>bicycle</u>.", opts: ["A. is", "B. sister", "C. bicycle", "D. This"], ans: 1, exp: "Phải dùng sở hữu cách 's để chỉ sự sở hữu -> my sister's bicycle." },
+                                        
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. The word 'They' in line 2 refers to:", opts: ["A. Schools", "B. Uniforms", "C. Students", "D. Countries"], ans: 2, exp: "'They' thay thế cho danh từ 'Students' ở câu trước đó." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. Which statement is TRUE about Finnish students?", opts: ["A. They wear uniforms every day.", "B. They feel stressed about homework.", "C. They can wear whatever they feel comfortable in.", "D. They don't like playing sports."], ans: 2, exp: "Bài đọc: 'They can wear comfortable clothes like jeans and T-shirts'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. What can be inferred about the education system in Finland?", opts: ["A. It is very strict.", "B. It focuses on rote learning.", "C. It encourages creativity and well-being.", "D. It forces students to study all day."], ans: 2, exp: "Suy luận: Không mặc đồng phục, ít bài tập, được chơi thể thao/âm nhạc -> Khuyến khích sự sáng tạo và sức khỏe (creativity and well-being)." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What does the word 'hard-working' mean in the text?", opts: ["A. Lazy", "B. Putting a lot of effort into doing things", "C. Working in a difficult place", "D. Being very smart"], ans: 1, exp: "Định nghĩa của hard-working là chăm chỉ, nỗ lực nhiều." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. Which statement is NOT TRUE?", opts: ["A. Students wear jeans to school.", "B. They have a lot of homework.", "C. They play sports after school.", "D. They learn music."], ans: 1, exp: "Bài đọc ghi: 'They also do not have much homework'." },
+                                        
+                                        { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'The garden is in front of the building.'", opts: ["A. The building is next to the garden.", "B. The building is behind the garden.", "C. The building is in front of the garden.", "D. The building is under the garden."], ans: 1, exp: "Vườn ở trước tòa nhà -> Tòa nhà ở sau (behind) khu vườn." },
+                                        { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'Let's go to the museum this weekend.'", opts: ["A. How about going to the museum this weekend?", "B. Why don't we going to the museum this weekend?", "C. What about go to the museum this weekend?", "D. Let's going to the museum this weekend."], ans: 0, exp: "Cấu trúc rủ rê: Let's + V = How about + V-ing." },
+                                        { part: "PART V: WRITING", q: "28. Find the mistake: 'Are you <u>do</u> <u>anything</u> <u>this</u> <u>weekend</u>?'", opts: ["A. do", "B. anything", "C. this", "D. weekend"], ans: 0, exp: "Hỏi kế hoạch tương lai dùng HT Tiếp diễn -> Are you doing." },
+                                        { part: "PART V: WRITING", q: "29. Combine words: He / have / round face / and / short black hair.", opts: ["A. He have a round face and short black hair.", "B. He has a round face and short black hair.", "C. He is a round face and short black hair.", "D. He has round face and a short black hair."], ans: 1, exp: "Chủ ngữ số ít 'He' dùng 'has'. Có mạo từ 'a' trước danh từ đếm được số ít 'face'." },
+                                        { part: "PART V: WRITING", q: "30. What is the correct response to 'What is your new friend like?'", opts: ["A. She likes reading books.", "B. She is tall and slim.", "C. She is very kind and creative.", "D. She looks beautiful."], ans: 2, exp: "Câu hỏi 'What is she like?' hỏi về tính cách." }
+                                    ]
+                                }
+                            },
+                            "test2": {
+                                name: "Test 2",
+                                listeningScript: "My best friend is Peter. He is a tall boy with short blonde hair and big blue eyes. He is very active and clever. He loves playing basketball in the schoolyard. This weekend, Peter and I are going to the cinema to watch a new movie. We are meeting at 7 PM outside the cinema. I am very excited.",
+                                readingText: "Hello, my name is Mai. I live in a stilt house in a small village. My house is made of wood and bamboo. It is very cool in the summer. Under the house, my family keeps some chickens and ducks. Inside, we have a big living room. We do everything there: eating, sleeping, and watching TV. I love my peaceful village.",
+                                levels: {
+                                    "normal": [
+                                        { part: "PART I: LISTENING", q: "1. What does Peter look like?", opts: ["A. Short with black hair", "B. Tall with blonde hair", "C. Tall with brown hair", "D. Short with red hair"], ans: 1, exp: "Script: 'He is a tall boy with short blonde hair'." },
+                                        { part: "PART I: LISTENING", q: "2. What is Peter like?", opts: ["A. Shy and clever", "B. Active and clever", "C. Funny and active", "D. Kind and confident"], ans: 1, exp: "Script: 'He is very active and clever'." },
+                                        { part: "PART I: LISTENING", q: "3. What sport does Peter love playing?", opts: ["A. Football", "B. Tennis", "C. Basketball", "D. Judo"], ans: 2, exp: "Script: 'He loves playing basketball'." },
+                                        { part: "PART I: LISTENING", q: "4. What are they doing this weekend?", opts: ["A. Playing basketball", "B. Going to the park", "C. Going to the cinema", "D. Doing homework"], ans: 2, exp: "Script: 'Peter and I are going to the cinema'." },
+                                        { part: "PART I: LISTENING", q: "5. What time are they meeting?", opts: ["A. 6 PM", "B. 7 PM", "C. 8 PM", "D. 9 PM"], ans: 1, exp: "Script: 'We are meeting at 7 PM'." },
+                                        
+                                        { part: "PART II: PHONETICS", q: "6. Choose the word whose underlined part is pronounced differently:", opts: ["A. c<u>o</u>mpass", "B. m<u>o</u>ther", "C. br<u>o</u>ther", "D. p<u>o</u>ster"], ans: 3, exp: "Poster là âm /oʊ/, các từ còn lại là /ʌ/." },
+                                        { part: "PART II: PHONETICS", q: "7. Choose the word whose underlined part is pronounced differently:", opts: ["A. sm<u>a</u>rt", "B. cl<u>a</u>ss", "C. <u>a</u>rt", "D. s<u>u</u>bject"], ans: 3, exp: "Subject là âm /ʌ/, các từ còn lại là /ɑː/." },
+                                        { part: "PART II: PHONETICS", q: "8. Choose the word whose ending is pronounced differently:", opts: ["A. book<u>s</u>", "B. lamp<u>s</u>", "C. flat<u>s</u>", "D. bed<u>s</u>"], ans: 3, exp: "Beds là /z/, còn lại là /s/." },
+                                        { part: "PART II: PHONETICS", q: "9. Choose the word whose ending is pronounced differently:", opts: ["A. watch<u>es</u>", "B. class<u>es</u>", "C. box<u>es</u>", "D. do<u>es</u>"], ans: 3, exp: "Does là /z/, còn lại là /ɪz/." },
+                                        { part: "PART II: PHONETICS", q: "10. Choose the word whose underlined part is pronounced differently:", opts: ["A. <u>p</u>icnic", "B. <u>p</u>lay", "C. <u>b</u>oard", "D. <u>p</u>ass"], ans: 2, exp: "Board là /b/, còn lại là /p/." },
+                                        
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "11. Where is the cat? - It is sleeping ________ the sofa and the armchair.", opts: ["A. in", "B. between", "C. on", "D. under"], ans: 1, exp: "Ở giữa 2 vật dùng 'between'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "12. He _______ judo every Tuesday.", opts: ["A. plays", "B. makes", "C. does", "D. has"], ans: 2, exp: "Đi với các môn võ dùng 'do'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "13. I _______ my uniform on Mondays.", opts: ["A. wear always", "B. always wear", "C. am always wear", "D. always wearing"], ans: 1, exp: "Trạng từ tần suất (always) đứng TRƯỚC động từ thường." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "14. She _______ tired after school.", opts: ["A. is usually", "B. usually is", "C. usually are", "D. are usually"], ans: 0, exp: "Trạng từ tần suất (usually) đứng SAU to-be (is)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "15. Look! The boy _______ a heavy backpack.", opts: ["A. is carrying", "B. carry", "C. carries", "D. carrying"], ans: 0, exp: "Có 'Look!' -> HT Tiếp diễn." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "16. This is _______ book.", opts: ["A. Nam's", "B. Nams'", "C. Nams", "D. Nam"], ans: 0, exp: "Sở hữu cách của tên riêng thêm 's." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "17. Students live and study in a _______ school.", opts: ["A. international", "B. boarding", "C. smart", "D. public"], ans: 1, exp: "Trường nội trú là boarding school." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "18. Find the mistake: My dog <u>sleep</u> <u>under</u> the <u>table</u> <u>every</u> day.", opts: ["A. sleep", "B. under", "C. table", "D. every"], ans: 0, exp: "Chủ ngữ 'My dog' số ít ở thì Hiện tại đơn -> động từ phải thêm s (sleeps)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "19. We _______ English now.", opts: ["A. study", "B. are studying", "C. studies", "D. studying"], ans: 1, exp: "Có 'now' -> HT Tiếp diễn." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "20. She has a _______ face.", opts: ["A. round", "B. long black", "C. tall", "D. short"], ans: 0, exp: "Mô tả khuôn mặt dùng 'round' (tròn)." },
+                                        
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Where does Mai live?", opts: ["A. In a townhouse", "B. In a villa", "C. In a stilt house", "D. In an apartment"], ans: 2, exp: "Bài đọc: 'I live in a stilt house'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. What is her house made of?", opts: ["A. Brick and stone", "B. Wood and bamboo", "C. Glass and steel", "D. Plastic"], ans: 1, exp: "Bài đọc: 'made of wood and bamboo'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. How is the house in the summer?", opts: ["A. Very hot", "B. Very warm", "C. Very cool", "D. Very cold"], ans: 2, exp: "Bài đọc: 'It is very cool in the summer'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What does her family keep under the house?", opts: ["A. Dogs and cats", "B. Chickens and ducks", "C. Cows and pigs", "D. Birds"], ans: 1, exp: "Bài đọc: 'keeps some chickens and ducks'." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What do they do in the big living room?", opts: ["A. Only sleeping", "B. Only eating", "C. Everything (eating, sleeping, watching TV)", "D. Cooking"], ans: 2, exp: "Bài đọc: 'We do everything there'." },
+                                        
+                                        { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'My brother has short curly hair.'", opts: ["A. My brother's hair is short and curly.", "B. My brother is short curly hair.", "C. My brother hair is short and curly.", "D. My brother has hair short curly."], ans: 0, exp: "Đổi cấu trúc S + have + Adj + Noun thành S's Noun + is + Adj." },
+                                        { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'The cat is behind the computer.'", opts: ["A. The computer is next to the cat.", "B. The computer is in front of the cat.", "C. The computer is under the cat.", "D. The computer is behind the cat."], ans: 1, exp: "A ở sau B -> B ở trước A." },
+                                        { part: "PART V: WRITING", q: "28. Choose the correct question: 'She is tall and slim.'", opts: ["A. What does she look like?", "B. What is she like?", "C. How is she?", "D. Who is she?"], ans: 0, exp: "Hỏi ngoại hình dùng 'look like'." },
+                                        { part: "PART V: WRITING", q: "29. Choose the correctly ordered sentence: my / in front of / desk / is / the / window .", opts: ["A. My desk is in front of the window.", "B. My window is in front of desk the.", "C. The window is in front of my desk.", "D. Both A and C are grammatically correct."], ans: 3, exp: "Cả A và C đều đúng ngữ pháp (Bàn trước cửa sổ hoặc Cửa sổ trước bàn)." },
+                                        { part: "PART V: WRITING", q: "30. Choose the sentence with the closest meaning: 'We have a plan to go to the park tomorrow.'", opts: ["A. We are going to the park tomorrow.", "B. We go to the park tomorrow.", "C. We going to the park tomorrow.", "D. We are go to the park tomorrow."], ans: 0, exp: "Kế hoạch tương lai -> HT Tiếp diễn." }
+                                    ],
+                                    "hard": [
+                                        { part: "PART I: LISTENING", q: "1. What colour are Peter's eyes?", opts: ["A. Black", "B. Brown", "C. Blue", "D. Green"], ans: 2, exp: "Script: 'big blue eyes'." },
+                                        { part: "PART I: LISTENING", q: "2. Based on the script, which adjective does NOT describe Peter?", opts: ["A. Tall", "B. Active", "C. Clever", "D. Shy"], ans: 3, exp: "Script không nhắc đến từ 'shy'." },
+                                        { part: "PART I: LISTENING", q: "3. Where does Peter love playing basketball?", opts: ["A. In the park", "B. In the schoolyard", "C. In the gym", "D. At home"], ans: 1, exp: "Script: 'playing basketball in the schoolyard'." },
+                                        { part: "PART I: LISTENING", q: "4. Where are they meeting this weekend?", opts: ["A. Inside the cinema", "B. Outside the cinema", "C. At the bus stop", "D. At the schoolyard"], ans: 1, exp: "Script: 'meeting at 7 PM outside the cinema'." },
+                                        { part: "PART I: LISTENING", q: "5. How does the speaker feel about the weekend plan?", opts: ["A. Bored", "B. Tired", "C. Excited", "D. Sad"], ans: 2, exp: "Script: 'I am very excited'." },
+                                        
+                                        { part: "PART II: PHONETICS", q: "6. Choose the word whose underlined part is pronounced differently:", opts: ["A. l<u>a</u>mp", "B. sm<u>a</u>rt", "C. <u>a</u>rt", "D. p<u>a</u>rk"], ans: 0, exp: "Lamp là âm /æ/, các từ còn lại là /ɑː/." },
+                                        { part: "PART II: PHONETICS", q: "7. Choose the word whose underlined part is pronounced differently:", opts: ["A. f<u>u</u>nny", "B. l<u>u</u>nch", "C. s<u>u</u>n", "D. <u>u</u>niform"], ans: 3, exp: "Uniform là /juː/, các từ còn lại là /ʌ/." },
+                                        { part: "PART II: PHONETICS", q: "8. Choose the word whose ending is pronounced differently:", opts: ["A. laugh<u>s</u>", "B. stop<u>s</u>", "C. play<u>s</u>", "D. book<u>s</u>"], ans: 2, exp: "Plays phát âm là /z/, còn lại là /s/." },
+                                        { part: "PART II: PHONETICS", q: "9. Choose the word whose ending is pronounced differently:", opts: ["A. dish<u>es</u>", "B. watch<u>es</u>", "C. chang<u>es</u>", "D. cloth<u>es</u>"], ans: 3, exp: "Clothes phát âm là /z/, còn lại là /ɪz/." },
+                                        { part: "PART II: PHONETICS", q: "10. Choose the word whose underlined part is pronounced differently:", opts: ["A. com<u>p</u>ass", "B. <u>b</u>iscuit", "C. <u>p</u>oster", "D. s<u>p</u>orts"], ans: 1, exp: "Biscuit là /b/, còn lại là /p/." },
+                                        
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "11. Choose the ANTONYM (Từ trái nghĩa) of 'shy':", opts: ["A. confident", "B. clever", "C. kind", "D. quiet"], ans: 0, exp: "Shy (nhút nhát) trái nghĩa với Confident (tự tự)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "12. Choose the SYNONYM (Từ đồng nghĩa) of 'modern':", opts: ["A. old", "B. historic", "C. new", "D. small"], ans: 2, exp: "Modern (hiện đại) đồng nghĩa với New (mới)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "13. Find the mistake: He <u>is</u> <u>late always</u> <u>for</u> <u>school</u>.", opts: ["A. is", "B. late always", "C. for", "D. school"], ans: 1, exp: "Trạng từ tần suất (always) phải đứng SAU to-be. Sửa thành 'always late'." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "14. Find the mistake: There <u>are</u> a <u>computer</u> and two <u>chairs</u> in <u>my</u> room.", opts: ["A. are", "B. computer", "C. chairs", "D. my"], ans: 0, exp: "There is/are chia theo danh từ gần nhất. 'a computer' số ít -> There is." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "15. Please be quiet! The students _______ the test.", opts: ["A. do", "B. are doing", "C. doing", "D. does"], ans: 1, exp: "Câu mệnh lệnh 'Please be quiet!' -> HT Tiếp diễn." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "16. My father never _______ coffee in the evening.", opts: ["A. drink", "B. drinking", "C. drinks", "D. is drinking"], ans: 2, exp: "'never' -> HT Đơn. Chủ ngữ số ít -> drinks." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "17. The cat is hiding _______ the door.", opts: ["A. behind", "B. between", "C. under", "D. in"], ans: 0, exp: "Trốn 'đằng sau' cánh cửa (behind)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "18. Mai is very _______. She often writes stories and draws pictures.", opts: ["A. hard-working", "B. creative", "C. active", "D. funny"], ans: 1, exp: "Viết truyện và vẽ tranh -> creative (sáng tạo)." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "19. Find the mistake: She <u>always</u> <u>brushs</u> her <u>teeth</u> <u>before</u> going to bed.", opts: ["A. always", "B. brushs", "C. teeth", "D. before"], ans: 1, exp: "Động từ tận cùng bằng 'sh' phải thêm 'es' -> brushes." },
+                                        { part: "PART III: VOCABULARY & GRAMMAR", q: "20. These are the _______ notebooks.", opts: ["A. childrens", "B. children's", "C. childrens'", "D. children"], ans: 1, exp: "Danh từ số nhiều bất quy tắc không có 's' (children) thì sở hữu cách vẫn thêm 's bình thường." },
+                                        
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "21. Why is a stilt house cool in the summer?", opts: ["A. Because it is near a river.", "B. Because it has air conditioners.", "C. Because it is built on high posts and made of wood.", "D. The text does not say."], ans: 2, exp: "Suy luận từ bài: Nhà sàn xây trên cột cao, làm từ gỗ/tre nên mát mẻ." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "22. Which statement is NOT TRUE about Mai's house?", opts: ["A. It is in a small village.", "B. It has many small rooms.", "C. Animals are kept under the house.", "D. It keeps people safe from wild animals."], ans: 1, exp: "Bài đọc ghi: 'we have a big living room. We do everything there' -> Không có nhiều phòng nhỏ." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "23. The word 'there' in line 5 refers to:", opts: ["A. Under the house", "B. In the small village", "C. In the big living room", "D. Outside the house"], ans: 2, exp: "'We do everything there' -> 'there' thay thế cho 'a big living room' ở câu trước." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "24. What can be inferred about the lifestyle of Mai's family?", opts: ["A. They are very rich.", "B. They have a communal and peaceful lifestyle.", "C. They live a modern city life.", "D. They don't like animals."], ans: 1, exp: "Suy luận: Sống chung 1 phòng lớn, nuôi gà vịt, yêu làng quê -> lối sống cộng đồng, thanh bình." },
+                                        { part: "PART IV: READING COMPREHENSION (Based on the text above)", q: "25. What is the main material of the stilt house?", opts: ["A. Brick", "B. Concrete", "C. Wood and bamboo", "D. Plastic"], ans: 2, exp: "Bài đọc: 'It is usually made of wood and bamboo'." },
+                                        
+                                        { part: "PART V: WRITING", q: "26. Choose the sentence with the closest meaning: 'He is a creative and kind boy.'", opts: ["A. What does he look like?", "B. What is his personality like?", "C. How is he?", "D. Who is he?"], ans: 1, exp: "Hỏi về tính cách: 'What is his personality like?' hoặc 'What is he like?'." },
+                                        { part: "PART V: WRITING", q: "27. Choose the sentence with the closest meaning: 'There are twenty desks in my classroom.'", opts: ["A. My classroom has twenty desks.", "B. My classroom have twenty desks.", "C. Twenty desks are my classroom.", "D. My classroom is twenty desks."], ans: 0, exp: "Đổi cấu trúc There is/are -> S + have/has." },
+                                        { part: "PART V: WRITING", q: "28. Find the mistake: 'Are you <u>play</u> <u>badminton</u> <u>with</u> us <u>tomorrow</u>?'", opts: ["A. play", "B. badminton", "C. with", "D. tomorrow"], ans: 0, exp: "Kế hoạch tương lai dùng HT Tiếp diễn -> Are you playing." },
+                                        { part: "PART V: WRITING", q: "29. Combine words: The dog / be / between / armchair / and / sofa.", opts: ["A. The dog is between the armchair and the sofa.", "B. The dog are between the armchair and the sofa.", "C. The dog is between armchair and sofa.", "D. The dog is between the armchair or the sofa."], ans: 0, exp: "Cấu trúc: be + between + N1 + and + N2." },
+                                        { part: "PART V: WRITING", q: "30. Choose the sentence with the closest meaning: 'She loves designing new things.'", opts: ["A. She is lazy.", "B. She is funny.", "C. She is creative.", "D. She is kind."], ans: 2, exp: "Thích thiết kế đồ mới -> Sáng tạo (creative)." }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    // ==========================================
+                    // UNIT 4: MY NEIGHBOURHOOD
+                    // ==========================================
+                    {
+                        id: "u4",
+                        type: "lesson",
+                        title: "Unit 4: My Neighbourhood",
+                        sections: [
+                            {
+                                type: "objectives", title: "I. Objectives",
+                                content: `<ul class="list-disc pl-5 text-slate-700 space-y-2"><li><b>Vocabulary:</b> Places in a neighbourhood and adjectives.</li><li><b>Grammar:</b> Comparative Adjectives (So sánh hơn).</li><li><b>Pronunciation:</b> Sounds /ɪ/ and /iː/.</li></ul>`
+                            },
+                            {
+                                type: "vocab", title: "II. Vocabulary: Places & Adjectives",
+                                words: [
+                                    { w: "square", p: "/skweər/", m: "Quảng trường" },
+                                    { w: "art gallery", p: "/ɑːt ˈɡæl.ər.i/", m: "Phòng triển lãm nghệ thuật" },
+                                    { w: "railway station", p: "/ˈreɪl.weɪ ˌsteɪ.ʃən/", m: "Nhà ga xe lửa" },
+                                    { w: "historic", p: "/hɪˈstɒr.ɪk/", m: "Cổ kính, có tính lịch sử" },
+                                    { w: "peaceful", p: "/ˈpiːs.fəl/", m: "Yên bình, thanh bình" },
+                                    { w: "noisy", p: "/ˈnɔɪ.zi/", m: "Ồn ào, náo nhiệt" },
+                                    { w: "modern", p: "/ˈmɒd.ən/", m: "Hiện đại" },
+                                    { w: "narrow", p: "/ˈnær.əʊ/", m: "Chật hẹp (>< wide: rộng)" }
+                                ],
+                                collocations: [
+                                    { word: "GO", items: "straight (đi thẳng)" },
+                                    { word: "TURN", items: "left (rẽ trái), right (rẽ phải)" },
+                                    { word: "CROSS", items: "the street (sang đường)" },
+                                    { word: "TAKE", items: "the second turning (rẽ ở ngã rẽ thứ 2)" }
+                                ]
+                            },
+                            {
+                                type: "grammar", title: "III. Grammar: Comparative Adjectives",
+                                content: `<div class="glass-card note-box-print border-l-4 border-l-emerald-500 mb-6"><h3 class="font-bold text-lg text-emerald-800 mb-2 print:text-black">1. Short Adjectives (Tính từ ngắn)</h3><div class="text-sm mb-4 text-slate-700"><b>Định nghĩa:</b> Tính từ có 1 âm tiết, hoặc 2 âm tiết nhưng kết thúc bằng "y, er, ow, le, et".<br><b>Công thức:</b> S1 + to be + <b>Adj-ER + than</b> + S2.</div><div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-sm mb-4"><h4 class="font-bold text-emerald-800 mb-2 print:text-black">📝 Quy tắc thêm -ER:</h4><ul class="space-y-1"><li>• Thêm trực tiếp: tall ➔ tall<b>er</b>, fast ➔ fast<b>er</b></li><li>• Tận cùng là e: wide ➔ wid<b>er</b></li><li>• Phụ âm - nguyên âm - phụ âm: hot ➔ ho<b>tter</b>, big ➔ bi<b>gger</b></li><li>• Tận cùng là y: noisy ➔ nois<b>ier</b>, busy ➔ bus<b>ier</b></li></ul></div><p class="text-sm bg-slate-100 p-2 rounded inline-block font-medium">Ex: My neighbourhood is <b>noisier than</b> your neighbourhood.</p></div><div class="glass-card note-box-print border-l-4 border-l-blue-500 mb-6"><h3 class="font-bold text-lg text-blue-800 mb-2 print:text-black">2. Long Adjectives & Irregular (Tính từ dài & Bất quy tắc)</h3><div class="text-sm mb-4 text-slate-700"><b>Định nghĩa:</b> Tính từ có từ 2 âm tiết trở lên.<br><b>Công thức:</b> S1 + to be + <b>MORE + Adj + than</b> + S2.</div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-sm"><h4 class="font-bold text-blue-800 mb-2 print:text-black">📝 Tính từ dài:</h4><ul class="space-y-1"><li>• modern ➔ <b>more</b> modern</li><li>• peaceful ➔ <b>more</b> peaceful</li><li>• expensive ➔ <b>more</b> expensive</li></ul></div><div class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-sm"><h4 class="font-bold text-rose-800 mb-2 print:text-black">⚠️ Irregular (Bất quy tắc):</h4><ul class="space-y-1"><li>• good (tốt) ➔ <b>better</b></li><li>• bad (tệ) ➔ <b>worse</b></li><li>• far (xa) ➔ <b>farther/further</b></li></ul></div></div><p class="text-sm bg-slate-100 p-2 rounded inline-block font-medium">Ex: The city is <b>more modern than</b> the countryside.</p></div>`
+                            },
+                            {
+                                type: "pronunciation", title: "IV. Pronunciation",
+                                content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/ɪ/</div><p class="text-sm text-slate-500 mb-4">Short sound (Âm 'i' ngắn, hơi giống chữ 'ê')</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('historic, busy, building')}', 'en-US')">h<span class="text-indigo-600">i</span>storic, b<span class="text-indigo-600">u</span>sy, bu<span class="text-indigo-600">i</span>lding</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/iː/</div><p class="text-sm text-slate-500 mb-4">Long sound, smile (Âm 'i' dài, kéo khóe miệng)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('peaceful, cheap, street')}', 'en-US')">p<span class="text-rose-500">ea</span>ceful, ch<span class="text-rose-500">ea</span>p, str<span class="text-rose-500">ee</span>t</div></div></div>`
+                            },
+                            {
+                                type: "listening", title: "V. Dialogue & Role-play",
+                                lines: [
+                                    { c: "Khang", a: "👦🏻", t: "Hi Vy. Where do you live?", loc: "en-US", gender: "male" },
+                                    { c: "Vy", a: "👩🏻", t: "I live in the suburbs of Ho Chi Minh City. What about you?", loc: "en-US", gender: "female" },
+                                    { c: "Khang", a: "👦🏻", t: "I live in the city centre. My neighbourhood is very busy and noisy.", loc: "en-US", gender: "male" },
+                                    { c: "Vy", a: "👩🏻", t: "I see. It is noisier than my neighbourhood. My place is very peaceful.", loc: "en-US", gender: "female" },
+                                    { c: "Khang", a: "👦🏻", t: "Yes, but the city centre is more modern. There are many tall buildings and a big square.", loc: "en-US", gender: "male" },
+                                    { c: "Vy", a: "👩🏻", t: "That's true. Are there any art galleries near your house?", loc: "en-US", gender: "female" },
+                                    { c: "Khang", a: "👦🏻", t: "Yes. Go straight, take the second turning on the left. It's next to the railway station.", loc: "en-US", gender: "male" }
+                                ],
+                                questions: [
+                                    { id: "u4_l1", q: "1. Where does Vy live?", opts: ["A. In the city centre", "B. In the suburbs", "C. Near a railway station"], ans: 1 },
+                                    { id: "u4_l2", q: "2. How is Khang's neighbourhood compared to Vy's?", opts: ["A. It is noisier and more modern", "B. It is more peaceful", "C. It is older"], ans: 0 },
+                                    { id: "u4_l3", q: "3. How to get to the art gallery?", opts: ["A. Go straight and turn right", "B. Cross the street", "C. Go straight, take the 2nd turning on the left"], ans: 2 }
+                                ]
+                            },
+                            {
+                                type: "speaking", title: "VI. Speaking", topic: "Topic: Compare two places",
+                                prompts: [
+                                    "1. Where do you live? Is it in the city or the countryside?",
+                                    "2. What places are there in your neighbourhood? (square, grocery, memorial...)",
+                                    "3. Compare your neighbourhood to another place using adjectives (busy, peaceful, noisy, narrow, wide)."
+                                ],
+                                sample: "I live in the city centre. It is very busy and modern. There is a big square and a railway station. However, the streets are narrower than the streets in the suburbs. My hometown in the countryside is more peaceful and quieter than the city."
+                            },
+                            {
+                                type: "listening_task", title: "VII. Listening Comprehension",
+                                audioScript: "Welcome to my town. It is a historic town with many old houses. In the centre, there is a large square. Opposite the square is an old cathedral. My town is smaller than London, but I think it is more beautiful. The streets here are narrow, so there are not many cars. It is much quieter and more peaceful than the big city. If you want to buy food, you can go to the grocery near the railway station. It is cheaper there.",
+                                questions: [
+                                    { id: "u4_lt1", q: "1. What is opposite the large square?", opts: ["A. A railway station", "B. An old cathedral", "C. A grocery"], ans: 1 },
+                                    { id: "u4_lt2", q: "2. How is the town compared to London?", opts: ["A. Bigger and noisier", "B. Smaller but more beautiful", "C. More modern"], ans: 1 },
+                                    { id: "u4_lt3", q: "3. Why are there not many cars?", opts: ["A. Because the streets are narrow", "B. Because the town is poor", "C. Because people like walking"], ans: 0 },
+                                    { id: "u4_lt4", q: "4. Where is the grocery?", opts: ["A. In the square", "B. Near the railway station", "C. Next to the cathedral"], ans: 1 }
+                                ]
+                            },
+                            {
+                                type: "reading_practice", title: "VIII. Reading & Practice",
+                                readingText: "Da Nang and Hoi An are two famous places in Central Vietnam, but they are very different. Da Nang is a modern city. It has many tall buildings, big bridges, and wide streets. Da Nang is noisier and busier than Hoi An. On the other hand, Hoi An is an ancient town. It is very historic. The houses in Hoi An are older and smaller. The streets are narrower, so people often walk or ride bicycles. For many tourists, Hoi An is more peaceful and romantic than Da Nang.",
+                                exercises: [
+                                    { id: 'u4_p1', type: 'choice', q: "1. Which place has wider streets?", opts: ["A. Da Nang", "B. Hoi An", "C. Both are the same"], ans: 0, exp: "Bài đọc miêu tả Da Nang: 'It has many tall buildings, big bridges, and wide streets'." },
+                                    { id: 'u4_p2', type: 'choice', q: "2. Why do people often walk or ride bicycles in Hoi An?", opts: ["A. Because the air is clean", "B. Because the streets are narrow", "C. Because they don't have cars"], ans: 1, exp: "Bài đọc ghi: 'The streets are narrower, so people often walk or ride bicycles'." },
+                                    { id: 'u4_p3', type: 'grammar', q: "3. Grammar: The countryside is ________ than the city.", opts: ["A. more quiet", "B. quieter", "C. quiet"], ans: 1, exp: "'Quiet' có thể xem là tính từ ngắn (thêm -er) -> quieter." },
+                                    { id: 'u4_p4', type: 'grammar', q: "4. Grammar: This restaurant is ________ than that one.", opts: ["A. gooder", "B. better", "C. more good"], ans: 1, exp: "'Good' là tính từ bất quy tắc, dạng so sánh hơn là 'better'." }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        let currentClass = "class-6";
+        let currentModule = null;
+        let userAnswers = {};
+        let userListeningAnswers = {};
+        let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
+
+        function initApp() {
+            const selector = document.getElementById('class-selector');
+            selector.innerHTML = '';
+            for (let cId in database) {
+                selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`;
+            }
+            renderMenu();
+            if(database[currentClass].modules.length > 0) {
+                loadModule(database[currentClass].modules[0].id);
+            }
+        }
+
+        function renderMenu() {
+            const menu = document.getElementById('nav-menu');
+            menu.innerHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 px-2">LESSONS & EXAMS</p>';
+            
+            database[currentClass].modules.forEach(mod => {
+                let html = '';
+                if(mod.type === 'lesson') {
+                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn">📖 ${mod.title}</button>`;
+                } else if (mod.type === 'exam_module') {
+                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn exam-btn mt-4">📝 ${mod.title}</button>`;
+                }
+                menu.innerHTML += html;
+            });
+        }
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        }
+
+        function changeClass() {
+            currentClass = document.getElementById('class-selector').value;
+            renderMenu();
+            if(database[currentClass].modules.length > 0) {
+                loadModule(database[currentClass].modules[0].id);
+            }
+        }
+
+        function loadModule(moduleId) {
+            if (window.innerWidth < 1024) toggleMenu(); 
+            
+            const mod = database[currentClass].modules.find(m => m.id === moduleId);
+            if (!mod) return;
+
+            currentModule = mod;
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            const navBtn = document.getElementById('nav-' + moduleId);
+            if(navBtn) navBtn.classList.add('active');
+            
+            document.getElementById('header-title').innerText = mod.title;
+            document.getElementById('print-class-title').innerText = database[currentClass].name;
+            document.getElementById('print-module-title').innerText = mod.title;
+
+            const contentArea = document.getElementById('content-area');
+            contentArea.innerHTML = '';
+            
+            // Clear exam timer if active
+            if(currentExam.timer) clearInterval(currentExam.timer);
+            
+            if (mod.type === 'lesson') {
+                renderLessonView(mod, contentArea);
+            } else if (mod.type === 'exam_module') {
+                renderExamSetupView(mod, contentArea);
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderLessonView(mod, container) {
+            let html = '';
+            
+            mod.sections.forEach((sec, sIdx) => {
+                html += `<section><h2 class="text-2xl font-bold text-slate-800 baloo-font">${sec.title}</h2>`;
+
+                if (sec.type === 'objectives') {
+                    html += `<div class="glass-card bg-indigo-50 border-indigo-200 note-box-print">${sec.content}</div>`;
+                } 
+                else if (sec.type === 'vocab') {
+                    html += `<p class="text-sm text-indigo-600 font-bold mb-4 bg-indigo-50 inline-block px-3 py-1 rounded-lg no-print">💡 Tap a card to listen</p>
+                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 print-grid">`;
+                    sec.words.forEach(w => {
+                        let safeWord = encodeURIComponent(w.w);
+                        html += `<div class="glass-card !mb-0 p-4 audio-row border border-slate-200 bg-white vocab-item-print" onclick="playAudio('${safeWord}', 'en-US')">
+                                    <h3 class="font-bold text-indigo-700 text-lg print:text-black">${w.w}</h3>
+                                    <p class="text-sm text-slate-500 mb-1 print:italic print:text-black">${w.p}</p>
+                                    <p class="text-slate-800 font-medium">${w.m}</p>
+                                 </div>`;
+                    });
+                    html += `</div>`;
+                    
+                    if(sec.collocations) {
+                        html += `<div class="glass-card bg-slate-50 border-slate-300 note-box-print p-4">
+                                    <h3 class="font-bold text-slate-800 mb-3 text-lg">🎯 Collocations & Word Webs:</h3>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-medium">`;
+                        sec.collocations.forEach(c => {
+                            html += `<div><b class="text-indigo-700 uppercase">${c.word}</b>:<br> ${c.items}</div>`;
+                        });
+                        html += `</div></div>`;
+                    }
+                } 
+                else if (sec.type === 'grammar' || sec.type === 'pronunciation') {
+                    html += sec.content;
+                }
+                else if (sec.type === 'listening') {
+                    html += `<div class="glass-card border-t-4 border-sky-500 bg-sky-50/30">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-sky-200 pb-4 print:border-none no-print">
+                                    <span class="text-sm text-sky-600 font-bold bg-sky-100 px-3 py-1.5 rounded-full shadow-sm">👇 TAP TO LISTEN & ROLE-PLAY</span>
+                                    <div class="flex gap-2 w-full sm:w-auto">
+                                        <button onclick="playAllDialogue()" class="flex-1 sm:flex-none bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-600 transition-colors flex items-center justify-center gap-2">
+                                            ▶️ Play All
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="space-y-3 mb-8">`;
+                    
+                    sec.lines.forEach((l, i) => {
+                        let isRev = i % 2 !== 0 ? 'flex-row-reverse print:flex-row' : '';
+                        let align = i % 2 !== 0 ? 'text-right print:text-left' : '';
+                        let bg = i % 2 !== 0 ? 'bg-sky-50 border-sky-200' : 'bg-white border-slate-200';
+                        let safeText = encodeURIComponent(l.t).replace(/'/g, "%27"); 
+                        
+                        html += `<div class="audio-row flex gap-3 p-2 ${isRev}" onclick="playDialogueLine('${safeText}', '${l.gender}')">
+                                    <div class="chat-avatar w-10 h-10 rounded-full bg-sky-200 flex items-center justify-center text-xl shrink-0 no-print">${l.a}</div>
+                                    <div class="${align} w-full"><div class="text-xs font-bold text-sky-600 mb-1 mx-1 no-print">${l.c}</div>
+                                    <div class="p-3 rounded-2xl border ${bg} inline-block max-w-[85%] text-[15px] font-medium shadow-sm"><span class="hidden print:inline chat-name-print">${l.c}: </span>${l.t}</div></div>
+                                 </div>`;
+                    });
+                    html += `</div>
+                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item">
+                                <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">🎧 Choose the correct answer:</h4>
+                                <div class="space-y-5">`;
+                    sec.questions.forEach(q => {
+                        html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
+                        q.opts.forEach((opt, idx) => {
+                            html += `<div onclick="selectListening(this, '${q.id}', ${idx}, ${q.ans})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-sky-100">${opt}</div>`;
+                        });
+                        html += `</div><div id="res-${q.id}" class="hidden mt-2 font-bold text-sm"></div></div>`;
+                    });
+                    html += `</div></div></div>`;
+                }
+                else if (sec.type === 'speaking') {
+                    let safeSample = encodeURIComponent(sec.sample).replace(/'/g, "%27");
+                    
+                    html += `<div class="glass-card border-t-4 border-rose-500 note-box-print">
+                                <h3 class="font-bold text-slate-800 text-lg mb-2">${sec.topic}</h3>
+                                <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 mb-4 print:bg-white print:border-slate-300">
+                                    <p class="text-sm font-bold text-rose-800 mb-2 print:text-black">Prompts (Gợi ý):</p>
+                                    <ul class="text-sm text-slate-700 space-y-2 pl-2">`;
+                    sec.prompts.forEach(p => html += `<li>${p}</li>`);
+                    html += `</ul></div>
+                                <div class="flex flex-col md:flex-row items-start gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                    <button onclick="playSpeakingSample('${safeSample}')" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-rose-600 shrink-0 no-print flex items-center gap-2">
+                                        🔊 Listen to Sample
+                                    </button>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Sample Answer:</p>
+                                        <p class="text-[15px] text-slate-700 font-medium">"${sec.sample}"</p>
+                                    </div>
+                                </div>
+                             </div>`;
+                }
+                else if (sec.type === 'listening_task') {
+                    let safeScript = encodeURIComponent(sec.audioScript).replace(/'/g, "%27");
+                    html += `<div class="glass-card border-t-4 border-teal-500 bg-teal-50/30 note-box-print mb-6">
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-teal-200 pb-4 print:border-none no-print">
+                                    <span class="text-sm text-teal-600 font-bold bg-teal-100 px-3 py-1.5 rounded-full shadow-sm">🎧 TAP TO LISTEN (KỸ NĂNG NGHE)</span>
+                                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                                        <button onclick="playAudio('${safeScript}', 'en-US')" class="flex-1 sm:flex-none bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+                                            ▶️ Phát Audio (Play)
+                                        </button>
+                                        <button onclick="toggleTranscript(this)" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
+                                            📝 Transcript
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="audio-transcript hidden mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl text-sm text-slate-800 leading-relaxed no-print shadow-inner">
+                                    <b>Audio Script:</b> ${sec.audioScript}
+                                </div>
+                                <div class="hidden print:block text-slate-800 text-sm leading-relaxed mb-6 italic border border-slate-300 p-4 rounded-xl bg-white">
+                                    <b>Audio Script (For teacher):</b> ${sec.audioScript}
+                                </div>
+                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item">
+                                    <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">🎧 Listen and choose the correct answer:</h4>
+                                    <div class="space-y-5">`;
+                    sec.questions.forEach(q => {
+                        html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
+                        q.opts.forEach((opt, idx) => {
+                            html += `<div onclick="selectListeningChoice(this, '${q.id}', ${idx})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-teal-100">${opt}</div>`;
+                        });
+                        html += `</div></div>`;
+                    });
+                    html += `</div>
+                             <div class="text-center mt-6 no-print listening-action-buttons">
+                                <button onclick="submitListeningTask('${sec.questions[0].id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">✅ Submit Listening</button>
+                             </div>
+                             </div></div>`;
+                }
+                else if (sec.type === 'reading_practice') {
+                    let rawReading = sec.readingText.replace(/<[^>]*>?/gm, ''); 
+                    let safeReading = encodeURIComponent(rawReading).replace(/'/g, "%27");
+                    
+                    html += `<div class="glass-card border-t-4 border-amber-500 note-box-print mb-6">
+                                <h3 class="text-lg font-bold text-slate-800 mb-3">🌎 Reading</h3>
+                                <p class="text-xs font-bold text-amber-600 bg-amber-100 px-3 py-1 rounded-full mb-3 inline-block no-print">👇 TAP TO LISTEN TO THE TEXT</p>
+                                <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:bg-white print:border-none print:p-0" onclick="playReadingText('${safeReading}')">
+                                    ${sec.readingText}
+                                </div>
+                             </div>
+                             <div class="glass-card border-t-4 border-indigo-500" id="practice-container">`;
+                             
+                    sec.exercises.forEach(ex => {
+                        html += `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl print:bg-transparent print:border-none print:p-0 print:mb-4 mb-4 exercise-item" id="ex-${ex.id}">
+                                    <p class="text-[15px] font-bold text-slate-800 mb-3 print:mb-1">${ex.q}</p>`;
+                        
+                        if(ex.type === 'choice' || ex.type === 'grammar') {
+                            html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-2 print:grid-cols-3" id="opts-${ex.id}">`;
+                            ex.opts.forEach((opt, idx) => {
+                                html += `<div onclick="selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 print:border-none print:p-1 print:inline">${opt}</div>`;
+                            });
+                            html += `</div>`;
+                        } else if (ex.type === 'fill') {
+                            html += `<div class="flex gap-2 no-print"><input type="text" id="input-${ex.id}" placeholder="Type here..." class="flex-1 p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"></div><div class="print-only border-b border-black w-32 h-6 inline-block mt-2"></div>`;
+                        }
+                        
+                        html += `<div id="exp-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"><b>💡 Explanation:</b> ${ex.exp}</div></div>`;
+                    });
+                    
+                    html += `<div class="text-center mt-6 no-print" id="action-buttons">
+                                <button onclick="submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">✅ Submit & Explain</button>
+                             </div></div>`;
+                    userAnswers = {}; 
+                }
+                
+                html += `</section>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderExamSetupView(mod, container) {
+            let html = `
+                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
+                    <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
+                    <p class="text-slate-500 mb-8 font-medium">Review 1: Comprehensive test for Units 1 to 3</p>
+                    
+                    <div class="max-w-md mx-auto space-y-4">
+                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="test1">${mod.tests.test1.name}</option>
+                            <option value="test2">${mod.tests.test2.name}</option>
+                        </select>
+                        
+                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        
+                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
+                            🚀 START EXAM
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function startExam(modId) {
+            const mod = database[currentClass].modules.find(m => m.id === modId);
+            const testId = document.getElementById('exam-test-selector').value;
+            const level = document.getElementById('exam-level-selector').value;
+            
+            currentExam.testId = testId;
+            currentExam.level = level;
+            currentExam.questions = mod.tests[testId].levels[level];
+            currentExam.answers = {};
+            currentExam.flagged = {}; // Quản lý trạng thái gắn cờ đỏ
+            currentExam.timeLeft = 45 * 60; // 45 minutes
+
+            const testData = mod.tests[testId];
+            let safeAudio = encodeURIComponent(testData.listeningScript).replace(/'/g, "%27");
+
+            // Tạo thanh Tab ngang dính (Sticky Tabs) để chuyển phần nhanh
+            let html = `
+                <div class="sticky top-0 z-[60] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">
+                    <button onclick="document.getElementById('part-PART-I:-LISTENING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">🎧 Listening</button>
+                    <button onclick="document.getElementById('part-PART-II:-PHONETICS').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">🗣️ Phonetics</button>
+                    <button onclick="document.getElementById('part-PART-III:-VOCABULARY-&-GRAMMAR').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">📚 Vocab & Grammar</button>
+                    <button onclick="document.getElementById('part-PART-IV:-READING-COMPREHENSION-(Based-on-the-text-above)').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">📖 Reading</button>
+                    <button onclick="document.getElementById('part-PART-V:-WRITING').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-transparent hover:border-indigo-300">✍️ Writing</button>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-6 relative">
+                    <!-- MAIN COLUMN: QUESTIONS -->
+                    <div class="flex-1 space-y-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center">
+                            <h2 class="text-xl font-bold text-slate-800 baloo-font uppercase text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
+                        </div>
+                        
+                        <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-24" id="part-PART-I:-LISTENING">
+                            <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
+                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio (Listen only)</button>
+                            <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
+                        </div>
+            `;
+
+            let currentPart = "";
+            currentExam.questions.forEach((q, idx) => {
+                // Xử lý tiêu đề phần và Chèn đoạn Reading trực tiếp vào Part IV
+                if (q.part !== currentPart) {
+                    let partId = 'part-' + q.part.replace(/\s+/g, '-');
+                    
+                    if (q.part.includes("READING COMPREHENSION")) {
+                        html += `
+                        <div class="glass-card bg-amber-50 border-amber-200 mt-8 mb-6 p-5 scroll-mt-24" id="${partId}">
+                            <h3 class="font-bold text-amber-800 mb-3 text-lg">📚 READING TEXT</h3>
+                            <div class="bg-white p-4 rounded-xl border border-amber-100 text-slate-800 leading-relaxed text-[15px]">
+                                ${testData.readingText}
+                            </div>
+                        </div>`;
+                    } else if (q.part !== "PART I: LISTENING") {
+                        // Tránh duplicate tiêu đề Listening vì đã có thẻ riêng ở trên
+                        html += `<h3 id="${partId}" class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2 scroll-mt-24">${q.part}</h3>`;
+                    }
+                    currentPart = q.part;
+                }
+                
+                // Khối câu hỏi
+                html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-24" id="exam-q-${idx}">
+                            <div class="flex justify-between items-start mb-4 gap-4">
+                                <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Q${idx+1}.</span> ${q.q}</p>
+                                <button onclick="toggleExamFlag(${idx})" id="flag-btn-${idx}" class="shrink-0 text-slate-300 hover:text-rose-500 transition-colors p-2 rounded-lg hover:bg-rose-50 bg-slate-50 border border-slate-200 no-print" title="Flag for review">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"></path></svg>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="exam-opts-${idx}">`;
+                q.opts.forEach((opt, oIdx) => {
+                    html += `<div onclick="selectExamChoice(this, ${idx}, ${oIdx})" class="q-btn bg-slate-50 border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 hover:border-indigo-300 transition-colors">${opt}</div>`;
+                });
+                html += `</div>
+                         <div id="exam-exp-${idx}" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800"><b>💡 Explanation:</b> ${q.exp}</div>
+                         </div>`;
+            });
+
+            html += `
+                        <div class="text-center mt-10 pb-8 no-print" id="exam-action-buttons">
+                            <button onclick="submitExam()" class="bg-rose-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-rose-700 shadow-xl transition-transform transform active:scale-95 text-lg w-full md:w-auto">
+                                ✅ SUBMIT EXAM
+                            </button>
+                        </div>
+                    </div> <!-- End Left Column -->
+
+                    <!-- RIGHT COLUMN: NAVIGATOR PANEL -->
+                    <div class="w-full lg:w-72 shrink-0 no-print order-first lg:order-last">
+                        <div class="sticky top-20 bg-white p-5 rounded-2xl border border-slate-200 shadow-md max-h-[60vh] lg:max-h-[85vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-5 pb-4 border-b border-slate-100">
+                                <h3 class="font-bold text-slate-800 baloo-font text-lg">Question Board</h3>
+                                <div class="font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg text-base border border-rose-200 shadow-inner flex items-center gap-1">
+                                    ⏱️ <span id="timer-countdown">45:00</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Legend -->
+                            <div class="flex flex-wrap gap-3 mb-5 text-[11px] font-bold text-slate-600 justify-center">
+                                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded border-2 border-rose-300 bg-white"></span> Unanswered</div>
+                                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-emerald-500 border-2 border-emerald-600"></span> Answered</div>
+                                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-rose-100 border-2 border-rose-500 text-rose-600 flex items-center justify-center font-bold">⚑</span> Flagged</div>
+                            </div>
+
+                            <div class="grid grid-cols-5 gap-2" id="exam-navigator">
+                                <!-- Navigator buttons will be generated here -->
+                            </div>
+                        </div>
+                    </div> <!-- End Right Column -->
+                </div>
+            `;
+
+            document.getElementById('content-area').innerHTML = html;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            renderExamNavigator();
+
+            if(currentExam.timer) clearInterval(currentExam.timer);
+            currentExam.timer = setInterval(() => {
+                currentExam.timeLeft--;
+                let m = Math.floor(currentExam.timeLeft / 60);
+                let s = currentExam.timeLeft % 60;
+                document.getElementById('timer-countdown').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+                
+                if (currentExam.timeLeft <= 0) {
+                    clearInterval(currentExam.timer);
+                    showCustomAlert("Time's up!", "45 minutes are over! The system has automatically submitted your exam.");
+                    submitExam(true);
+                }
+            }, 1000);
+        }
+
+        function renderExamNavigator() {
+            let navHtml = '';
+            currentExam.questions.forEach((_, idx) => {
+                navHtml += `<button onclick="document.getElementById('exam-q-${idx}').scrollIntoView({behavior: 'smooth', block: 'center'})" id="nav-btn-${idx}" class="w-full aspect-square rounded-lg border-2 border-rose-300 text-rose-500 bg-white flex items-center justify-center font-bold text-[15px] hover:scale-105 hover:bg-rose-50 transition-all shadow-sm">${idx + 1}</button>`;
+            });
+            document.getElementById('exam-navigator').innerHTML = navHtml;
+        }
+
+        function updateExamNavigator(idx) {
+            let btn = document.getElementById('nav-btn-' + idx);
+            if (!btn) return;
+            
+            let hasAnswer = currentExam.answers[idx] !== undefined;
+            let isFlagged = currentExam.flagged[idx];
+
+            // Reset base classes
+            btn.className = "w-full aspect-square rounded-lg border-2 flex items-center justify-center font-bold text-[15px] hover:scale-105 transition-all shadow-sm cursor-pointer";
+
+            if (isFlagged) {
+                // Trạng thái cờ đỏ nổi bật
+                btn.classList.add("bg-rose-100", "border-rose-500", "text-rose-600");
+                btn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"></path></svg>`;
+            } else if (hasAnswer) {
+                // Đã làm: Xanh lá
+                btn.classList.add("bg-emerald-500", "border-emerald-600", "text-white");
+                btn.innerHTML = idx + 1;
+            } else {
+                // Chưa làm: Viền đỏ nhạt
+                btn.classList.add("bg-white", "border-rose-300", "text-rose-500", "hover:bg-rose-50");
+                btn.innerHTML = idx + 1;
+            }
+        }
+
+        function toggleExamFlag(idx) {
+            currentExam.flagged[idx] = !currentExam.flagged[idx];
+            let flagBtn = document.getElementById('flag-btn-' + idx);
+            if(currentExam.flagged[idx]) {
+                flagBtn.classList.remove('text-slate-300', 'bg-slate-50', 'border-slate-200');
+                flagBtn.classList.add('text-rose-600', 'bg-rose-100', 'border-rose-300');
+            } else {
+                flagBtn.classList.add('text-slate-300', 'bg-slate-50', 'border-slate-200');
+                flagBtn.classList.remove('text-rose-600', 'bg-rose-100', 'border-rose-300');
+            }
+            updateExamNavigator(idx);
+        }
+
+        function selectExamChoice(btn, qIdx, choiceIdx) {
+            currentExam.answers[qIdx] = choiceIdx;
+            const parent = document.getElementById('exam-opts-' + qIdx);
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            btn.classList.add('q-selected');
+            
+            // Tự động cập nhật bảng Navigator bên phải
+            updateExamNavigator(qIdx);
+        }
+
+        function submitExam(isTimeout = false) {
+            let unanswered = currentExam.questions.length - Object.keys(currentExam.answers).length;
+            if(!isTimeout && unanswered > 0) {
+                if(!confirm(`You have ${unanswered} unanswered questions! Are you sure you want to submit?`)) return;
+            } else if (!isTimeout) {
+                if(!confirm("Are you sure you want to submit your exam?")) return;
+            }
+
+            clearInterval(currentExam.timer);
+            
+            let score = 0;
+            currentExam.questions.forEach((q, idx) => {
+                let userAns = currentExam.answers[idx];
+                let parent = document.getElementById('exam-opts-' + idx);
+                let btns = parent.querySelectorAll('.q-btn');
+                
+                btns.forEach(b => b.classList.add('disabled'));
+
+                if (userAns === q.ans) {
+                    score++;
+                    btns[userAns].style.backgroundColor = "#e0e7ff"; 
+                    btns[userAns].style.borderColor = "#4f46e5";
+                } else {
+                    if (userAns !== undefined) {
+                        btns[userAns].classList.remove('q-selected');
+                        btns[userAns].classList.add('q-wrong'); 
+                    }
+                }
+            });
+
+            const actionContainer = document.getElementById('exam-action-buttons');
+            let percentage = (score / currentExam.questions.length) * 10;
+            let resultColor = percentage >= 8 ? "emerald" : (percentage >= 5 ? "amber" : "rose");
+
+            actionContainer.innerHTML = `
+                <div class="p-8 bg-white border-2 border-${resultColor}-500 rounded-2xl shadow-lg inline-block text-center w-full md:w-auto mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2 baloo-font">EXAM RESULT</h2>
+                    <div class="text-5xl font-extrabold text-${resultColor}-600 mb-2">${score} / ${currentExam.questions.length}</div>
+                    <p class="text-slate-500 font-medium">Your score: ${percentage.toFixed(1)} / 10</p>
+                </div>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <button onclick="loadModule('${currentModule.id}')" class="bg-slate-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-slate-700 shadow-md transition-transform transform active:scale-95 w-full md:w-auto">
+                        🔄 Try Again
+                    </button>
+                    <button onclick="explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95 w-full md:w-auto">
+                        💡 Show Answers & Explanation
+                    </button>
+                </div>
+            `;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function explainExam() {
+            document.getElementById('exam-audio-script').classList.remove('hidden');
+
+            currentExam.questions.forEach((q, idx) => {
+                let parent = document.getElementById('exam-opts-' + idx);
+                let btns = parent.querySelectorAll('.q-btn');
+                
+                btns[q.ans].classList.remove('q-wrong'); 
+                btns[q.ans].classList.add('q-correct');
+                btns[q.ans].style.backgroundColor = ""; 
+                btns[q.ans].style.borderColor = "";
+
+                document.getElementById('exam-exp-' + idx).classList.remove('hidden');
+
+                // Cập nhật lại màu sắc cho Navigator Panel để học sinh dễ soi lại câu sai
+                let navBtn = document.getElementById('nav-btn-' + idx);
+                if(navBtn) {
+                    navBtn.className = "w-full aspect-square rounded-lg border-2 flex items-center justify-center font-bold text-[15px] transition-all shadow-sm cursor-pointer hover:scale-105";
+                    if(currentExam.answers[idx] === q.ans) {
+                        navBtn.classList.add("bg-emerald-100", "border-emerald-500", "text-emerald-700");
+                    } else {
+                        navBtn.classList.add("bg-rose-100", "border-rose-500", "text-rose-700");
+                    }
+                    navBtn.innerHTML = idx + 1; 
+                }
+            });
+            
+            showCustomAlert("Success", "Correct answers (green) and detailed explanations have been unlocked below each question!", "✅");
+        }
+
+        function toggleTranscript(btn) {
+            const container = btn.closest('.glass-card');
+            const el = container.querySelector('.audio-transcript');
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function selectListeningChoice(btn, qId, choiceIdx) {
+            userListeningAnswers[qId] = choiceIdx;
+            const parent = document.getElementById('opts-' + qId);
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            btn.classList.add('q-selected');
+        }
+
+        function submitListeningTask(firstQid) {
+            let score = 0;
+            const section = currentModule.sections.find(s => s.type === 'listening_task');
+            const questions = section.questions;
+
+            questions.forEach(q => {
+                const parent = document.getElementById('opts-' + q.id);
+                const btns = parent.querySelectorAll('.q-btn');
+                const userAns = userListeningAnswers[q.id];
+                
+                btns.forEach(b => b.classList.add('disabled'));
+
+                if (userAns === q.ans) {
+                    btns[userAns].classList.remove('q-selected', 'q-wrong');
+                    btns[userAns].classList.add('q-correct');
+                    score++;
+                } else {
+                    if (userAns !== undefined) {
+                        btns[userAns].classList.remove('q-selected');
+                        btns[userAns].classList.add('q-wrong');
+                    }
+                    btns[q.ans].classList.add('q-correct');
+                }
+            });
+
+            const actionContainer = document.querySelector('.listening-action-buttons');
+            actionContainer.innerHTML = `
+                <div class="text-xl font-bold text-teal-600 mb-4 bg-teal-50 inline-block px-6 py-2 rounded-xl border border-teal-200">🎉 Score: ${score} / ${questions.length}</div>
+                <br><button onclick="loadModule('${currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>
+            `;
+        }
+
+        function selectListening(btn, qId, selectedIdx, ansIdx) {
+            const parent = document.getElementById('opts-' + qId);
+            parent.querySelectorAll('.q-btn').forEach(b => { b.classList.add('disabled'); b.classList.remove('q-selected');});
+            const resultDiv = document.getElementById('res-' + qId);
+            resultDiv.classList.remove('hidden');
+
+            if(selectedIdx === ansIdx) {
+                btn.classList.add('q-correct');
+                resultDiv.innerText = "✅ Correct!";
+                resultDiv.className = "mt-2 font-bold text-sm text-emerald-600";
+            } else {
+                btn.classList.add('q-wrong');
+                parent.children[ansIdx].classList.add('q-correct');
+                resultDiv.innerText = "❌ Incorrect. Listen again!";
+                resultDiv.className = "mt-2 font-bold text-sm text-rose-600";
+            }
+        }
+
+        function selectChoice(btn, exId, choiceIdx) {
+            userAnswers[exId] = choiceIdx;
+            const parent = document.getElementById('opts-' + exId);
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            btn.classList.add('q-selected');
+        }
+
+        function submitExercises() {
+            let score = 0;
+            const exercises = currentModule.sections.find(s => s.type === 'reading_practice').exercises;
+
+            exercises.forEach(ex => {
+                const expDiv = document.getElementById('exp-' + ex.id);
+                expDiv.classList.remove('hidden');
+
+                if (ex.type === 'choice' || ex.type === 'grammar') {
+                    const parent = document.getElementById('opts-' + ex.id);
+                    const btns = parent.querySelectorAll('.q-btn');
+                    const userAns = userAnswers[ex.id];
+                    btns.forEach(b => b.classList.add('disabled'));
+
+                    if (userAns === ex.ans) {
+                        btns[userAns].classList.remove('q-selected', 'q-wrong');
+                        btns[userAns].classList.add('q-correct');
+                        score++;
+                    } else {
+                        if (userAns !== undefined) {
+                            btns[userAns].classList.remove('q-selected');
+                            btns[userAns].classList.add('q-wrong');
+                        }
+                        btns[ex.ans].classList.add('q-correct');
+                    }
+                } else if (ex.type === 'fill') {
+                    const input = document.getElementById('input-' + ex.id);
+                    const val = input.value.trim().toLowerCase();
+                    input.readOnly = true;
+                    if (val === ex.ans) { input.classList.add('q-input-correct'); score++; } 
+                    else {
+                        input.classList.add('q-input-wrong');
+                        expDiv.innerHTML = `<span class="text-rose-600 block mb-2 text-[15px]">❌ Đáp án đúng là: <b class="bg-rose-100 px-2 py-0.5 rounded">${ex.ans}</b></span>` + expDiv.innerHTML;
+                    }
+                }
+            });
+
+            const actionContainer = document.getElementById('action-buttons');
+            actionContainer.innerHTML = `
+                <div class="text-xl font-bold text-emerald-600 mb-4 bg-emerald-50 inline-block px-6 py-2 rounded-xl border border-emerald-200">🎉 Score: ${score} / ${exercises.length}</div>
+                <br><button onclick="loadModule('${currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>
+            `;
+            actionContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        const synth = window.speechSynthesis;
+        let availableVoices = [];
+
+        function loadVoices() { availableVoices = synth.getVoices(); }
+        if (typeof synth.onvoiceschanged !== 'undefined') { synth.onvoiceschanged = loadVoices; }
+        loadVoices();
+
+        function getVoiceByGender(gender, lang = 'en-US') {
+            if (availableVoices.length === 0) availableVoices = synth.getVoices();
+            const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
+            const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
+            let voice = null;
+            if (gender === 'female') { voice = availableVoices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
+            else if (gender === 'male') { voice = availableVoices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
+            if (!voice) { voice = availableVoices.find(v => v.lang.startsWith('en')); }
+            return voice;
+        }
+
+        function highlightAudioRow() {
+            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
+            if(event && event.currentTarget && event.currentTarget.classList.contains('audio-row')) {
+                event.currentTarget.classList.add('active-audio');
+            }
+        }
+        function removeHighlight() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); }
+
+        function playAudio(encodedText, lang = 'en-US', pitch = 1) {
+            highlightAudioRow();
+            synth.cancel();
+            let text = "";
+            try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
+            
+            let chunks = text.match(/[^.!?]+[.!?]+/g);
+            if (!chunks || chunks.length === 0) chunks = [text];
+            let currentChunk = 0;
+            
+            function speakNextChunk() {
+                if (currentChunk >= chunks.length) { removeHighlight(); return; }
+                let utterance = new SpeechSynthesisUtterance(chunks[currentChunk].trim());
+                utterance.lang = lang; utterance.rate = 0.85; utterance.pitch = pitch;
+                utterance.onend = () => { currentChunk++; speakNextChunk(); };
+                utterance.onerror = () => removeHighlight();
+                synth.speak(utterance);
+            }
+            speakNextChunk();
+        }
+
+        function playDialogueLine(encodedText, gender) {
+            highlightAudioRow();
+            synth.cancel();
+            let text = "";
+            try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = getVoiceByGender(gender, 'en-US');
+            if(voice) utterance.voice = voice;
+            utterance.lang = 'en-US'; utterance.rate = 0.85;
+            utterance.onend = () => removeHighlight();
+            utterance.onerror = () => removeHighlight();
+            synth.speak(utterance);
+        }
+        
+        function playSpeakingSample(encodedText) { playAudio(encodedText, 'en-US'); }
+        function playReadingText(encodedText) { playAudio(encodedText, 'en-US'); }
+
+        function playAllDialogue() {
+            synth.cancel(); 
+            const sec = currentModule.sections.find(s => s.type === 'listening');
+            if(!sec) return;
+            removeHighlight();
+            showCustomAlert("Playing All", "Đang phát toàn bộ bài hội thoại. (Playing the full dialogue).", "▶️");
+            let currentLine = 0;
+            function speakNextLine() {
+                if(currentLine >= sec.lines.length) return;
+                let l = sec.lines[currentLine];
+                let utterance = new SpeechSynthesisUtterance(l.t);
+                const voice = getVoiceByGender(l.gender, l.loc || 'en-US');
+                if(voice) utterance.voice = voice;
+                utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
+                utterance.onend = () => { currentLine++; speakNextLine(); };
+                synth.speak(utterance);
+            }
+            speakNextLine();
+        }
+
+        function showCustomAlert(title, message, icon="🔔") {
+            document.getElementById('alertIcon').innerText = icon;
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.add('active');
+        }
+        function closeCustomAlert() { document.getElementById('customAlert').classList.remove('active'); }
+
+        window.onload = initApp;
+
+        // Force Safari activation on iOS
+        document.body.addEventListener('touchstart', function() {
+            if (!synth.speaking) {
+                const s = new SpeechSynthesisUtterance("");
+                synth.speak(s);
+            }
+        }, {once: true});
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) { return false; } 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } 
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) { return false; } 
+        }
+        document.addEventListener('selectstart', event => event.preventDefault());
+    </script>
+</body>
+</html>
