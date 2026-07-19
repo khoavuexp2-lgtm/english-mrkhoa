@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Global Success 6 - Interactive English LMS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #f1f5f9; color: #1e293b; overflow: hidden; }
@@ -28,31 +27,10 @@
         .q-wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; text-decoration: line-through;}
         .disabled { pointer-events: none; opacity: 0.9;}
 
-        /* Styles cho Bài tập Tương tác (SBT) */
-        .sbt-inline-btn { display: inline-block; padding: 4px 12px; margin: 2px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600; background: white; color: #475569;}
-        .sbt-inline-btn:hover:not(.disabled) { border-color: #818cf8; background: #f5f3ff; color: #4f46e5;}
-        
-        .fill-input { border: none; border-bottom: 2px dashed #94a3b8; background: transparent; padding: 4px 8px; font-weight: 600; color: #1e293b; outline: none; text-align: center; min-width: 80px; transition: all 0.2s; font-size: 16px;}
-        .fill-input:focus { border-bottom-color: #4f46e5; background: #f8fafc;}
-        .input-correct { border-bottom: 2px solid #10b981 !important; color: #10b981 !important; background: #d1fae5 !important; border-radius: 6px;}
-        .input-wrong { border-bottom: 2px solid #ef4444 !important; color: #ef4444 !important; background: #fee2e2 !important; border-radius: 6px;}
-        
-        .chip { display: inline-block; padding: 6px 14px; margin: 4px; background: #ffffff; border: 2px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.1s; user-select: none; }
-        .chip:active:not(.disabled) { transform: scale(0.95); }
-        .chip.used { opacity: 0.3; pointer-events: none; box-shadow: none; border-style: dashed;}
-        .dropzone { min-height: 50px; border: 2px dashed #94a3b8; border-radius: 12px; padding: 8px; margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; background: #f8fafc; cursor: pointer;}
-        .dropzone .chip { background: #e0e7ff; border-color: #818cf8; color: #3730a3; }
-        .dropzone.correct { border: 2px solid #10b981; background: #d1fae5; }
-        .dropzone.wrong { border: 2px solid #ef4444; background: #fee2e2; }
-
-        /* Tối ưu hóa bản in PDF cho SBT */
-        #sbt-pdf-export-container { display: none; width: 800px; padding: 40px; background: white; color: black; font-family: 'Times New Roman', Times, serif; font-size: 14px;}
-        .pdf-section-title { font-weight: bold; font-size: 18px; color: #1e3a8a; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;}
-        .pdf-q-text { font-weight: 600; margin-bottom: 5px; }
-        .pdf-ans-box { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin: 0 5px; border: 1px solid #ccc; background: #f8fafc;}
-        .pdf-correct { background-color: #d1fae5; color: #047857; border-color: #10b981; }
-        .pdf-wrong { background-color: #fee2e2; color: #b91c1c; border-color: #ef4444; text-decoration: line-through; }
-        .pdf-real-ans { background-color: #e0e7ff; color: #3730a3; border-color: #4f46e5; font-size: 0.9em; margin-left: 10px;}
+        .fill-input { border-bottom: 2px solid #cbd5e1; outline: none; background: transparent; text-align: center; font-weight: bold; color: #4f46e5; padding: 0 5px; transition: all 0.2s; }
+        .fill-input:focus { border-bottom-color: #4f46e5; }
+        .fill-correct { border-bottom-color: #22c55e !important; color: #166534 !important; background-color: #dcfce7; border-radius: 4px;}
+        .fill-wrong { border-bottom-color: #ef4444 !important; color: #991b1b !important; background-color: #fee2e2; border-radius: 4px;}
 
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 10px; border: 1px solid #e2e8f0; text-align: left;}
@@ -69,6 +47,10 @@
         .module-nav-btn.exam-btn { border: 1px solid #fecdd3; background-color: #fff1f2; color: #be123c; }
         .module-nav-btn.exam-btn:hover { background-color: #ffe4e6; }
         .module-nav-btn.exam-btn.active { background-color: #fecdd3; color: #9f1239; border-left: 4px solid #e11d48; }
+        
+        .sbt-btn { border: 1px solid #fef08a; background-color: #fef9c3; color: #a16207; }
+        .sbt-btn:hover { background-color: #fef08a; }
+        .sbt-btn.active { background-color: #fde047; color: #854d0e; border-left: 4px solid #eab308; }
 
         .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);}
         .custom-alert-overlay.active { display: flex; opacity: 1;}
@@ -78,35 +60,15 @@
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             @page { size: A4 portrait; margin: 18mm 15mm 20mm 15mm; } 
-            body { background: white !important; font-size: 11.5pt !important; font-family: 'Georgia', 'Times New Roman', serif !important; color: #111 !important; line-height: 1.5 !important; overflow: visible !important; }
+            body { background: white !important; font-size: 11.5pt !important; color: #111 !important; line-height: 1.5 !important; overflow: visible !important; }
             .scroll-container { height: auto !important; overflow: visible !important; padding: 0 !important; }
-            .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .audio-row:hover, .glass-card > p.text-xs.font-bold, #listening-action-buttons { display: none !important; }
+            .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .submit-btn { display: none !important; }
             #content-area { padding: 0 !important; max-width: 100% !important; }
-            .glass-card { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; margin-bottom: 18pt !important; background: transparent !important; page-break-inside: auto !important; }
-            section { page-break-inside: auto !important; margin-bottom: 15pt !important; }
-            .unit-header-print { text-align: right; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; margin-bottom: 25px; }
-            .unit-header-print h1 { font-family: 'Arial', sans-serif !important; font-size: 24pt !important; font-weight: 900 !important; color: #4f46e5 !important; margin: 0; text-transform: uppercase; }
-            .unit-header-print h2 { font-family: 'Arial', sans-serif !important; font-size: 12pt !important; font-weight: normal !important; color: #64748b !important; margin: 5px 0 0 0; letter-spacing: 2px; text-transform: uppercase; }
-            h2.baloo-font { font-family: 'Arial', sans-serif !important; font-size: 14pt !important; color: #ffffff !important; background-color: #4f46e5 !important; padding: 6px 12px !important; border-radius: 6px !important; margin: 20pt 0 10pt 0 !important; font-weight: bold !important; text-transform: uppercase; display: inline-block; page-break-after: avoid !important; }
-            h3 { font-family: 'Arial', sans-serif !important; font-size: 12pt !important; font-weight: bold !important; margin-bottom: 8pt !important; page-break-after: avoid !important; color: #1e3a8a !important;}
-            .vocab-item-print, table, .exercise-item { page-break-inside: avoid !important; }
-            .print-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12pt !important; }
-            .vocab-item-print { border: 1px solid #e2e8f0 !important; padding: 10pt !important; border-radius: 8px !important; background: #f8fafc !important; border-left: 4px solid #4f46e5 !important;}
-            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 12pt !important; }
-            th, td { border: 1px solid #cbd5e1 !important; padding: 8pt !important; font-family: 'Arial', sans-serif !important; font-size: 10.5pt !important;}
-            th { background-color: #e2e8f0 !important; color: #0f172a !important;}
-            .note-box-print { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; padding: 12pt !important; margin-bottom: 12pt !important; border-radius: 8px !important; }
-            .audio-row { border: none !important; padding: 0 !important; display: block !important; margin-bottom: 8pt !important;}
-            .chat-avatar { display: none !important; } 
-            .chat-left, .chat-right, .p-3.rounded-2xl { display: inline !important; background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; max-width: 100% !important; color: #1e293b !important; font-family: 'Georgia', serif !important; font-size: 11.5pt !important;}
-            .text-right { text-align: left !important; }
-            .flex-row-reverse { flex-direction: row !important; }
-            .chat-name-print { font-weight: bold !important; color: #4f46e5 !important; display: inline-block !important; min-width: 75px !important; font-family: 'Arial', sans-serif !important;}
-            .exercise-item { margin-bottom: 12pt !important; }
-            .q-btn { display: inline-block !important; border: none !important; padding: 0 !important; margin-right: 18pt !important; background: transparent !important; font-family: 'Arial', sans-serif !important;}
+            .glass-card { box-shadow: none !important; border: 1px solid #ccc !important; padding: 15px !important; margin-bottom: 15pt !important; background: transparent !important; page-break-inside: avoid !important; }
         }
     </style>
 
+    <!-- FIREBASE INITIALIZATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -118,8 +80,7 @@
             projectId: "tienganh6thaykhoadeptrai",
             storageBucket: "tienganh6thaykhoadeptrai.firebasestorage.app",
             messagingSenderId: "924106863588",
-            appId: "1:924106863588:web:e702ff575534036b950df1",
-            measurementId: "G-X3MK9XTMR8"
+            appId: "1:924106863588:web:e702ff575534036b950df1"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -139,20 +100,7 @@
         window.fQuery = query;
         window.fWhere = where;
 
-        // CHỈ ĐỊNH SUPER ADMIN TẠI ĐÂY
-        const SUPER_ADMIN_EMAILS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
-
-        window.loginWithGoogle = async function() {
-            const provider = new GoogleAuthProvider();
-            try { await signInWithPopup(auth, provider); } 
-            catch (error) { console.error(error); alert("Sign in failed. Check Authorized Domains in Firebase."); }
-        }
-
-        window.logoutGoogle = async function() {
-            await signOut(auth);
-            window.location.reload();
-        }
-
+       // CHỈ ĐỊNH SUPER ADMIN TẠI ĐÂY
         onAuthStateChanged(auth, async (user) => {
             const authContainer = document.getElementById('auth-container');
             const nicknameOverlay = document.getElementById('nicknameOverlay');
@@ -206,7 +154,7 @@
                 if (window.isAdmin && printBtn) printBtn.classList.remove('hidden');
                 if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
                 
-                window.renderMenu();
+                renderMenu();
 
             } else {
                 // CHƯA ĐĂNG NHẬP
@@ -220,21 +168,20 @@
                     </button>
                 `;
                 if(printBtn) printBtn.classList.add('hidden');
-                window.renderMenu();
+                renderMenu();
                 
-                // Kiểm tra Bảo mật: Đang làm bài Test hoặc Workbook (Trừ Review 1 học thử) mà đăng xuất thì đá ra Unit 1
-                if (window.currentModule && (window.currentModule.type === 'exam_module' || window.currentModule.type === 'workbook') && window.currentModule.id !== 'rev1') {
-                    alert("Tính năng này yêu cầu đăng nhập. Hệ thống sẽ chuyển bạn về trang chính.");
-                    window.loadModule('u1');
+                // Kiểm tra Bảo mật: Đang làm bài Test (Trừ Review 1 học thử) mà đăng xuất thì đá ra Unit 1
+                if (window.currentModule && window.currentModule.type === 'exam_module' && window.currentModule.id !== 'rev1') {
+                    alert("Bài kiểm tra yêu cầu đăng nhập. Hệ thống sẽ chuyển bạn về trang chính.");
+                    loadModule('u1');
                 }
             }
         });
     </script>
 </head>
 <body>
-
-    <!-- OVERLAY & SIDEBAR -->
     <div id="overlay" class="sidebar-overlay no-print" onclick="toggleMenu()"></div>
+    // THANH SIDEBAR
     <aside id="sidebar" class="sidebar no-print">
         <div class="p-6 border-b border-slate-100 bg-indigo-50 flex justify-between items-center">
             <div>
@@ -268,7 +215,7 @@
         </div>
     </div>
 
-    <!-- STUDENT REPORT MODAL (Detailed View) -->
+    <!-- STUDENT REPORT MODAL -->
     <div id="studentReportModal" class="custom-alert-overlay no-print z-[2000]">
         <div class="bg-white rounded-2xl w-[95%] max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl">
@@ -288,7 +235,6 @@
                 <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate max-w-[200px] md:max-w-md hidden sm:block">Loading...</h2>
             </div>
             <div class="flex items-center gap-3">
-                <span id="attempt-badge" class="hidden bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg font-bold text-sm border border-amber-200">Lần thử: 1/3</span>
                 <button onclick="window.print()" id="print-btn" class="hidden bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm">
                     🖨️ <span class="hidden md:inline">Print</span>
                 </button>
@@ -307,13 +253,11 @@
         </main>
     </div>
 
-    <!-- KHUNG PDF ẨN CHO SBT -->
-    <div id="sbt-pdf-export-container"></div>
-
     <script>
-        // ==========================================
-        // CẤU TRÚC DỮ LIỆU MODULE
-        // ==========================================
+        // =========================================================================
+        // KHU VỰC MODULE DỮ LIỆU ĐỘC LẬP (VS CODE: Gập / Mở tại đây)
+        // =========================================================================
+
         const unit1 = {
             id: "u1", type: "lesson", title: "Unit 1: My New School",
             sections: [
@@ -346,7 +290,7 @@
                 },
                 {
                     type: "pronunciation", title: "IV. Pronunciation",
-                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/ɑː/</div><p class="text-sm text-slate-500 mb-4">Long sound, open your mouth wide. (Âm a dài)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('smart, art, class')}', 'en-US')">sm<span class="text-indigo-600">ar</span>t, <span class="text-indigo-600">ar</span>t, cl<span class="text-indigo-600">a</span>ss</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/ʌ/</div><p class="text-sm text-slate-500 mb-4">Short, quick sound. (Âm á ngắn)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('subject, study, compass')}', 'en-US')">s<span class="text-rose-500">u</span>bject, st<span class="text-rose-500">u</span>dy, c<span class="text-rose-500">o</span>mpass</div></div></div>`
+                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/ɑː/</div><p class="text-sm text-slate-500 mb-4">Long sound, open your mouth wide. (Âm a dài)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('smart, art, class')}', 'en-US')">sm<span class="text-indigo-600">ar</span>t, <span class="text-indigo-600">ar</span>t, cl<span class="text-indigo-600">a</span>ss</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/ʌ/</div><p class="text-sm text-slate-500 mb-4">Short, quick sound. (Âm á ngắn)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('subject, study, compass')}', 'en-US')">s<span class="text-rose-500">u</span>bject, st<span class="text-rose-500">u</span>dy, c<span class="text-rose-500">o</span>mpass</div></div></div>`
                 },
                 {
                     type: "listening", title: "V. Listening & Role-play",
@@ -427,11 +371,11 @@
                 },
                 {
                     type: "grammar", title: "III. Grammar",
-                    content: `<div class="glass-card note-box-print border-l-4 border-l-emerald-500 mb-6"><h3 class="font-bold text-lg text-emerald-800 mb-2 print:text-black">1. Possessive Case (Sở hữu cách 's)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage (Cách dùng):</b> Dùng để chỉ sự sở hữu (Cái gì thuộc về ai). Thường dùng cho người hoặc động vật.</div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl w-full"><h4 class="font-bold text-emerald-800 text-sm mb-2 print:text-black">📝 Danh từ số ít / Tên riêng</h4><p class="text-sm text-slate-700">Thêm <b class="text-emerald-600 text-base print:text-black">'s</b> vào sau danh từ sở hữu.</p><ul class="text-sm mt-2 space-y-1"><li>• Emma<b>'s</b> room <i>(Phòng của Emma)</i></li><li>• My mother<b>'s</b> book <i>(Sách của mẹ tôi)</i></li></ul></div><div class="bg-blue-50 border border-blue-200 p-4 rounded-xl w-full"><h4 class="font-bold text-blue-800 text-sm mb-2 print:text-black">📝 Danh từ số nhiều có sẵn "s"</h4><p class="text-sm text-slate-700">Chỉ thêm dấu nháy đơn <b class="text-blue-600 text-base print:text-black">'</b> vào cuối.</p><ul class="text-sm mt-2 space-y-1"><li>• The students<b>'</b> bags <i>(Cặp của các học sinh)</i></li><li>• My parents<b>'</b> bedroom <i>(Phòng của bố mẹ)</i></li></ul></div></div></div><div class="glass-card note-box-print border-l-4 border-l-blue-500 mb-6"><h3 class="font-bold text-lg text-blue-800 mb-2 print:text-black">2. Prepositions of Place (Giới từ chỉ nơi chốn)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage:</b> Dùng để chỉ vị trí của người hoặc vật.</div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4 font-medium text-slate-800"><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('in')}', 'en-US')"><b>in</b><br><span class="text-slate-500 font-normal">ở trong</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('on')}', 'en-US')"><b>on</b><br><span class="text-slate-500 font-normal">ở trên (bề mặt)</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('under')}', 'en-US')"><b>under</b><br><span class="text-slate-500 font-normal">ở dưới</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('behind')}', 'en-US')"><b>behind</b><br><span class="text-slate-500 font-normal">đằng sau</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('next to')}', 'en-US')"><b>next to</b><br><span class="text-slate-500 font-normal">kế bên</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('in front of')}', 'en-US')"><b>in front of</b><br><span class="text-slate-500 font-normal">phía trước</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center md:col-span-2 cursor-pointer hover:bg-blue-50" onclick="window.playAudio('${encodeURIComponent('between')}', 'en-US')"><b>between ... and ...</b><br><span class="text-slate-500 font-normal">ở giữa (2 vật)</span></div></div></div>`
+                    content: `<div class="glass-card note-box-print border-l-4 border-l-emerald-500 mb-6"><h3 class="font-bold text-lg text-emerald-800 mb-2 print:text-black">1. Possessive Case (Sở hữu cách 's)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage (Cách dùng):</b> Dùng để chỉ sự sở hữu (Cái gì thuộc về ai). Thường dùng cho người hoặc động vật.</div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl w-full"><h4 class="font-bold text-emerald-800 text-sm mb-2 print:text-black">📝 Danh từ số ít / Tên riêng</h4><p class="text-sm text-slate-700">Thêm <b class="text-emerald-600 text-base print:text-black">'s</b> vào sau danh từ sở hữu.</p><ul class="text-sm mt-2 space-y-1"><li>• Emma<b>'s</b> room <i>(Phòng của Emma)</i></li><li>• My mother<b>'s</b> book <i>(Sách của mẹ tôi)</i></li></ul></div><div class="bg-blue-50 border border-blue-200 p-4 rounded-xl w-full"><h4 class="font-bold text-blue-800 text-sm mb-2 print:text-black">📝 Danh từ số nhiều có sẵn "s"</h4><p class="text-sm text-slate-700">Chỉ thêm dấu nháy đơn <b class="text-blue-600 text-base print:text-black">'</b> vào cuối.</p><ul class="text-sm mt-2 space-y-1"><li>• The students<b>'</b> bags <i>(Cặp của các học sinh)</i></li><li>• My parents<b>'</b> bedroom <i>(Phòng của bố mẹ)</i></li></ul></div></div></div><div class="glass-card note-box-print border-l-4 border-l-blue-500 mb-6"><h3 class="font-bold text-lg text-blue-800 mb-2 print:text-black">2. Prepositions of Place (Giới từ chỉ nơi chốn)</h3><div class="text-sm mb-4 text-slate-700"><b>Usage:</b> Dùng để chỉ vị trí của người hoặc vật.</div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4 font-medium text-slate-800"><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('in')}', 'en-US')"><b>in</b><br><span class="text-slate-500 font-normal">ở trong</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('on')}', 'en-US')"><b>on</b><br><span class="text-slate-500 font-normal">ở trên (bề mặt)</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('under')}', 'en-US')"><b>under</b><br><span class="text-slate-500 font-normal">ở dưới</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('behind')}', 'en-US')"><b>behind</b><br><span class="text-slate-500 font-normal">đằng sau</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('next to')}', 'en-US')"><b>next to</b><br><span class="text-slate-500 font-normal">kế bên</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('in front of')}', 'en-US')"><b>in front of</b><br><span class="text-slate-500 font-normal">phía trước</span></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center md:col-span-2 cursor-pointer hover:bg-blue-50" onclick="playAudio('${encodeURIComponent('between')}', 'en-US')"><b>between ... and ...</b><br><span class="text-slate-500 font-normal">ở giữa (2 vật)</span></div></div></div>`
                 },
                 {
                     type: "pronunciation", title: "IV. Pronunciation: Final /s/, /z/, /ɪz/",
-                    content: `<div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-indigo-600 mb-2">/s/</div><p class="text-xs text-slate-500 mb-3">(Sau p, k, t, f, th)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="window.playAudio('${encodeURIComponent('lamps, sinks, flats')}', 'en-US')">lamp<span class="text-indigo-600">s</span>, sink<span class="text-indigo-600">s</span>, flat<span class="text-indigo-600">s</span></div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-emerald-600 mb-2">/z/</div><p class="text-xs text-slate-500 mb-3">(Các âm còn lại)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="window.playAudio('${encodeURIComponent('beds, wardrobes, pens')}', 'en-US')">bed<span class="text-emerald-600">s</span>, wardrobe<span class="text-emerald-600">s</span>, pen<span class="text-emerald-600">s</span></div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-rose-500 mb-2">/ɪz/</div><p class="text-xs text-slate-500 mb-3">(Sau s, x, z, ch, sh, ce, ge)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="window.playAudio('${encodeURIComponent('houses, boxes, watches')}', 'en-US')">hous<span class="text-rose-500">es</span>, box<span class="text-rose-500">es</span>, watch<span class="text-rose-500">es</span></div></div></div>`
+                    content: `<div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-indigo-600 mb-2">/s/</div><p class="text-xs text-slate-500 mb-3">(Sau p, k, t, f, th)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="playAudio('${encodeURIComponent('lamps, sinks, flats')}', 'en-US')">lamp<span class="text-indigo-600">s</span>, sink<span class="text-indigo-600">s</span>, flat<span class="text-indigo-600">s</span></div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-emerald-600 mb-2">/z/</div><p class="text-xs text-slate-500 mb-3">(Các âm còn lại)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="playAudio('${encodeURIComponent('beds, wardrobes, pens')}', 'en-US')">bed<span class="text-emerald-600">s</span>, wardrobe<span class="text-emerald-600">s</span>, pen<span class="text-emerald-600">s</span></div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-2xl text-rose-500 mb-2">/ɪz/</div><p class="text-xs text-slate-500 mb-3">(Sau s, x, z, ch, sh, ce, ge)</p><div class="text-slate-800 font-bold audio-row p-2 text-sm" onclick="playAudio('${encodeURIComponent('houses, boxes, watches')}', 'en-US')">hous<span class="text-rose-500">es</span>, box<span class="text-rose-500">es</span>, watch<span class="text-rose-500">es</span></div></div></div>`
                 },
                 {
                     type: "listening", title: "V. Listening & Role-play",
@@ -492,7 +436,7 @@
                 },
                 {
                     type: "grammar", title: "II. Vocabulary: Body Parts & Appearance",
-                    content: `<div class="glass-card body-parts-visual border-l-4 border-l-indigo-500 mb-6 bg-indigo-50/30"><p class="text-sm text-indigo-600 font-bold mb-4 bg-white inline-block px-3 py-1 rounded-lg no-print shadow-sm">💡 Tap words to listen</p><div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 p-2"><div class="space-y-3 text-center md:text-right w-full md:w-auto"><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('hair')}', 'en-US')">💇‍♀️ Hair (Tóc)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('eye')}', 'en-US')">👁️ Eye (Mắt)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('nose')}', 'en-US')">👃 Nose (Mũi)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('mouth')}', 'en-US')">👄 Mouth (Miệng)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('cheek')}', 'en-US')">😊 Cheek (Má)</div></div><div class="text-[100px] md:text-[140px] leading-none drop-shadow-xl relative my-4 md:my-0">🧍‍♂️</div><div class="space-y-3 text-center md:text-left w-full md:w-auto"><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('arm')}', 'en-US')">💪 Arm (Cánh tay)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('hand')}', 'en-US')">🖐️ Hand (Bàn tay)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('leg')}', 'en-US')">🦵 Leg (Chân)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="window.playAudio('${encodeURIComponent('foot')}', 'en-US')">🦶 Foot (Bàn chân)</div><div class="text-xs text-slate-500 font-medium italic p-2 no-print">* Số nhiều của foot là feet</div></div></div><div class="mt-6 bg-white p-4 rounded-xl border border-slate-200"><h4 class="font-bold text-slate-800 mb-3">🎨 Adjectives for Appearance (Tính từ miêu tả ngoại hình):</h4><div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm font-medium text-slate-700"><div class="audio-row p-2 bg-slate-50 rounded" onclick="window.playAudio('${encodeURIComponent('tall')}', 'en-US')">tall (cao) - short (thấp)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="window.playAudio('${encodeURIComponent('fat')}', 'en-US')">fat (mập) - slim (mảnh mai)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="window.playAudio('${encodeURIComponent('long')}', 'en-US')">long (dài) - short (ngắn)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="window.playAudio('${encodeURIComponent('straight')}', 'en-US')">straight (thẳng)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="window.playAudio('${encodeURIComponent('curly')}', 'en-US')">curly (xoăn)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="window.playAudio('${encodeURIComponent('blonde')}', 'en-US')">blonde (vàng hoe)</div></div></div></div>`
+                    content: `<div class="glass-card body-parts-visual border-l-4 border-l-indigo-500 mb-6 bg-indigo-50/30"><p class="text-sm text-indigo-600 font-bold mb-4 bg-white inline-block px-3 py-1 rounded-lg no-print shadow-sm">💡 Tap words to listen</p><div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 p-2"><div class="space-y-3 text-center md:text-right w-full md:w-auto"><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('hair')}', 'en-US')">💇‍♀️ Hair (Tóc)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('eye')}', 'en-US')">👁️ Eye (Mắt)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('nose')}', 'en-US')">👃 Nose (Mũi)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('mouth')}', 'en-US')">👄 Mouth (Miệng)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('cheek')}', 'en-US')">😊 Cheek (Má)</div></div><div class="text-[100px] md:text-[140px] leading-none drop-shadow-xl relative my-4 md:my-0">🧍‍♂️</div><div class="space-y-3 text-center md:text-left w-full md:w-auto"><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('arm')}', 'en-US')">💪 Arm (Cánh tay)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('hand')}', 'en-US')">🖐️ Hand (Bàn tay)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('leg')}', 'en-US')">🦵 Leg (Chân)</div><div class="audio-row p-2.5 font-bold text-indigo-700 bg-white rounded-xl shadow-sm border border-indigo-100" onclick="playAudio('${encodeURIComponent('foot')}', 'en-US')">🦶 Foot (Bàn chân)</div><div class="text-xs text-slate-500 font-medium italic p-2 no-print">* Số nhiều của foot là feet</div></div></div><div class="mt-6 bg-white p-4 rounded-xl border border-slate-200"><h4 class="font-bold text-slate-800 mb-3">🎨 Adjectives for Appearance (Tính từ miêu tả ngoại hình):</h4><div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm font-medium text-slate-700"><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('tall')}', 'en-US')">tall (cao) - short (thấp)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('fat')}', 'en-US')">fat (mập) - slim (mảnh mai)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('long')}', 'en-US')">long (dài) - short (ngắn)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('straight')}', 'en-US')">straight (thẳng)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('curly')}', 'en-US')">curly (xoăn)</div><div class="audio-row p-2 bg-slate-50 rounded" onclick="playAudio('${encodeURIComponent('blonde')}', 'en-US')">blonde (vàng hoe)</div></div></div></div>`
                 },
                 {
                     type: "vocab", title: "III. Vocabulary: Personality Adjectives",
@@ -517,7 +461,7 @@
                 },
                 {
                     type: "pronunciation", title: "V. Pronunciation",
-                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/b/</div><p class="text-sm text-slate-500 mb-4">Âm hữu thanh (Có rung dây thanh quản)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('book, blonde, biscuit')}', 'en-US')"><span class="text-indigo-600">b</span>ook, <span class="text-indigo-600">b</span>londe, <span class="text-indigo-600">b</span>iscuit</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/p/</div><p class="text-sm text-slate-500 mb-4">Âm vô thanh (Bật hơi mạnh, không rung)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('picnic, play, ponytail')}', 'en-US')"><span class="text-rose-500">p</span>icnic, <span class="text-rose-500">p</span>lay, <span class="text-rose-500">p</span>onytail</div></div></div>`
+                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/b/</div><p class="text-sm text-slate-500 mb-4">Âm hữu thanh (Có rung dây thanh quản)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('book, blonde, biscuit')}', 'en-US')"><span class="text-indigo-600">b</span>ook, <span class="text-indigo-600">b</span>londe, <span class="text-indigo-600">b</span>iscuit</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/p/</div><p class="text-sm text-slate-500 mb-4">Âm vô thanh (Bật hơi mạnh, không rung)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('picnic, play, ponytail')}', 'en-US')"><span class="text-rose-500">p</span>icnic, <span class="text-rose-500">p</span>lay, <span class="text-rose-500">p</span>onytail</div></div></div>`
                 },
                 {
                     type: "listening", title: "VI. Dialogue & Role-play",
@@ -602,7 +546,7 @@
                 },
                 {
                     type: "pronunciation", title: "IV. Pronunciation",
-                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/ɪ/</div><p class="text-sm text-slate-500 mb-4">Short sound (Âm 'i' ngắn, hơi giống chữ 'ê')</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('historic, busy, building')}', 'en-US')">h<span class="text-indigo-600">i</span>storic, b<span class="text-indigo-600">u</span>sy, bu<span class="text-indigo-600">i</span>lding</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/iː/</div><p class="text-sm text-slate-500 mb-4">Long sound, smile (Âm 'i' dài, kéo khóe miệng)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('peaceful, cheap, street')}', 'en-US')">p<span class="text-rose-500">ea</span>ceful, ch<span class="text-rose-500">ea</span>p, str<span class="text-rose-500">ee</span>t</div></div></div>`
+                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/ɪ/</div><p class="text-sm text-slate-500 mb-4">Short sound (Âm 'i' ngắn, hơi giống chữ 'ê')</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('historic, busy, building')}', 'en-US')">h<span class="text-indigo-600">i</span>storic, b<span class="text-indigo-600">u</span>sy, bu<span class="text-indigo-600">i</span>lding</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/iː/</div><p class="text-sm text-slate-500 mb-4">Long sound, smile (Âm 'i' dài, kéo khóe miệng)</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('peaceful, cheap, street')}', 'en-US')">p<span class="text-rose-500">ea</span>ceful, ch<span class="text-rose-500">ea</span>p, str<span class="text-rose-500">ee</span>t</div></div></div>`
                 },
                 {
                     type: "listening", title: "V. Dialogue & Role-play",
@@ -686,7 +630,7 @@
                 },
                 {
                     type: "pronunciation", title: "IV. Pronunciation",
-                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/t/</div><p class="text-sm text-slate-500 mb-4">Âm vô thanh</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('town, tent, mountain')}', 'en-US')"><span class="text-indigo-600">t</span>own, <span class="text-indigo-600">t</span>ent, moun<span class="text-indigo-600">t</span>ain</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/d/</div><p class="text-sm text-slate-500 mb-4">Âm hữu thanh</p><div class="text-slate-800 font-bold audio-row p-2" onclick="window.playAudio('${encodeURIComponent('desert, island, wonder')}', 'en-US')"><span class="text-rose-500">d</span>esert, islan<span class="text-rose-500">d</span>, won<span class="text-rose-500">d</span>er</div></div></div>`
+                    content: `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-indigo-600 mb-2">/t/</div><p class="text-sm text-slate-500 mb-4">Âm vô thanh</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('town, tent, mountain')}', 'en-US')"><span class="text-indigo-600">t</span>own, <span class="text-indigo-600">t</span>ent, moun<span class="text-indigo-600">t</span>ain</div></div><div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center note-box-print"><div class="font-bold text-3xl text-rose-500 mb-2">/d/</div><p class="text-sm text-slate-500 mb-4">Âm hữu thanh</p><div class="text-slate-800 font-bold audio-row p-2" onclick="playAudio('${encodeURIComponent('desert, island, wonder')}', 'en-US')"><span class="text-rose-500">d</span>esert, islan<span class="text-rose-500">d</span>, won<span class="text-rose-500">d</span>er</div></div></div>`
                 },
                 {
                     type: "listening", title: "V. Dialogue & Role-play",
@@ -906,21 +850,50 @@
             }
         };
 
+// SACH BAI TAP
+        const sbtUnit1 = {
+            id: "sbt_u1", type: "sbt_module", title: "SBT Unit 1: My New School",
+            exercises: [
+                {
+                    id: "sbt_u1_a1", part: "A. Pronunciation",
+                    title: "1. Find the word which has a different sound in the part underlined.",
+                    type: "choice",
+                    questions: [
+                        { q: "1. A. st<u>u</u>dy B. l<u>u</u>nch C. s<u>u</u>bject D. comp<u>u</u>ter", opts: ["A", "B", "C", "D"], ans: 3, exp: "'computer' /ju:/, còn lại là /ʌ/" },
+                        { q: "2. A. c<u>a</u>lculator B. cl<u>a</u>ssmate C. f<u>a</u>st D. f<u>a</u>ther", opts: ["A", "B", "C", "D"], ans: 0, exp: "'calculator' /æ/, còn lại là /ɑ:/" }
+                    ]
+                },
+                {
+                    id: "sbt_u1_b4", part: "B. Vocabulary & Grammar",
+                    title: "4. Put the verbs in brackets in the correct form.",
+                    type: "fill",
+                    questions: [
+                        { q: "1. School [fill] (finish) at 4.30 p.m. every day.", ans: "finishes", exp: "Hiện tại đơn, chủ ngữ số ít -> finishes." },
+                        { q: "2. [fill] you usually [fill] (write) to your pen pal?", ans: "Do|write", exp: "Câu hỏi HTĐ với 'you' -> Do you write." }
+                    ]
+                }
+            ]
+        };
+
         const database = {
             "class-6": {
                 name: "English 6",
-                modules: [unit1, unit2, unit3, review1, unit4, unit5]
+                modules: [unit1, sbtUnit1, unit2, unit3, review1, unit4, unit5]
             }
         };
 
-        // --- GLOBAL VARIABLES ---
+        // =========================================================================
+        // KHU VỰC LOGIC CHÍNH CỦA APP (CORE ENGINE)
+        // =========================================================================
+
         let currentClass = "class-6";
         let currentModule = null;
-        let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0, startTime: 0 };
+        let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
         
         window.userPracticeAnswers = {};
         window.userListeningAnswers = {};
         window.adminUsersData = [];
+        window.sbtState = {};
 
         function initApp() {
             const selector = document.getElementById('class-selector');
@@ -928,27 +901,21 @@
             for (let cId in database) {
                 selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`;
             }
-            window.renderMenu();
+            renderMenu();
             if(database[currentClass].modules.length > 0) {
-                window.loadModule(database[currentClass].modules[0].id);
+                loadModule(database[currentClass].modules[0].id);
             }
             document.body.addEventListener('touchstart', function() {
-                if ('speechSynthesis' in window) {
-                    const s = new SpeechSynthesisUtterance("");
-                    window.speechSynthesis.speak(s);
-                }
+                const s = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(s);
             }, {once: true});
         }
 
-        window.renderDashboardMenu = function() {
+        function renderDashboardMenu() {
             const menu = document.getElementById('nav-menu');
             let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>`;
             dashHTML += `<button onclick="showMyProgress()" id="nav-progress" class="module-nav-btn bg-sky-50 text-sky-700 border border-sky-200">📈 My Progress</button>`;
             dashHTML += `<button onclick="showLeaderboard()" id="nav-leaderboard" class="module-nav-btn bg-amber-50 text-amber-700 border border-amber-200 mt-2">🏆 Leaderboard</button>`;
-            
-            // WORKBOOK SBT MODULE
-            dashHTML += `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">WORKBOOK (SÁCH BÀI TẬP)</p>`;
-            // We'll append workbook module here if it exists in the modules array
             
             if (window.isAdmin) {
                 dashHTML += `
@@ -967,53 +934,47 @@
             }
         }
 
-        window.renderMenu = function() {
+        function renderMenu() {
             const menu = document.getElementById('nav-menu');
             menu.innerHTML = '';
             
             let lessonsHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 px-2">LESSONS</p>';
             let testsHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">EXAMS</p>';
-            let sbtHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">WORKBOOK (SÁCH BÀI TẬP)</p>';
+            let sbtHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">WORKBOOK (SBT)</p>';
             
             database[currentClass].modules.forEach(mod => {
-                let html = '';
-                if(mod.type === 'lesson') {
-                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn">📖 ${mod.title}</button>`;
-                    lessonsHTML += html;
-                } else if (mod.type === 'exam_module') {
-                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn exam-btn">📝 ${mod.title}</button>`;
-                    testsHTML += html;
-                } else if (mod.type === 'workbook') {
-                    html = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn bg-teal-50 text-teal-700 border border-teal-200">📓 ${mod.title}</button>`;
-                    sbtHTML += html;
-                }
+                let btn = `<button onclick="loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn`;
+                if(mod.type === 'lesson') lessonsHTML += `${btn}">📖 ${mod.title}</button>`;
+                else if(mod.type === 'exam_module') testsHTML += `${btn} exam-btn">📝 ${mod.title}</button>`;
+                else if(mod.type === 'sbt_module') sbtHTML += `${btn} sbt-btn">📙 ${mod.title}</button>`;
             });
             
             menu.innerHTML = lessonsHTML + testsHTML + sbtHTML;
-            window.renderDashboardMenu();
+            renderDashboardMenu();
         }
 
-        window.toggleMenu = function() {
+        function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('open');
         }
 
-        window.changeClass = function() {
+        function changeClass() {
             currentClass = document.getElementById('class-selector').value;
-            window.renderMenu();
+            renderMenu();
             if(database[currentClass].modules.length > 0) {
-                window.loadModule(database[currentClass].modules[0].id);
+                loadModule(database[currentClass].modules[0].id);
             }
         }
 
-        window.loadModule = function(moduleId) {
-            if (window.innerWidth < 1024) window.toggleMenu(); 
+        function loadModule(moduleId) {
+            if (window.innerWidth < 1024) toggleMenu(); 
             
             const mod = database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+           
             const navBtn = document.getElementById('nav-' + moduleId);
             if(navBtn) navBtn.classList.add('active');
             
@@ -1024,18 +985,17 @@
             
             const printModuleTitle = document.getElementById('print-module-title');
             if (printModuleTitle) printModuleTitle.innerText = mod.title;
-
+                      
             const contentArea = document.getElementById('content-area');
             contentArea.innerHTML = '';
-            
+
             if(currentExam.timer) clearInterval(currentExam.timer);
-            document.getElementById('attempt-badge').classList.add('hidden');
+            document.getElementById('test-timer') && document.getElementById('test-timer').classList.add('hidden');
             
             let isExamSecure = mod.type === 'exam_module' && mod.id !== 'rev1';
             let isUnit5Secure = mod.id === 'u5';
-            let isSBTSecure = mod.type === 'workbook';
             
-            if ((isExamSecure || isUnit5Secure || isSBTSecure) && !window.currentUser) {
+            if ((isExamSecure || isUnit5Secure) && !window.currentUser) {
                 contentArea.innerHTML = `
                     <div class="glass-card text-center py-16 border-t-4 border-rose-500">
                         <div class="text-6xl mb-4">🔒</div>
@@ -1048,21 +1008,20 @@
                 return;
             }
 
-            if (mod.type === 'lesson') window.renderLessonView(mod, contentArea);
-            else if (mod.type === 'exam_module') window.renderExamSetupView(mod, contentArea);
-            else if (mod.type === 'workbook') {
-                if (window.isAdmin) {
-                    window.renderTeacherSBT(mod, contentArea);
-                } else {
-                    window.resetSBTState();
-                    window.renderStudentSBT(mod, contentArea);
-                }
-            }
+            if (mod.type === 'lesson') renderLessonView(mod, contentArea);
+            else if (mod.type === 'exam_module') renderExamSetupView(mod, contentArea);   
+            
+            const sourceNotice = document.getElementById('sbt-source-notice');
+            if (mod.type === 'sbt_module') sourceNotice.classList.remove('hidden');
+            else sourceNotice.classList.add('hidden');
+            
+            if (mod.type === 'lesson') renderLessonView(mod, contentArea);
+            else if (mod.type === 'sbt_module') renderSBTView(mod, contentArea);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        window.renderLessonView = function(mod, container) {
+        function renderLessonView(mod, container) {
             let html = '';
             mod.sections.forEach((sec, sIdx) => {
                 html += `<section><h2 class="text-2xl font-bold text-slate-800 baloo-font mt-6 mb-4">${sec.title}</h2>`;
@@ -1075,7 +1034,7 @@
                              <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 print-grid">`;
                     sec.words.forEach(w => {
                         let safeWord = encodeURIComponent(w.w);
-                        html += `<div class="glass-card !mb-0 p-4 audio-row border border-slate-200 bg-white vocab-item-print" onclick="window.playAudio('${safeWord}', 'en-US')">
+                        html += `<div class="glass-card !mb-0 p-4 audio-row border border-slate-200 bg-white vocab-item-print" onclick="playAudio('${safeWord}', 'en-US')">
                                     <h3 class="font-bold text-indigo-700 text-lg print:text-black">${w.w}</h3>
                                     <p class="text-sm text-slate-500 mb-1 print:italic print:text-black">${w.p}</p>
                                     <p class="text-slate-800 font-medium">${w.m}</p>
@@ -1098,7 +1057,7 @@
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-sky-200 pb-4 print:border-none no-print">
                                     <span class="text-sm text-sky-600 font-bold bg-sky-100 px-3 py-1.5 rounded-full shadow-sm">👇 TAP TO LISTEN & ROLE-PLAY</span>
                                     <div class="flex gap-2 w-full sm:w-auto">
-                                        <button onclick="window.playAllDialogue()" class="flex-1 sm:flex-none bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-600 transition-colors flex items-center justify-center gap-2">
+                                        <button onclick="playAllDialogue()" class="flex-1 sm:flex-none bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-600 transition-colors flex items-center justify-center gap-2">
                                             ▶️ Play All
                                         </button>
                                     </div>
@@ -1109,7 +1068,7 @@
                         let align = i % 2 !== 0 ? 'text-right print:text-left' : '';
                         let bg = i % 2 !== 0 ? 'bg-sky-50 border-sky-200' : 'bg-white border-slate-200';
                         let safeText = encodeURIComponent(l.t).replace(/'/g, "%27"); 
-                        html += `<div class="audio-row flex gap-3 p-2 ${isRev}" onclick="window.playDialogueLine('${safeText}', '${l.gender}')">
+                        html += `<div class="audio-row flex gap-3 p-2 ${isRev}" onclick="playDialogueLine('${safeText}', '${l.gender}')">
                                     <div class="chat-avatar w-10 h-10 rounded-full bg-sky-200 flex items-center justify-center text-xl shrink-0 no-print">${l.a}</div>
                                     <div class="${align} w-full"><div class="text-xs font-bold text-sky-600 mb-1 mx-1 no-print">${l.c}</div>
                                     <div class="p-3 rounded-2xl border ${bg} inline-block max-w-[85%] text-[15px] font-medium shadow-sm"><span class="hidden print:inline chat-name-print">${l.c}: </span>${l.t}</div></div>
@@ -1124,7 +1083,7 @@
                         sec.questions.forEach(q => {
                             html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
                             q.opts.forEach((opt, idx) => {
-                                html += `<div onclick="window.selectListening(this, '${q.id}', ${idx}, ${q.ans})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-sky-100">${opt}</div>`;
+                                html += `<div onclick="selectListening(this, '${q.id}', ${idx}, ${q.ans})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-sky-100">${opt}</div>`;
                             });
                             html += `</div><div id="res-${q.id}" class="hidden mt-2 font-bold text-sm"></div></div>`;
                         });
@@ -1142,7 +1101,7 @@
                     sec.prompts.forEach(p => html += `<li>${p}</li>`);
                     html += `</ul></div>
                                 <div class="flex flex-col md:flex-row items-start gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                                    <button onclick="window.playSpeakingSample('${safeSample}')" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-rose-600 shrink-0 no-print flex items-center gap-2">
+                                    <button onclick="playSpeakingSample('${safeSample}')" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-rose-600 shrink-0 no-print flex items-center gap-2">
                                         🔊 Listen to Sample
                                     </button>
                                     <div>
@@ -1158,10 +1117,10 @@
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-teal-200 pb-4 print:border-none no-print">
                                     <span class="text-sm text-teal-600 font-bold bg-teal-100 px-3 py-1.5 rounded-full shadow-sm">🎧 TAP TO LISTEN</span>
                                     <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                                        <button onclick="window.playAudio('${safeScript}', 'en-US')" class="flex-1 sm:flex-none bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+                                        <button onclick="playAudio('${safeScript}', 'en-US')" class="flex-1 sm:flex-none bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
                                             ▶️ Play
                                         </button>
-                                        <button onclick="window.toggleTranscript(this)" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
+                                        <button onclick="toggleTranscript(this)" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
                                             📝 Transcript
                                         </button>
                                     </div>
@@ -1178,13 +1137,13 @@
                     sec.questions.forEach(q => {
                         html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
                         q.opts.forEach((opt, idx) => {
-                            html += `<div onclick="window.selectListeningChoice(this, '${q.id}', ${idx})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-teal-100">${opt}</div>`;
+                            html += `<div onclick="selectListeningChoice(this, '${q.id}', ${idx})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-teal-100">${opt}</div>`;
                         });
                         html += `</div></div>`;
                     });
                     html += `</div>
                              <div class="text-center mt-6 no-print listening-action-buttons">
-                                <button onclick="window.submitListeningTask('${sec.questions[0].id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">✅ Submit Listening</button>
+                                <button onclick="submitListeningTask('${sec.questions[0].id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">✅ Submit Listening</button>
                              </div>
                              </div></div>`;
                 }
@@ -1195,7 +1154,7 @@
                         let safeReading = encodeURIComponent(rawReading).replace(/'/g, "%27");
                         html += `<div class="glass-card border-t-4 border-amber-500 mb-6 note-box-print">
                                     <h3 class="text-lg font-bold text-slate-800 mb-3">🌎 Reading</h3>
-                                    <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:border-none print:p-0" onclick="window.playReadingText('${safeReading}')">
+                                    <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:border-none print:p-0" onclick="playReadingText('${safeReading}')">
                                         ${textContent}
                                     </div>
                                  </div>`;
@@ -1207,12 +1166,12 @@
                                         <p class="text-[15px] font-bold text-slate-800 mb-3">${ex.q}</p>
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2 print:grid-cols-3" id="opts-${ex.id}">`;
                             ex.opts.forEach((opt, idx) => {
-                                html += `<div onclick="window.selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 print:border-none print:p-1 print:inline">${opt}</div>`;
+                                html += `<div onclick="selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 print:border-none print:p-1 print:inline">${opt}</div>`;
                             });
                             html += `</div><div id="exp-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"><b>💡 Explanation:</b> ${ex.exp}</div></div>`;
                         });
                         html += `<div class="text-center mt-6 no-print" id="action-buttons">
-                                    <button onclick="window.submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">✅ Submit & Explain</button>
+                                    <button onclick="submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">✅ Submit & Explain</button>
                                  </div></div>`;
                     }
                     window.userPracticeAnswers = {}; 
@@ -1222,7 +1181,7 @@
             container.innerHTML = html;
         }
 
-        window.renderExamSetupView = function(mod, container) {
+        function renderExamSetupView(mod, container) {
             let html = `
                 <div class="glass-card border-t-4 border-rose-500 text-center py-12">
                     <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
@@ -1238,7 +1197,7 @@
                             <option value="normal">Level: Normal</option>
                             <option value="hard">Level: Hard</option>
                         </select>
-                        <button onclick="window.startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
+                        <button onclick="startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
                             🚀 START EXAM
                         </button>
                     </div>
@@ -1246,6 +1205,48 @@
             `;
             container.innerHTML = html;
         }
+
+        function renderSBTView(mod, container) {
+            let html = `<div class="mb-6"><h2 class="text-2xl font-bold text-indigo-800 baloo-font uppercase">${mod.title}</h2><p class="text-slate-500 text-sm">Học sinh được làm lại tối đa 3 lần. Các câu sai sẽ bị bôi đỏ.</p></div>`;
+            mod.exercises.forEach((ex, idx) => {
+                if(!window.sbtState[ex.id]) window.sbtState[ex.id] = { attempts: 0, answers: {} };
+                html += `<div class="glass-card mb-8" id="ex-container-${ex.id}">
+                            <div class="border-b-2 border-slate-100 pb-3 mb-4 flex justify-between items-end">
+                                <div>
+                                    <span class="text-xs font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-1 rounded">${ex.part}</span>
+                                    <h3 class="font-bold text-lg text-slate-800 mt-2">${ex.title}</h3>
+                                </div>
+                                <span class="text-sm font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full" id="attempt-badge-${ex.id}">Lần thử: ${window.sbtState[ex.id].attempts}/3</span>
+                            </div>`;
+                if(ex.note) html += `<p class="text-sm text-slate-600 bg-amber-50 p-2 rounded mb-4 font-medium">${ex.note}</p>`;
+                html += `<div class="space-y-6">`;
+                ex.questions.forEach((q, qIdx) => {
+                    html += `<div><p class="font-bold text-slate-800 mb-3">${parseQuestion(q.q, ex.id, qIdx)}</p>`;
+                    if (ex.type === 'choice') {
+                        html += `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2" id="opts-${ex.id}-${qIdx}">`;
+                        q.opts.forEach((opt, oIdx) => { html += `<div onclick="selectSBTChoice('${ex.id}', ${qIdx}, ${oIdx})" class="q-btn bg-slate-50 border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50">${opt}</div>`; });
+                        html += `</div>`;
+                    }
+                    html += `<div id="exp-${ex.id}-${qIdx}" class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800"><b>💡 Giải thích:</b> ${q.exp}</div></div>`;
+                });
+                html += `</div>
+                         <div class="mt-6 text-right no-print">
+                            <button onclick="submitSBTExercise('${ex.id}')" id="submit-btn-${ex.id}" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md submit-btn">✅ Nộp Bài Này</button>
+                         </div>
+                      </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function parseQuestion(text, exId, qIdx) {
+            let count = 0;
+            return text.replace(/\[fill\]/g, () => {
+                let html = `<input type="text" id="fill-${exId}-${qIdx}-${count}" oninput="saveSBTFill('${exId}', ${qIdx}, ${count}, this.value)" class="fill-input w-24" autocomplete="off" autocorrect="off" autocapitalize="off">`;
+                count++; return html;
+            });
+        }
+
+ /// EXAM LOGIC
 
         window.startExam = function(modId) {
             const mod = window.currentModule;
@@ -1258,7 +1259,6 @@
             currentExam.answers = {};
             currentExam.flagged = {};
             currentExam.timeLeft = 45 * 60;
-            currentExam.startTime = Date.now();
 
             const testData = mod.tests[testId];
             let safeAudio = encodeURIComponent(testData.listeningScript || "").replace(/'/g, "%27");
@@ -1285,7 +1285,7 @@
                     <div class="flex-1 space-y-6">
                         <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-32" id="part-0">
                             <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
-                            <button onclick="window.playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio (Listen only)</button>
+                            <button onclick="playAudio('${safeAudio}', 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio (Listen only)</button>
                             <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
                         </div>
             `;
@@ -1314,13 +1314,13 @@
                 html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-32" id="exam-q-${idx}">
                             <div class="flex justify-between items-start mb-4 gap-4">
                                 <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Q${idx+1}.</span> ${q.q}</p>
-                                <button onclick="window.toggleExamFlag(${idx})" id="flag-btn-${idx}" class="shrink-0 text-slate-300 hover:text-rose-500 transition-colors p-2 rounded-lg hover:bg-rose-50 bg-slate-50 border border-slate-200 no-print" title="Flag for review">
+                                <button onclick="toggleExamFlag(${idx})" id="flag-btn-${idx}" class="shrink-0 text-slate-300 hover:text-rose-500 transition-colors p-2 rounded-lg hover:bg-rose-50 bg-slate-50 border border-slate-200 no-print" title="Flag for review">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"></path></svg>
                                 </button>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="exam-opts-${idx}">`;
                 q.opts.forEach((opt, oIdx) => {
-                    html += `<div onclick="window.selectExamChoice(this, ${idx}, ${oIdx})" class="q-btn bg-slate-50 border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 hover:border-indigo-300 transition-colors">${opt}</div>`;
+                    html += `<div onclick="selectExamChoice(this, ${idx}, ${oIdx})" class="q-btn bg-slate-50 border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 hover:border-indigo-300 transition-colors">${opt}</div>`;
                 });
                 html += `</div>
                          <div id="exam-exp-${idx}" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800"><b>💡 Explanation:</b> ${q.exp}</div>
@@ -1329,7 +1329,7 @@
 
             html += `
                         <div class="text-center mt-10 pb-8 no-print" id="exam-action-buttons">
-                            <button onclick="window.submitExam()" class="bg-rose-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-rose-700 shadow-xl transition-transform transform active:scale-95 text-lg w-full md:w-auto">
+                            <button onclick="submitExam()" class="bg-rose-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-rose-700 shadow-xl transition-transform transform active:scale-95 text-lg w-full md:w-auto">
                                 ✅ SUBMIT EXAM
                             </button>
                         </div>
@@ -1368,7 +1368,7 @@
                 
                 if (currentExam.timeLeft <= 0) {
                     clearInterval(currentExam.timer);
-                    window.submitExam(true);
+                    submitExam(true);
                 }
             }, 1000);
         }
@@ -1410,7 +1410,7 @@
                 flagBtn.classList.remove('text-rose-600', 'bg-rose-100', 'border-rose-300');
                 flagBtn.classList.add('text-slate-300', 'bg-slate-50', 'border-slate-200');
             }
-            window.updateExamNavigator(idx);
+            updateExamNavigator(idx);
         }
 
         window.selectExamChoice = function(btn, qIdx, choiceIdx) {
@@ -1418,7 +1418,7 @@
             const parent = document.getElementById('exam-opts-' + qIdx);
             parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
             btn.classList.add('q-selected');
-            window.updateExamNavigator(qIdx);
+            updateExamNavigator(qIdx);
         }
 
         window.submitExam = async function(isTimeout = false) {
@@ -1462,8 +1462,7 @@
             });
 
             let percentage = (score / currentExam.questions.length) * 10;
-            let timeTaken = Math.floor((Date.now() - currentExam.startTime) / 1000);
-            
+            let timeTaken = 45 * 60 - currentExam.timeLeft;
             if (window.currentUser && !window.isSuperAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
@@ -1496,8 +1495,8 @@
                     ${!window.currentUser ? '<p class="text-xs text-rose-500 mt-2">Not signed in. Score will not be saved on Leaderboard.</p>' : ''}
                 </div>
                 <div class="flex flex-col md:flex-row justify-center gap-4">
-                    <button onclick="window.loadModule('${window.currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md transition-transform transform active:scale-95">🔄 Try Again</button>
-                    <button onclick="window.explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95">💡 Show Answers & Explanation</button>
+                    <button onclick="loadModule('${window.currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md transition-transform transform active:scale-95">🔄 Try Again</button>
+                    <button onclick="explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95">💡 Show Answers & Explanation</button>
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1516,615 +1515,89 @@
             const scriptDiv = document.getElementById('exam-audio-script');
             if(scriptDiv) scriptDiv.classList.remove('hidden');
         }
-
-        // ==========================================
-        // TEACHER WORKBOOK (SBT) LOGIC
-        // ==========================================
-        window.renderTeacherSBT = function(mod, container) {
-            let assignedIds = JSON.parse(localStorage.getItem('sbt_assignments') || '[]');
-            
-            let html = `
-                <div class="glass-card border-t-4 border-emerald-500">
-                    <h2 class="text-2xl font-bold text-emerald-800 mb-2 baloo-font">Quản lý giao bài tập: ${mod.title}</h2>
-                    <p class="text-slate-600 mb-6">Thầy cô hãy tick chọn các bài tập muốn giao cho học sinh. Học sinh sẽ chỉ nhìn thấy và được chấm điểm dựa trên các bài tập được chọn.</p>
-                    <div class="space-y-6">`;
-
-            mod.data.forEach(sec => {
-                html += `
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h3 class="font-bold text-lg text-slate-800 border-b border-slate-300 pb-2 mb-3">${sec.sectionTitle}</h3>
-                        <div class="space-y-3">
-                `;
-                sec.exercises.forEach(ex => {
-                    let isChecked = assignedIds.includes(ex.exId) ? 'checked' : '';
-                    html += `
-                        <label class="flex items-start gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors">
-                            <input type="checkbox" value="${ex.exId}" class="sbt-assign-cb mt-1 w-5 h-5 accent-indigo-600" ${isChecked}>
-                            <div>
-                                <span class="font-bold text-indigo-700 block">${ex.exId}: ${ex.instruction}</span>
-                                <span class="text-xs text-slate-500">${ex.questions.length} câu hỏi (${ex.type})</span>
-                            </div>
-                        </label>
-                    `;
-                });
-                html += `</div></div>`;
-            });
-
-            html += `
-                    </div>
-                    <div class="mt-8 text-center border-t border-slate-200 pt-6">
-                        <button onclick="window.saveAssignment()" class="bg-emerald-600 text-white px-10 py-3.5 rounded-xl font-bold hover:bg-emerald-700 shadow-md text-lg transition-transform active:scale-95">
-                            GIAO BÀI CHO LỚP
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="glass-card border-t-4 border-indigo-500 mt-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold text-indigo-800 baloo-font">Danh sách nộp bài của Học sinh</h2>
-                        <button onclick="window.refreshSBTResults('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold text-sm hover:bg-indigo-200">Làm mới</button>
-                    </div>
-                    <div id="sbt-teacher-results-area" class="overflow-x-auto">
-                        <p class="text-slate-500 text-center py-4">Đang tải dữ liệu...</p>
-                    </div>
-                </div>
-            `;
-            container.innerHTML = html;
-            window.refreshSBTResults(mod.id);
+// --- SBT EXERCISES ---        
+        window.selectSBTChoice = function(exId, qIdx, choiceIdx) {
+            let state = window.sbtState[exId];
+            if (state.attempts >= 3 || state.locked) return; 
+            if (state.answers[qIdx] && state.answers[qIdx].isCorrect) return; 
+            state.answers[qIdx] = { val: choiceIdx };
+            const parent = document.getElementById(`opts-${exId}-${qIdx}`);
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            parent.children[choiceIdx].classList.add('q-selected');
         }
 
-        window.saveAssignment = function() {
-            const checkboxes = document.querySelectorAll('.sbt-assign-cb:checked');
-            let assignedIds = Array.from(checkboxes).map(cb => cb.value);
-            if(assignedIds.length === 0) return alert("Thầy cô chưa chọn bài tập nào!");
-            localStorage.setItem('sbt_assignments', JSON.stringify(assignedIds));
-            alert("Đã lưu cấu hình giao bài thành công! Học sinh vào web sẽ thấy đề mới.");
+        window.saveSBTFill = function(exId, qIdx, fillIdx, val) {
+            let state = window.sbtState[exId];
+            if (state.attempts >= 3 || state.locked) return;
+            if(!state.answers[qIdx]) state.answers[qIdx] = { val: [] };
+            if(!Array.isArray(state.answers[qIdx].val)) state.answers[qIdx].val = [];
+            state.answers[qIdx].val[fillIdx] = val.trim();
         }
 
-        window.refreshSBTResults = async function(testId) {
-            let area = document.getElementById('sbt-teacher-results-area');
-            if(!window.fdb) { area.innerHTML = "Không có kết nối CSDL."; return; }
-            try {
-                // Fetch from exam_results where testId matches the workbook ID (e.g. sbt1)
-                const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("testId", "==", testId));
-                const snapshot = await window.fGetDocs(q);
-                let results = [];
-                snapshot.forEach(doc => { results.push(doc.data()); });
-                
-                if(results.length === 0) {
-                    area.innerHTML = "<p class='text-slate-500 italic text-center p-4'>Chưa có học sinh nào nộp bài chốt.</p>";
-                    return;
-                }
-                
-                // Sort by timestamp desc
-                results.sort((a,b) => b.timestamp - a.timestamp);
-                
-                let table = `<table class="w-full text-sm text-left"><tr class="bg-indigo-50 text-indigo-800">
-                    <th class="p-3 rounded-tl-lg">Học sinh</th><th class="p-3 text-center">Điểm</th><th class="p-3 text-center">Thời gian nộp</th><th class="p-3 text-center rounded-tr-lg">Hành động</th></tr>`;
-                
-                results.forEach(r => {
-                    let encodedData = encodeURIComponent(JSON.stringify(r));
-                    let dateStr = new Date(r.timestamp).toLocaleString('vi-VN');
-                    table += `<tr class="border-b hover:bg-slate-50">
-                        <td class="p-3 font-bold">${r.nickname} <br><span class="text-xs font-normal text-slate-500">${r.email}</span></td>
-                        <td class="p-3 text-center font-bold text-emerald-600 text-lg">${r.score}/${r.total}</td>
-                        <td class="p-3 text-center text-slate-500">${dateStr}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="window.generateSBTPDF('${encodedData}')" class="bg-rose-100 text-rose-600 border border-rose-300 px-3 py-1 rounded font-bold hover:bg-rose-200">Xuất PDF</button>
-                        </td>
-                    </tr>`;
-                });
-                table += `</table>`;
-                area.innerHTML = table;
-            } catch (e) {
-                console.error(e);
-                area.innerHTML = "Lỗi khi tải dữ liệu.";
-            }
-        }
+        window.submitSBTExercise = function(exId) {
+            const ex = currentModule.exercises.find(e => e.id === exId);
+            let state = window.sbtState[exId];
+            if (state.attempts >= 3 || state.locked) return;
 
-        // ==========================================
-        // STUDENT WORKBOOK (SBT) LOGIC
-        // ==========================================
-        window.sbtState = {
-            assigned: [],
-            answers: {},
-            attempts: 1,
-            isFinal: false
-        };
+            state.attempts++;
+            document.getElementById(`attempt-badge-${exId}`).innerText = `Lần thử: ${state.attempts}/3`;
+            let allCorrect = true;
 
-        window.resetSBTState = function() {
-            window.sbtState.assigned = JSON.parse(localStorage.getItem('sbt_assignments') || '[]');
-            window.sbtState.answers = {};
-            window.sbtState.attempts = 1;
-            window.sbtState.isFinal = false;
-        };
-
-        window.renderStudentSBT = function(mod, container) {
-            document.getElementById('attempt-badge').classList.remove('hidden');
-            document.getElementById('attempt-badge').innerText = `Lần thử: ${window.sbtState.attempts}/3`;
-            
-            if(window.sbtState.assigned.length === 0) {
-                container.innerHTML = `
-                    <div class="glass-card text-center py-16">
-                        <div class="text-6xl mb-4">📭</div>
-                        <h2 class="text-2xl font-bold text-slate-800">Chưa có bài tập</h2>
-                        <p class="text-slate-500">Giáo viên chưa giao bài tập nào cho phần này. Vui lòng quay lại sau.</p>
-                    </div>`;
-                return;
-            }
-
-            let html = '';
-            
-            mod.data.forEach(sec => {
-                let assignedExsInSection = sec.exercises.filter(ex => window.sbtState.assigned.includes(ex.exId));
-                if (assignedExsInSection.length > 0) {
-                    html += `
-                        <div class="glass-card mb-8 p-0 overflow-hidden border-t-4 border-indigo-600">
-                            <div class="bg-indigo-50 p-6 border-b border-indigo-100">
-                                <h2 class="text-2xl font-bold text-indigo-900 baloo-font tracking-wide">${sec.sectionTitle}</h2>
-                            </div>
-                            <div class="p-6 md:p-8 space-y-10">
-                    `;
-
-                    assignedExsInSection.forEach(ex => {
-                        html += `<div id="sbt-ex-${ex.exId}" class="exercise-block">
-                            <h3 class="font-bold text-indigo-700 text-lg border-b-2 border-indigo-100 pb-2 mb-5">${ex.instruction}</h3>
-                            <div class="space-y-6">
-                        `;
-
-                        ex.questions.forEach((q, qIndex) => {
-                            let qHTML = `<div class="text-[16px] leading-loose text-slate-800" id="sbt-q-${q.id}">`;
-                            let uAns = window.sbtState.answers[q.id];
-                            let isCorrect = window.checkSBTAnswer(q.id, uAns, mod.data);
-                            let isLocked = window.sbtState.isFinal || (window.sbtState.attempts > 1 && isCorrect);
-
-                            // DẠNG CHOICE
-                            if (ex.type === "choice") {
-                                qHTML += `<p class="font-medium mb-3">${q.q}</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-4">`;
-                                q.opts.forEach((opt, oIdx) => {
-                                    let btnClass = "sbt-inline-btn w-full text-left";
-                                    if (isLocked) btnClass += " disabled";
-                                    if (uAns === oIdx) {
-                                        btnClass += " q-selected";
-                                        if (window.sbtState.attempts > 1 && !isCorrect) btnClass += " q-wrong";
-                                        if (isCorrect && window.sbtState.attempts > 1) btnClass += " q-correct";
-                                    }
-                                    if (window.sbtState.isFinal && oIdx === q.ans) btnClass += " q-correct";
-                                    qHTML += `<button onclick="window.selectSBTMCQ('${q.id}', ${oIdx}, this)" class="${btnClass}">${opt}</button>`;
-                                });
-                                qHTML += `</div>`;
-                            }
-                            // DẠNG INLINE
-                            else if (ex.type === "inline") {
-                                let parts = q.q.split(/\[|\]/);
-                                qHTML += `<div class="flex flex-wrap items-center gap-2"><span class="text-slate-400 font-bold mr-1">►</span> ${parts[0]}`;
-                                let options = parts[1].split('|');
-                                options.forEach(opt => {
-                                    let btnClass = "sbt-inline-btn !py-1 !px-3 !m-0";
-                                    if (isLocked) btnClass += " disabled";
-                                    if (uAns === opt) {
-                                        btnClass += " q-selected";
-                                        if (window.sbtState.attempts > 1 && !isCorrect) btnClass += " q-wrong";
-                                        if (isCorrect && window.sbtState.attempts > 1) btnClass += " q-correct";
-                                    }
-                                    if (window.sbtState.isFinal && opt === q.ans) btnClass += " q-correct";
-                                    qHTML += `<button onclick="window.selectSBTInline('${q.id}', '${opt}', this)" class="${btnClass}">${opt}</button>`;
-                                });
-                                qHTML += `${parts[2]}</div>`;
-                            }
-                            // DẠNG FILL
-                            else if (ex.type === "fill") {
-                                let inputClass = "fill-input";
-                                if (isLocked) inputClass += " disabled";
-                                if (uAns && window.sbtState.attempts > 1) {
-                                    if(isCorrect) inputClass += " input-correct";
-                                    else inputClass += " input-wrong";
-                                }
-                                
-                                if (q.q.includes("________")) {
-                                    let parts = q.q.split("________");
-                                    let formattedQ = "";
-                                    for(let i=0; i<parts.length-1; i++){
-                                        let uVal = uAns ? (uAns.split(', ')[i] || "") : "";
-                                        let inpId = `sbt-input-${q.id}-${i}`;
-                                        formattedQ += parts[i] + `<input type="text" id="${inpId}" class="${inputClass}" value="${uVal}" onchange="window.saveSBTMultiInput('${q.id}')" ${isLocked ? 'disabled' : ''} spellcheck="false" autocomplete="off">`;
-                                    }
-                                    formattedQ += parts[parts.length-1];
-                                    qHTML += `<div class="flex items-center gap-2 flex-wrap"><span class="text-slate-400 font-bold mr-1">►</span> ${formattedQ}</div>`;
-                                } else {
-                                    let hintPart = q.q.split(': ');
-                                    let uVal = uAns || "";
-                                    qHTML += `<div class="flex items-center gap-2"><span class="text-slate-400 font-bold mr-1">►</span> ${hintPart[0]}: 
-                                              <input type="text" id="sbt-input-${q.id}" class="${inputClass}" value="${uVal}" placeholder="${hintPart[1]}" onchange="window.saveSBTSingleInput('${q.id}', this.value)" ${isLocked ? 'disabled' : ''} spellcheck="false" autocomplete="off"></div>`;
-                                }
-
-                                if (window.sbtState.isFinal && !isCorrect) {
-                                    qHTML += `<div class="mt-2 text-sm text-emerald-600 font-bold bg-emerald-50 inline-block px-3 py-1 rounded ml-6 border border-emerald-200">👉 Correct: ${q.ans}</div>`;
-                                }
-                            }
-                            // DẠNG REORDER
-                            else if (ex.type === "reorder") {
-                                qHTML += `<div class="flex items-start gap-3"><span class="text-slate-400 font-bold mt-2">►</span> <div class="w-full">`;
-                                let dzClass = "dropzone";
-                                if (window.sbtState.attempts > 1 && uAns) {
-                                    if(isCorrect) dzClass += " correct disabled";
-                                    else dzClass += " wrong";
-                                }
-                                if (window.sbtState.isFinal) dzClass += " disabled";
-
-                                qHTML += `<div id="sbt-dz-${q.id}" class="${dzClass}" onclick="window.removeSBTLastChip('${q.id}', '${mod.id}')">`;
-                                if (uAns) {
-                                    let words = uAns.match(/(?:[^\s"]+|"[^"]*")+/g) || uAns.split(" ");
-                                    words.forEach(w => { qHTML += `<span class="chip">${w}</span>`; });
-                                } else {
-                                    qHTML += `<span class="text-slate-400 italic text-sm mt-1 ml-2">(Chạm vào các từ bên dưới để ghép câu)</span>`;
-                                }
-                                qHTML += `</div>`;
-
-                                if (!isLocked) {
-                                    qHTML += `<div class="flex flex-wrap gap-1" id="sbt-source-${q.id}">`;
-                                    if (!q.shuffled) q.shuffled = [...q.words].sort(() => Math.random() - 0.5);
-                                    let selectedArr = uAns ? uAns.split(" ") : [];
-                                    
-                                    q.shuffled.forEach((w, index) => {
-                                        // Simple used logic
-                                        qHTML += `<span class="chip" onclick="window.addSBTChip('${q.id}', '${w.replace(/'/g, "\\'")}', this, '${mod.id}')">${w}</span>`;
-                                    });
-                                    qHTML += `</div>`;
-                                }
-
-                                if (window.sbtState.isFinal && !isCorrect) {
-                                    qHTML += `<div class="mt-3 text-sm text-emerald-600 font-bold bg-emerald-50 inline-block px-3 py-2 rounded-lg border border-emerald-200">👉 Correct: ${q.ans}</div>`;
-                                }
-                                qHTML += `</div></div>`;
-                            }
-
-                            if (window.sbtState.isFinal && q.exp) {
-                                qHTML += `<div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-900 shadow-inner">
-                                            <b class="text-amber-700 block mb-1">💡 Giải thích chi tiết:</b> ${q.exp}
-                                          </div>`;
-                            }
-
-                            qHTML += `</div>`;
-                            html += qHTML;
-                        });
-                        html += `</div></div>`;
-                    });
-                    html += `</div></div>`;
-                }
-            });
-
-            html += `
-                <div class="text-center mt-10 pb-10" id="sbt-action-area">
-                    <button id="btn-sbt-submit" onclick="window.submitSBTWorkbook('${mod.id}')" class="bg-indigo-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 shadow-xl transition-transform active:scale-95">
-                        NỘP BÀI KHÓA LẠI
-                    </button>
-                    
-                    <div id="sbt-feedback-panel" class="hidden mt-8 p-8 rounded-3xl border-2 shadow-sm">
-                        <h3 id="sbt-fb-title" class="text-3xl font-bold baloo-font mb-3"></h3>
-                        <p id="sbt-fb-desc" class="text-slate-600 mb-6 font-medium text-lg leading-relaxed"></p>
-                        <div class="flex flex-col sm:flex-row justify-center gap-4">
-                            <button id="btn-sbt-try-again" onclick="window.retrySBTWorkbook('${mod.id}')" class="bg-amber-500 text-white px-10 py-3.5 rounded-xl font-bold shadow-md hidden hover:bg-amber-600 transition-transform active:scale-95 text-lg">
-                                🔄 Sửa Lại Câu Sai
-                            </button>
-                            <button id="btn-sbt-pdf-student" onclick="window.studentGenerateSBTPDF('${mod.id}')" class="bg-emerald-600 text-white px-10 py-3.5 rounded-xl font-bold shadow-md hidden hover:bg-emerald-700 transition-transform active:scale-95 text-lg">
-                                📥 Tải File PDF Chấm Điểm
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.innerHTML = html;
-        }
-
-        // SBT State Setters
-        window.selectSBTMCQ = function(qId, idx, btn) {
-            window.sbtState.answers[qId] = idx;
-            const parent = btn.parentElement;
-            parent.querySelectorAll('.sbt-inline-btn').forEach(b => b.classList.remove('q-selected'));
-            btn.classList.add('q-selected');
-        }
-        window.selectSBTInline = function(qId, val, btn) {
-            window.sbtState.answers[qId] = val;
-            const parent = btn.parentElement;
-            parent.querySelectorAll('.sbt-inline-btn').forEach(b => b.classList.remove('q-selected'));
-            btn.classList.add('q-selected');
-        }
-        window.saveSBTSingleInput = function(qId, val) { window.sbtState.answers[qId] = val.trim(); }
-        window.saveSBTMultiInput = function(qId) {
-            const inputs = document.querySelectorAll(`input[id^="sbt-input-${qId}-"]`);
-            let vals = []; inputs.forEach(inp => vals.push(inp.value.trim()));
-            window.sbtState.answers[qId] = vals.join(", ");
-        }
-        window.addSBTChip = function(qId, word, chipEl, modId) {
-            chipEl.classList.add('used');
-            let current = window.sbtState.answers[qId] ? window.sbtState.answers[qId] + " " : "";
-            current += word;
-            current = current.replace(/\s+\./g, ".").replace(/\s+\?/g, "?").trim();
-            window.sbtState.answers[qId] = current;
-            window.renderStudentSBT(window.currentModule, document.getElementById('content-area')); 
-        }
-        window.removeSBTLastChip = function(qId, modId) {
-            let current = window.sbtState.answers[qId];
-            if (!current) return;
-            let arr = current.replace(/\./g, " .").replace(/\?/g, " ?").split(/\s+/);
-            arr.pop();
-            window.sbtState.answers[qId] = arr.join(" ").replace(/\s+\./g, ".").replace(/\s+\?/g, "?").trim();
-            window.renderStudentSBT(window.currentModule, document.getElementById('content-area'));
-        }
-
-        window.checkSBTAnswer = function(qId, userAns, modData) {
-            if (userAns === undefined || userAns === null || userAns === "") return false;
-            let targetQ = null;
-            for (let sec of modData) {
-                for (let ex of sec.exercises) {
-                    let found = ex.questions.find(q => q.id === qId);
-                    if (found) { targetQ = found; break; }
-                }
-                if (targetQ) break;
-            }
-            if (!targetQ) return false;
-
-            if (typeof targetQ.ans === 'number') { return parseInt(userAns) === targetQ.ans; } 
-            else {
-                let cleanU = String(userAns).replace(/\s+/g, " ").trim().toLowerCase();
-                let cleanA = String(targetQ.ans).replace(/\s+/g, " ").trim().toLowerCase();
-                return cleanU === cleanA;
-            }
-        }
-
-        window.submitSBTWorkbook = async function(modId) {
-            // Force save inputs
-            document.querySelectorAll('.fill-input').forEach(inp => inp.blur());
-
-            const modData = window.currentModule.data;
-            let totalQ = 0;
-            modData.forEach(sec => {
-                sec.exercises.forEach(ex => {
-                    if(window.sbtState.assigned.includes(ex.exId)) totalQ += ex.questions.length;
-                });
-            });
-
-            let answered = Object.values(window.sbtState.answers).filter(v => v !== "").length;
-            if (answered < totalQ && window.sbtState.attempts < 3) {
-                if(!confirm(`Em còn ${totalQ - answered} câu chưa làm. Vẫn muốn nộp?`)) return;
-            }
-
-            let score = 0;
-            let detailedResults = [];
-            
-            // Build detailed results for saving and PDF
-            modData.forEach(sec => {
-                let assignedExs = sec.exercises.filter(ex => window.sbtState.assigned.includes(ex.exId));
-                assignedExs.forEach(ex => {
-                    ex.questions.forEach(q => {
-                        let uAns = window.sbtState.answers[q.id];
-                        let isCorrect = window.checkSBTAnswer(q.id, uAns, modData);
-                        if(isCorrect) score++;
-                        
-                        let uAnsText = uAns !== undefined ? uAns : "Bỏ trống";
-                        if(ex.type === 'choice' && uAns !== undefined && uAns !== "") uAnsText = q.opts[uAns];
-                        
-                        detailedResults.push({
-                            q: q.q,
-                            userAns: uAnsText,
-                            correctAns: ex.type === 'choice' ? q.opts[q.ans] : q.ans,
-                            isCorrect: isCorrect
-                        });
-                    });
-                });
-            });
-
-            const fbPanel = document.getElementById('sbt-feedback-panel');
-            const fbTitle = document.getElementById('sbt-fb-title');
-            const fbDesc = document.getElementById('sbt-fb-desc');
-            const btnTryAgain = document.getElementById('btn-sbt-try-again');
-            const btnSubmit = document.getElementById('btn-sbt-submit');
-            const btnPdf = document.getElementById('btn-sbt-pdf-student');
-
-            fbPanel.classList.remove('hidden', 'bg-rose-50', 'border-rose-200', 'bg-emerald-50', 'border-emerald-200');
-
-            if (score === totalQ) {
-                window.sbtState.isFinal = true;
-                window.saveSBTResult(score, totalQ, detailedResults);
-                fbPanel.classList.add('bg-emerald-50', 'border-emerald-200');
-                fbTitle.innerText = `Tuyệt đỉnh! ${score}/${totalQ}`;
-                fbTitle.className = "text-4xl font-bold baloo-font mb-3 text-emerald-700";
-                fbDesc.innerText = "Em đã làm đúng toàn bộ bài tập Giáo viên giao. Kết quả hoàn hảo đã được lưu.";
-                btnTryAgain.classList.add('hidden');
-                btnSubmit.classList.add('hidden');
-                btnPdf.classList.remove('hidden');
-            } 
-            else if (window.sbtState.attempts < 3) {
-                fbPanel.classList.add('bg-rose-50', 'border-rose-200');
-                fbTitle.innerText = `Chưa hoàn hảo! (${score}/${totalQ})`;
-                fbTitle.className = "text-4xl font-bold baloo-font mb-3 text-rose-600";
-                fbDesc.innerText = `Em bị sai ${totalQ - score} câu. Các câu đúng đã được hệ thống khóa lại bảo vệ. Em hãy kiểm tra phần bị bôi đỏ và suy nghĩ sửa lại nhé!`;
-                btnTryAgain.classList.remove('hidden');
-                btnSubmit.classList.add('hidden');
-                window.sbtState.attempts++;
-            } 
-            else {
-                window.sbtState.isFinal = true;
-                window.saveSBTResult(score, totalQ, detailedResults);
-                fbPanel.classList.add('bg-emerald-50', 'border-emerald-200');
-                fbTitle.innerText = `Hoàn thành! Điểm: ${score}/${totalQ}`;
-                fbTitle.className = "text-4xl font-bold baloo-font mb-3 text-emerald-700";
-                fbDesc.innerText = "Hệ thống đã chốt điểm. Hãy lướt lên xem Đáp án đúng (Màu Xanh) và Giải thích chi tiết cho những câu em làm sai nhé.";
-                btnTryAgain.classList.add('hidden');
-                btnSubmit.classList.add('hidden');
-                btnPdf.classList.remove('hidden');
-            }
-
-            window.renderStudentSBT(window.currentModule, document.getElementById('content-area')); 
-            setTimeout(() => document.getElementById('sbt-feedback-panel').scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-        }
-
-        window.retrySBTWorkbook = function(modId) {
-            const modData = window.currentModule.data;
-            for(let key in window.sbtState.answers) {
-                if(!window.checkSBTAnswer(key, window.sbtState.answers[key], modData)) {
-                    delete window.sbtState.answers[key];
-                }
-            }
-            window.renderStudentSBT(window.currentModule, document.getElementById('content-area'));
-            window.scrollTo(0,0);
-        }
-
-        window.saveSBTResult = async function(score, total, detailedResults) {
-            if (window.currentUser && !window.isAdmin) {
-                try {
-                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid,
-                        email: window.currentUser.email,
-                        nickname: window.currentUser.nickname,
-                        classId: window.currentUser.classId || 'unassigned',
-                        testId: window.currentModule.id,
-                        level: "SBT",
-                        testName: window.currentModule.title,
-                        score: score,
-                        total: total,
-                        percentage: (score / total) * 10,
-                        timeTaken: 0,
-                        timestamp: Date.now(),
-                        isLesson: false, // Treat as exam to show in reports and leaderboard
-                        detailedResults: detailedResults,
-                        answers: window.sbtState.answers, // For generating PDF later
-                        assigned: window.sbtState.assigned // For generating PDF later
-                    });
-                } catch(e) { console.error("Save SBT Error:", e); }
-            }
-        }
-
-        // ==========================================
-        // PDF EXPORT CHO SBT
-        // ==========================================
-        window.studentGenerateSBTPDF = function(modId) {
-            // Reconstruct the data object that the teacher generator expects
-            const data = {
-                nickname: window.currentUser.nickname,
-                score: Object.values(window.sbtState.answers).filter((uAns, index) => {
-                     // Very rough re-evaluation just for display text, ideally we pull from state
-                     return true; // Simplified for the wrapper
-                }).length, // This is just a placeholder, real score is in state but we don't track it globally easily here without re-eval. 
-                total: 0,
-                answers: window.sbtState.answers,
-                assigned: window.sbtState.assigned
-            };
-            
-            // Actually let's just trigger the main PDF gen with current state
-            let totalQ = 0; let score = 0;
-            const modData = window.currentModule.data;
-            modData.forEach(sec => {
-                sec.exercises.forEach(ex => {
-                    if(window.sbtState.assigned.includes(ex.exId)) {
-                        totalQ += ex.questions.length;
-                        ex.questions.forEach(q => {
-                            if(window.checkSBTAnswer(q.id, window.sbtState.answers[q.id], modData)) score++;
-                        });
+            ex.questions.forEach((q, qIdx) => {
+                let userAns = state.answers[qIdx] ? state.answers[qIdx].val : null;
+                if (ex.type === 'choice') {
+                    let isCorrect = (userAns === q.ans);
+                    const btns = document.getElementById(`opts-${exId}-${qIdx}`).children;
+                    if (isCorrect) {
+                        btns[userAns].classList.remove('q-selected', 'q-wrong');
+                        btns[userAns].classList.add('q-correct', 'disabled');
+                        state.answers[qIdx].isCorrect = true;
+                    } else {
+                        allCorrect = false;
+                        if (userAns !== null && userAns !== undefined) btns[userAns].classList.add('q-wrong');
+                        if (state.attempts >= 3) {
+                            btns[q.ans].classList.add('q-correct');
+                            document.getElementById(`exp-${exId}-${qIdx}`).classList.remove('hidden');
+                            Array.from(btns).forEach(b => b.classList.add('disabled'));
+                        }
                     }
-                });
-            });
-            data.score = score;
-            data.total = totalQ;
-            
-            window.generateSBTPDF(encodeURIComponent(JSON.stringify(data)), modData);
-        }
-
-        window.generateSBTPDF = function(encodedData, optionalModData = null) {
-            const data = JSON.parse(decodeURIComponent(encodedData));
-            const container = document.getElementById('sbt-pdf-export-container');
-            const modData = optionalModData || window.currentModule.data; // Use passed modData or current
-            
-            let html = `
-                <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px;">
-                    <h1 style="font-size: 22px; font-weight: bold; margin: 0; text-transform: uppercase;">PHIẾU BÀI TẬP SỐ - GLOBAL SUCCESS 6</h1>
-                    <h2 style="font-size: 16px; margin: 5px 0; color: #4f46e5;">${window.currentModule.title}</h2>
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 15px; font-size: 16px;">
-                        <span>Học sinh: ${data.nickname}</span>
-                        <span style="color: red;">Điểm số: ${data.score} / ${data.total}</span>
-                    </div>
-                </div>
-            `;
-
-            let currentAssigned = data.assigned || [];
-            
-            modData.forEach(sec => {
-                let assignedExs = sec.exercises.filter(ex => currentAssigned.includes(ex.exId));
-                if (assignedExs.length > 0) {
-                    html += `<div class="pdf-section-title">${sec.sectionTitle}</div>`;
-                    
-                    assignedExs.forEach(ex => {
-                        html += `<div style="font-style: italic; margin-bottom: 8px; font-weight: bold; color: #475569;">${ex.instruction}</div>`;
-                        
-                        ex.questions.forEach((q, idx) => {
-                            let uAns = data.answers[q.id];
-                            let isCorrect = window.checkSBTAnswer(q.id, uAns, modData);
-                            let ansDisplay = "";
-                            
-                            if (ex.type === 'choice') {
-                                ansDisplay = (uAns !== undefined && uAns !== "") ? q.opts[uAns] : "Bỏ trống";
-                            } else {
-                                ansDisplay = (uAns !== undefined && uAns !== "") ? uAns : "Bỏ trống";
+                } 
+                else if (ex.type === 'fill') {
+                    let correctArr = q.ans.split('|');
+                    let qCorrect = true;
+                    correctArr.forEach((cAns, fIdx) => {
+                        let uVal = (userAns && userAns[fIdx]) ? userAns[fIdx].toLowerCase() : "";
+                        let inputEl = document.getElementById(`fill-${exId}-${qIdx}-${fIdx}`);
+                        if (uVal === cAns.toLowerCase()) {
+                            inputEl.classList.remove('fill-wrong'); inputEl.classList.add('fill-correct'); inputEl.disabled = true;
+                        } else {
+                            qCorrect = false;
+                            inputEl.classList.add('fill-wrong');
+                            if (state.attempts >= 3) {
+                                inputEl.value = cAns; 
+                                inputEl.classList.remove('fill-wrong'); inputEl.classList.add('fill-correct'); inputEl.disabled = true;
                             }
-
-                            let ansClass = isCorrect ? "pdf-correct" : "pdf-wrong";
-                            
-                            html += `
-                                <div style="margin-bottom: 12px; page-break-inside: avoid;">
-                                    <div class="pdf-q-text">${q.q.replace(/\[.*?\]|________/, "...")}</div>
-                                    <div style="margin-top: 4px;">
-                                        <span>HS điền:</span> <span class="pdf-ans-box ${ansClass}">${ansDisplay}</span>
-                                        ${!isCorrect ? `<span class="pdf-ans-box pdf-real-ans">Đáp án đúng: ${ex.type === 'choice' ? q.opts[q.ans] : q.ans}</span>` : ""}
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        html += `<div style="height: 10px;"></div>`;
+                        }
                     });
+                    if(qCorrect) state.answers[qIdx] = { isCorrect: true };
+                    else allCorrect = false;
+                    if (state.attempts >= 3 && !qCorrect) document.getElementById(`exp-${exId}-${qIdx}`).classList.remove('hidden');
                 }
             });
 
-            container.innerHTML = html;
-            container.style.display = 'block';
-
-            const opt = {
-                margin:       15,
-                filename:     `ChamBai_${data.nickname.replace(/\s+/g, '_')}_${window.currentModule.id}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            alert("Hệ thống đang trích xuất file PDF. Quá trình này mất khoảng vài giây...");
-
-            html2pdf().set(opt).from(container).save().then(() => {
-                container.style.display = 'none';
-            });
+            if (allCorrect || state.attempts >= 3) {
+                state.locked = true;
+                const btn = document.getElementById(`submit-btn-${exId}`);
+                btn.innerText = "Đã Hoàn Thành";
+                btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+                btn.classList.add('disabled');
+                let badge = document.getElementById(`attempt-badge-${exId}`);
+                badge.classList.replace('bg-slate-100', 'bg-emerald-100');
+                badge.innerText = allCorrect ? "Tuyệt vời! Đúng 100%" : "Đã hết lượt - Xem đáp án";
+            }
         }
 
-        // --- Utils for other functionality ---
-        window.voices = [];
-        window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
-        window.getVoiceByGender = function(gender, lang = 'en-US') {
-            if (window.voices.length === 0) window.voices = window.speechSynthesis.getVoices();
-            const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
-            const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
-            let selectedVoice = null;
-            if (gender === 'female') { selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
-            else if (gender === 'male') { selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
-            if (!selectedVoice) { selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0])); }
-            return selectedVoice;
-        };
-
-        window.highlightAudioRow = function(event) {
-            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
-            if(event && event.currentTarget && event.currentTarget.classList.contains('audio-row')) {
-                event.currentTarget.classList.add('active-audio');
-            }
-        };
-        window.removeHighlight = function() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); };
-
+        // --- TTS AUDIO ---
         window.playAudio = function(encodedText, lang = 'en-US') {
             window.highlightAudioRow(window.event);
             window.speechSynthesis.cancel();
@@ -2169,18 +1642,143 @@
             speakNextLine();
         };
 
-        window.showCustomAlert = function(title, message, icon="🔔") {
+        window.selectListeningChoice = function(btn, qId, choiceIdx) {
+            window.userListeningAnswers[qId] = choiceIdx;
+            const parent = document.getElementById('opts-' + qId);
+            if(parent) {
+                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+                btn.classList.add('q-selected');
+            }
+        }
+
+        window.submitListeningTask = async function(firstQid) {
+            let score = 0; let questions = [];
+            const section = window.currentModule.sections.find(s => s.type === 'listening_task');
+            if(section && section.questions) questions = section.questions;
+
+            questions.forEach(q => {
+                const parent = document.getElementById('opts-' + q.id);
+                if(!parent) return;
+                const btns = parent.querySelectorAll('.q-btn');
+                const userAns = window.userListeningAnswers[q.id];
+                btns.forEach(b => b.classList.add('disabled'));
+
+                if (userAns === q.ans) {
+                    if(btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-correct'); }
+                    score++;
+                } else {
+                    if (userAns !== undefined && btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-wrong'); }
+                    if(btns[q.ans]) btns[q.ans].classList.add('q-correct');
+                }
+            });
+
+            if (window.currentUser && !window.isAdmin) {
+                try {
+                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
+                        uid: window.currentUser.uid,
+                        email: window.currentUser.email,
+                        nickname: window.currentUser.nickname,
+                        testId: window.currentModule.id, 
+                        level: "Listening",
+                        testName: window.currentModule.title,
+                        score: score, total: questions.length, percentage: (score/questions.length)*10,
+                        timeTaken: 0, timestamp: Date.now(), isLesson: true
+                    });
+                } catch(e) {}
+            }
+
+            const actionContainer = document.querySelector('.listening-action-buttons');
+            if(actionContainer) {
+                actionContainer.innerHTML = `
+                    <div class="text-xl font-bold text-teal-600 mb-4 bg-teal-50 inline-block px-6 py-2 rounded-xl border border-teal-200">🎉 Score: ${score} / ${questions.length}</div><br>
+                    <button onclick="loadModule('${window.currentModule.id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md">🔄 Try Again</button>
+                `;
+            }
+        }
+        
+        window.selectChoice = function(btn, exId, choiceIdx) {
+            window.userPracticeAnswers[exId] = choiceIdx;
+            const parent = document.getElementById('opts-' + exId);
+            if(parent) {
+                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+                btn.classList.add('q-selected');
+            }
+        };
+
+        window.submitExercises = async function() {
+            let score = 0; let exercises = [];
+            window.currentModule.sections.forEach(s => {
+                if(s.type === 'reading_practice' || s.type === 'practice') {
+                    if (s.exercises) exercises = exercises.concat(s.exercises);
+                }
+            });
+            if (exercises.length === 0) return;
+
+            exercises.forEach(ex => {
+                const expDiv = document.getElementById('exp-' + ex.id);
+                if(expDiv) expDiv.classList.remove('hidden');
+
+                const parent = document.getElementById('opts-' + ex.id);
+                if(!parent) return;
+                const btns = parent.querySelectorAll('.q-btn');
+                const userAns = window.userPracticeAnswers[ex.id];
+                btns.forEach(b => b.classList.add('disabled'));
+
+                if (userAns === ex.ans) {
+                    if(btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-correct'); }
+                    score++;
+                } else {
+                    if (userAns !== undefined && btns[userAns]) { btns[userAns].classList.remove('q-selected'); btns[userAns].classList.add('q-wrong'); }
+                    if(btns[ex.ans]) btns[ex.ans].classList.add('q-correct');
+                }
+            });
+
+            if (window.currentUser && !window.isAdmin) {
+                try {
+                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
+                        uid: window.currentUser.uid,
+                        email: window.currentUser.email,
+                        nickname: window.currentUser.nickname,
+                        testId: window.currentModule.id,
+                        level: "Practice",
+                        testName: window.currentModule.title,
+                        score: score, total: exercises.length, percentage: (score/exercises.length)*10,
+                        timeTaken: 0, timestamp: Date.now(), isLesson: true
+                    });
+                } catch(e) {}
+            }
+
+            const actionContainer = document.getElementById('action-buttons');
+            if(actionContainer) {
+                actionContainer.innerHTML = `
+                    <div class="text-xl font-bold text-indigo-600 mb-4 bg-indigo-50 inline-block px-6 py-2 rounded-xl border border-indigo-200">🎉 Score: ${score} / ${exercises.length}</div><br>
+                    <button onclick="loadModule('${window.currentModule.id}')" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md">🔄 Try Again</button>
+                `;
+            }
+        };
+
+        window.toggleTranscript = function(btn) {
+            const container = btn.closest('.glass-card');
+            const el = container.querySelector('.audio-transcript');
+            if(el) {
+                if(el.classList.contains('hidden')) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            }
+        }
+        
+        function showCustomAlert(title, message, icon="🔔") {
             document.getElementById('alertIcon').innerText = icon;
             document.getElementById('alertTitle').innerText = title;
             document.getElementById('alertMessage').innerText = message;
             document.getElementById('customAlert').classList.add('active');
         }
         window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
-        window.alert = function(msg) { window.showCustomAlert("Notification", msg); };
+        window.alert = function(msg) { showCustomAlert("Notification", msg); };
 
-        window.saveNickname = async function() {
+        // --- FIREBASE QUẢN LÝ ---
+       window.saveNickname = async function() {
             const input = document.getElementById('nicknameInput').value.trim();
-            if (!input) return window.showCustomAlert("Error", "Please enter a nickname.", "⚠️");
+            if (!input) return showCustomAlert("Error", "Please enter a nickname.", "⚠️");
 
             if (window.pendingUser) {
                 const userRef = window.fDoc(window.fdb, "users", window.pendingUser.uid);
@@ -2209,57 +1807,472 @@
             document.getElementById('nicknameOverlay').classList.add('active');
         }
 
-        // Attach SBT Unit 1 Data
-        const sbtUnit1 = [
-            {
-                sectionId: "A",
-                sectionTitle: "A. Pronunciation",
-                exercises: [
-                    {
-                        exId: "A1", instruction: "1. Find the word which has a different sound in the part underlined.", type: "choice",
-                        questions: [
-                            { id: "a1_1", q: "1. A. st<u>u</u>dy B. l<u>u</u>nch C. s<u>u</u>bject D. comp<u>u</u>ter", opts: ["study", "lunch", "subject", "computer"], ans: 3, exp: "Từ 'computer' có phần gạch chân đọc là /ə/, các từ còn lại đọc là /ʌ/." },
-                            { id: "a1_2", q: "2. A. c<u>a</u>lculator B. cl<u>a</u>ssmate C. f<u>a</u>st D. f<u>a</u>ther", opts: ["calculator", "classmate", "fast", "father"], ans: 0, exp: "Từ 'calculator' đọc là /æ/, các từ còn lại là /ɑː/." }
-                        ]
-                    },
-                    {
-                        exId: "A2", instruction: "2. Give the names of the following. (Gợi ý chữ cái đầu)", type: "fill",
-                        questions: [
-                            { id: "a2_1", q: "1. Dùng để vẽ đường tròn: c_____", ans: "compass", exp: "compass: compa" },
-                            { id: "a2_2", q: "2. Điện thoại thông minh: sm_____", ans: "smartphone", exp: "smartphone: điện thoại thông minh" }
-                        ]
+        window.showMyProgress = async function() {
+            if (!window.currentUser) { showCustomAlert("Notice", "Please sign in to view your progress.", "🔒"); return; }
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-progress')) document.getElementById('nav-progress').classList.add('active');
+            document.getElementById('header-title').innerText = "My Progress";
+            if (window.innerWidth < 1024) toggleMenu();
+
+            const container = document.getElementById('content-area');
+            container.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading progress...</div>`;
+
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let completedModules = {};
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.uid === window.currentUser.uid && d.isLesson) {
+                        completedModules[d.testId] = true;
                     }
-                ]
-            },
-            {
-                sectionId: "B",
-                sectionTitle: "B. Vocabulary & Grammar",
-                exercises: [
-                    {
-                        exId: "B2", instruction: "2. Choose the right word to complete each sentence.", type: "inline",
-                        questions: [
-                            { id: "b2_1", q: "1. The students at my school can [do|have|study] quietly in the library.", ans: "study", exp: "Học tập trong thư viện dùng 'study'." },
-                            { id: "b2_2", q: "2. My grandma [plays|does|studies] morning exercise every day.", ans: "does", exp: "do morning exercise -> does." }
-                        ]
-                    },
-                    {
-                        exId: "B6", instruction: "6. Put the following words and phrases in correct order to make sentences.", type: "reorder",
-                        questions: [
-                            { id: "b6_1", words: ["My grandmother", "at home", "always", "is", "in the evening", "."], ans: "My grandmother is always at home in the evening.", exp: "Trạng từ 'always' đứng SAU To-be 'is'." }
-                        ]
+                });
+
+                let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
+                
+                database[currentClass].modules.forEach(mod => {
+                    if(mod.type === 'lesson') {
+                        let isCompleted = completedModules[mod.id];
+                        let statusUI = isCompleted 
+                            ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
+                            : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
+                            
+                        html += `<div class="p-4 border rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
+                            <p class="font-bold text-slate-800">${mod.title}</p>
+                            ${statusUI}
+                        </div>`;
                     }
-                ]
+                });
+
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
+        }
+
+        window.showLeaderboard = async function() {
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-leaderboard')) document.getElementById('nav-leaderboard').classList.add('active');
+            document.getElementById('header-title').innerText = "Leaderboard";
+            if (window.innerWidth < 1024) toggleMenu();
+
+            let html = `
+                <div class="glass-card border-t-4 border-amber-500 mb-6">
+                    <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="test1">Review 1 - Test 1</option>
+                            <option value="test2">Review 1 - Test 2</option>
+                        </select>
+                        <select id="lb-level-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        <button onclick="fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
+                    </div>
+                </div>
+                <div id="lb-results"></div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+            window.fetchLeaderboardData();
+        }
+
+        window.fetchLeaderboardData = async function() {
+            const testId = document.getElementById('lb-test-select').value;
+            const level = document.getElementById('lb-level-select').value;
+            const resContainer = document.getElementById('lb-results');
+            resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
+
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let results = [];
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
+                });
+
+                results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
+
+                let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm">
+                    <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
+                
+                if (results.length === 0) {
+                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
+                } else {
+                    results.slice(0, 10).forEach((r, idx) => {
+                        let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
+                        let isMe = (window.currentUser && r.uid === window.currentUser.uid) ? "bg-amber-100 font-bold" : "";
+                        html += `<tr class="border-b ${isMe}">
+                            <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
+                            <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
+                            <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
+                        </tr>`;
+                    });
+                }
+                html += `</table></div>`;
+                resContainer.innerHTML = html;
+            } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
+        }
+
+        window.adminClassesData = [];
+        window.adminUsersData = [];
+
+        window.loadClassesFromDB = async function() {
+            if(!window.isAdmin) return;
+            try {
+                const snap = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
+                window.adminClassesData = [];
+                snap.forEach(doc => { window.adminClassesData.push({id: doc.id, ...doc.data()}) });
+                
+                let sidebarSelect = document.getElementById('sidebar-class-filter');
+                if(sidebarSelect) {
+                    let currentVal = sidebarSelect.value;
+                    let opts = `<option value="all">Tất cả lớp học</option><option value="unassigned">Chưa xếp lớp</option>`;
+                    window.adminClassesData.forEach(c => {
+                        opts += `<option value="${c.id}">Lớp ${c.name}</option>`;
+                    });
+                    sidebarSelect.innerHTML = opts;
+                    if(currentVal) sidebarSelect.value = currentVal;
+                }
+            } catch(e) { console.error("Lỗi tải danh sách lớp:", e); }
+        }
+
+        window.createNewClass = async function() {
+            if(!window.isSuperAdmin) { alert("Chỉ Admin cấp cao mới có quyền tạo lớp mới."); return; }
+            const nameInput = document.getElementById('new-class-name');
+            const name = nameInput.value.trim();
+            if(!name) { alert("Vui lòng nhập tên lớp!"); return; }
+
+            try {
+                await window.fAddDoc(window.fCollection(window.fdb, "classes"), { name: name, createdAt: Date.now() });
+                nameInput.value = '';
+                await window.loadClassesFromDB(); 
+                window.showClassManagement('all'); 
+                showCustomAlert("Thành công", "Đã tạo lớp thành công!", "✅");
+            } catch(e) { console.error(e); alert("Lỗi khi tạo lớp."); }
+        }
+
+        window.showClassManagement = async function(filterClassId = 'all') {
+            if(!window.isAdmin) return;
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.add('active');
+            
+            document.getElementById('header-title').innerText = "Class Management";
+            if (window.innerWidth < 1024) toggleMenu();
+
+            let createClassHtml = "";
+            if (window.isSuperAdmin) {
+                createClassHtml = `
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-6 flex flex-col sm:flex-row gap-3 items-center shadow-sm">
+                        <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl shrink-0">+</div>
+                        <input type="text" id="new-class-name" placeholder="Tạo lớp mới (Ví dụ: 6A1, 6A2)..." class="flex-1 p-3 rounded-lg border border-slate-300 font-bold outline-none focus:border-indigo-500 w-full text-slate-700">
+                        <button onclick="createNewClass()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-sm w-full sm:w-auto whitespace-nowrap transition-colors">Tạo Lớp</button>
+                    </div>
+                `;
             }
-        ];
 
-        // Attach to database
-        database['class-6'].modules.push({
-            id: "sbt1", type: "workbook", title: "SBT Unit 1: My New School", data: sbtUnit1
-        });
+            let html = `
+                <div class="glass-card border-t-4 border-indigo-500 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold baloo-font text-indigo-700">🏫 Quản Lý Học Viên & Phân Lớp</h2>
+                        <button onclick="exportUsersToCSV()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center justify-center gap-2 transition-colors">
+                            📥 Xuất Excel (CSV)
+                        </button>
+                    </div>
+                    
+                    ${createClassHtml}
 
-        // Start App
+                    <div class="flex justify-between items-center mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-3 w-full">
+                            <span class="font-bold text-slate-700 shrink-0">Lọc danh sách:</span>
+                            <select id="main-class-filter" onchange="loadAdminUsers(this.value)" class="flex-1 p-2.5 border border-slate-300 rounded-lg font-bold text-indigo-700 outline-none cursor-pointer bg-white">
+                                <option value="all">Tất cả học viên</option>
+                                <option value="unassigned">Học viên chưa xếp lớp</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-2 sm:p-4 rounded-xl border border-slate-200">
+                        <div id="admin-users-list" class="space-y-3 max-h-[600px] overflow-y-auto">
+                            <div class="text-center py-10 font-bold text-slate-500">Đang tải dữ liệu từ máy chủ...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('content-area').innerHTML = html;
+            
+            await window.loadClassesFromDB();
+            
+            let filterSelect = document.getElementById('main-class-filter');
+            if(filterSelect) {
+                let opts = `<option value="all">Tất cả học viên</option><option value="unassigned">Học viên chưa xếp lớp</option>`;
+                window.adminClassesData.forEach(c => {
+                    opts += `<option value="${c.id}" ${filterClassId === c.id ? 'selected' : ''}>Lớp ${c.name}</option>`;
+                });
+                filterSelect.innerHTML = opts;
+            }
+
+            let sidebarSelect = document.getElementById('sidebar-class-filter');
+            if(sidebarSelect) sidebarSelect.value = filterClassId;
+
+            window.loadAdminUsers(filterClassId);
+        }
+
+        window.loadAdminUsers = async function(filterClassId = 'all') {
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
+                let users = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+                users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
+                window.adminUsersData = users;
+
+                // RBAC: LỌC THEO QUYỀN TRUY CẬP
+                let filteredUsers = users;
+                
+                if (!window.isSuperAdmin) {
+                    // Giáo viên chỉ thấy học sinh lớp mình
+                    filteredUsers = users.filter(u => u.classId === window.currentUser.classId);
+                } else {
+                    // Super Admin thấy hết và có thể lọc
+                    if(filterClassId !== 'all') {
+                        if(filterClassId === 'unassigned') filteredUsers = users.filter(u => !u.classId);
+                        else filteredUsers = users.filter(u => u.classId === filterClassId);
+                    }
+                }
+
+                let uHtml = "";
+                filteredUsers.forEach(data => {
+                    const isBlocked = data.status === 'blocked';
+                    const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                    let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                    
+                    let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
+                    let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Đã Khóa</span>` : 
+                                      (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Hết Hạn</span>` : 
+                                      `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Đang Hoạt Động</span>`);
+
+                    let classSelectHtml = `<span class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Lớp: ${window.adminClassesData.find(c => c.id === data.classId)?.name || 'Chưa Xếp'}</span>`;
+                    
+                    let actionButtons = "";
+                    let roleSelectHtml = `<span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">${data.role === 'teacher' ? 'Giáo Viên' : 'Học Sinh'}</span>`;
+
+                    if (window.isSuperAdmin) {
+                        let classOptions = `<option value="">-- Xếp Lớp --</option>`;
+                        window.adminClassesData.forEach(c => {
+                            classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Lớp ${c.name}</option>`;
+                        });
+                        classSelectHtml = `
+                            <select onchange="updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer focus:border-indigo-500 shadow-sm w-full sm:w-auto">
+                                ${classOptions}
+                            </select>
+                        `;
+
+                        roleSelectHtml = `
+                            <select onchange="updateUserRole('${data.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 bg-white text-slate-700 outline-none cursor-pointer uppercase tracking-wider">
+                                <option value="student" ${data.role === 'student' ? 'selected' : ''}>HỌC SINH</option>
+                                <option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>GIÁO VIÊN</option>
+                            </select>
+                        `;
+
+                        actionButtons = `
+                            <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+                                <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Dùng thử 7 Ngày</option>
+                                <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Tháng</option>
+                                <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Tháng</option>
+                                <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Vĩnh Viễn</option>
+                            </select>
+                            <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-colors w-full sm:w-20">${isBlocked ? 'Mở Khóa' : 'Khóa TK'}</button>
+                            <button onclick="deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 transition-colors w-full sm:w-auto">Xóa</button>
+                        `;
+                    }
+
+                    uHtml += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between xl:items-center gap-4 transition-all hover:border-indigo-300 hover:shadow-md">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-12 h-12 rounded-full ${data.role === 'teacher' ? 'bg-purple-100 border-purple-300' : 'bg-slate-100 border-slate-300'} flex items-center justify-center text-xl shrink-0 border shadow-inner">
+                                ${data.role === 'teacher' ? '👨‍🏫' : '🎓'}
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-lg flex flex-wrap items-center gap-2">
+                                    ${data.nickname} 
+                                    ${roleSelectHtml}
+                                    <button onclick="openStudentReportModal('${data.id}', '${data.nickname}')" class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300 px-2 py-0.5 rounded font-bold hover:bg-indigo-200 shadow-sm ml-2">🔍 Xem Bài Làm</button>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${data.email}</span>
+                                    <span>| Hết hạn: <b class="${isExpired ? 'text-rose-600' : 'text-indigo-600'}">${expStr}</b></span>
+                                    <span>| ${statusBadge}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 w-full xl:w-auto">
+                            ${classSelectHtml}
+                            ${actionButtons}
+                        </div>
+                    </div>`;
+                });
+                
+                document.getElementById('admin-users-list').innerHTML = uHtml || `
+                    <div class="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
+                        <div class="text-5xl mb-3">📭</div>
+                        <p class="text-slate-500 font-bold text-lg">Không có học viên nào trong danh sách này.</p>
+                    </div>`;
+            } catch(e) { console.error(e); document.getElementById('admin-users-list').innerHTML = "<p class='text-rose-600 font-bold text-center'>Lỗi kết nối CSDL.</p>"; }
+        }
+
+        window.updateUserClass = async function(uid, classId) {
+            try {
+                await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classId: classId });
+                let filterClassId = document.getElementById('main-class-filter').value;
+                window.loadAdminUsers(filterClassId);
+            } catch(e) { console.error(e); alert("Có lỗi khi chuyển lớp."); }
+        }
+
+        window.updateUserRole = async function(uid, role) {
+            try {
+                await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { role: role });
+                let filterClassId = document.getElementById('main-class-filter').value;
+                window.loadAdminUsers(filterClassId);
+            } catch(e) { console.error(e); alert("Có lỗi khi đổi quyền."); }
+        }
+
+        window.updateUserPlan = async function(uid, plan) {
+            let expiryDate = null;
+            let now = Date.now();
+            if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
+            else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
+            else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
+            
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
+            let filterClassId = document.getElementById('main-class-filter').value;
+            window.loadAdminUsers(filterClassId);
+        }
+
+        window.toggleUserStatus = async function(uid, status) {
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { status: status });
+            let filterClassId = document.getElementById('main-class-filter').value;
+            window.loadAdminUsers(filterClassId);
+        }
+
+        window.deleteUser = async function(uid) {
+            if(confirm("XÓA TÀI KHOẢN VĨNH VIỄN?\nBạn có chắc chắn muốn xóa dữ liệu người dùng này không?")) {
+                await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
+                let filterClassId = document.getElementById('main-class-filter').value;
+                window.loadAdminUsers(filterClassId);
+            }
+        }
+
+        window.exportUsersToCSV = function() {
+            if(!window.adminUsersData) return;
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "Nickname,Email,Role,Class,Join Date,Plan,Expiry Date,Status\n";
+            
+            window.adminUsersData.forEach(user => {
+                let className = window.adminClassesData.find(c => c.id === user.classId)?.name || 'Unassigned';
+                let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                let row = `"${user.nickname}","${user.email}","${user.role}","${className}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"`;
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "students_list.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        // BÁO CÁO CHI TIẾT
+        window.openStudentReportModal = async function(uid, nickname) {
+            document.getElementById('reportModalTitle').innerText = `Báo cáo của học viên: ${nickname}`;
+            const content = document.getElementById('reportModalContent');
+            content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu máy chủ...</div>`;
+            document.getElementById('studentReportModal').classList.add('active');
+
+            try {
+                const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
+                const snapshot = await window.fGetDocs(q);
+                let results = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
+                results.sort((a,b) => b.timestamp - a.timestamp); // Mới nhất lên đầu
+
+                window.currentStudentResultsCache = results;
+
+                if (results.length === 0) {
+                    content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh này chưa hoàn thành bài nào.</p></div>`;
+                    return;
+                }
+
+                let html = `<div class="space-y-3">`;
+                results.forEach(r => {
+                    let date = new Date(r.timestamp).toLocaleString('vi-VN');
+                    let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
+                    let badge = r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập Luyện</span>` 
+                                           : `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Bài Kiểm Tra</span>`;
+
+                    html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300 transition-colors">
+                        <div>
+                            <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
+                            <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
+                            <button onclick="viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors">🔍 Xem Lỗi Sai</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+
+            } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
+        }
+
+        window.viewDetailedTest = function(docId) {
+            const content = document.getElementById('reportModalContent');
+            if(!window.currentStudentResultsCache) return;
+            const data = window.currentStudentResultsCache.find(r => r.docId === docId);
+            if(!data || !data.detailedResults) {
+                content.innerHTML = `
+                    <div class="mb-4"><button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại danh sách</button></div>
+                    <div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
+                return;
+            }
+
+            let html = `
+                <div class="flex items-center gap-4 mb-6 border-b pb-4">
+                    <button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
+                    <div>
+                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
+                        <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi</p>
+                    </div>
+                </div>
+                <div class="space-y-4">`;
+
+            data.detailedResults.forEach((res, i) => {
+                let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
+                let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">ĐÚNG</span>` 
+                                          : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">SAI</span>`;
+                
+                html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm">
+                    <div class="flex items-start justify-between gap-4 mb-3">
+                        <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Câu ${i+1}:</span> ${res.q}</p>
+                        ${badge}
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm">
+                        <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
+                        ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+            content.innerHTML = html;
+            document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.closeStudentReportModal = function() {
+            document.getElementById('studentReportModal').classList.remove('active');
+        }
+
         window.onload = initApp;
-
     </script>
 </body>
 </html>
