@@ -47,6 +47,8 @@
         .module-nav-btn.exam-btn { border: 1px solid #fecdd3; background-color: #fff1f2; color: #be123c; }
         .module-nav-btn.exam-btn:hover { background-color: #ffe4e6; }
         .module-nav-btn.exam-btn.active { background-color: #fecdd3; color: #9f1239; border-left: 4px solid #e11d48; }
+        
+        
         .sbt-btn { border: 1px solid #fef08a; background-color: #fef9c3; color: #a16207; }
         .sbt-btn:hover { background-color: #fef08a; }
         .sbt-btn.active { background-color: #fde047; color: #854d0e; border-left: 4px solid #eab308; }
@@ -62,9 +64,11 @@
             body { background: white !important; font-size: 11.5pt !important; color: #111 !important; line-height: 1.5 !important; overflow: visible !important; }
             .scroll-container { height: auto !important; overflow: visible !important; padding: 0 !important; }
             .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .submit-btn, .audio-row:hover, #listening-action-buttons { display: none !important; }
+            
             #content-area { padding: 0 !important; max-width: 100% !important; }
             .glass-card { box-shadow: none !important; border: 1px solid #ccc !important; padding: 15px !important; margin-bottom: 15pt !important; background: transparent !important; page-break-inside: avoid !important; }
             section { page-break-inside: auto !important; margin-bottom: 15pt !important; }
+            
             .unit-header-print { text-align: right; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; margin-bottom: 25px; }
             .unit-header-print h1 { font-family: 'Arial', sans-serif !important; font-size: 24pt !important; font-weight: 900 !important; color: #4f46e5 !important; margin: 0; text-transform: uppercase; }
             .unit-header-print h2 { font-family: 'Arial', sans-serif !important; font-size: 12pt !important; font-weight: normal !important; color: #64748b !important; margin: 5px 0 0 0; letter-spacing: 2px; text-transform: uppercase; }
@@ -72,6 +76,7 @@
             table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 12pt !important; }
             th, td { border: 1px solid #cbd5e1 !important; padding: 8pt !important; font-family: 'Arial', sans-serif !important; font-size: 10.5pt !important;}
             th { background-color: #e2e8f0 !important; color: #0f172a !important;}
+        
         }
     </style>
 
@@ -112,7 +117,7 @@
         window.loginWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
             try { await signInWithPopup(auth, provider); } 
-            catch (error) { console.error(error); alert("Lỗi đăng nhập. Kiểm tra Authorized Domains trong Firebase."); }
+            catch (error) { console.error(error); alert("Lỗi đăng nhập"); }
         }
 
         window.logoutGoogle = async function() {
@@ -167,13 +172,18 @@
                     <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Đăng xuất</button>
                 `;
 
-                if (window.isAdmin && printBtn) printBtn.classList.remove('hidden');
+                if(printBtn) {
+                    if (window.isAdmin) printBtn.classList.remove('hidden');
+                    else printBtn.classList.add('hidden');
+                }
+                
                 if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
                 renderMenu();
 
             } else {
                 window.currentUser = null; window.isAdmin = false; window.isSuperAdmin = false;
                 authContainer.innerHTML = `<button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Đăng nhập</button>`;
+                
                 if(printBtn) printBtn.classList.add('hidden');
                 renderMenu();
                 
@@ -208,22 +218,26 @@
         </div>
     </div>
 
-    <!-- NOTIFICATION ALERT -->
-    <div id="customAlert" class="custom-alert-overlay no-print">
-        <div class="custom-alert-box">
-            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4" id="alertIcon">🔔</div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2" id="alertTitle">Thông báo</h3>
-            <p class="text-slate-600 mb-6 font-medium" id="alertMessage">Nội dung</p>
-            <button onclick="closeCustomAlert()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl w-full hover:bg-indigo-700">Đã hiểu</button>
+    <!-- TEACHER ASSIGNMENT MODAL -->
+    <div id="assignmentModal" class="custom-alert-overlay no-print">
+        <div class="bg-white p-6 rounded-2xl w-[90%] max-w-lg shadow-2xl relative max-h-[80vh] flex flex-col">
+            <h2 class="text-xl font-bold baloo-font text-indigo-900 mb-2 border-b pb-2">⚙️ Cấu Hình Giao Bài Tập</h2>
+            <p class="text-sm text-slate-500 mb-4">Chọn các bài tập bạn muốn hiển thị cho lớp <b id="assign-class-name" class="text-indigo-600"></b></p>
+            <div id="assignment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-2">
+                <!-- Checkboxes injected here -->
+            </div>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('assignmentModal').classList.remove('active')" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-300">Hủy</button>
+                <button onclick="saveAssignment()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700">Lưu Giao Bài</button>
+            </div>
         </div>
     </div>
 
-    <!-- STUDENT REPORT MODAL -->
     <div id="studentReportModal" class="custom-alert-overlay no-print z-[2000]">
         <div class="bg-white rounded-2xl w-[95%] max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl">
                 <h3 class="font-bold text-xl text-indigo-800 baloo-font" id="reportModalTitle">Báo Cáo Học Viên</h3>
-                <button onclick="closeStudentReportModal()" class="text-slate-500 hover:text-rose-500 font-bold text-2xl px-2">&times;</button>
+                <button onclick="closeStudentReportModal()" class="text-slate-500 font-bold text-2xl px-2">&times;</button>
             </div>
             <div class="p-4 overflow-y-auto flex-1 bg-slate-50" id="reportModalContent"></div>
         </div>
@@ -233,11 +247,11 @@
         <header class="flex justify-between items-center bg-white px-4 py-3 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
             <div class="flex items-center gap-3">
                 <button onclick="toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50">☰ Menu</button>
-                <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate max-w-[200px] md:max-w-md hidden sm:block">Loading...</h2>
+                <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate hidden sm:block">Loading...</h2>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="window.print()" id="print-btn" class="hidden bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm">
-                    🖨️ <span class="hidden md:inline">Print / PDF</span>
+                <button onclick="window.print()" id="print-btn" class="bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm">
+                    🖨️ <span class="hidden md:inline">Print </span>
                 </button>
                 <div id="auth-container">
                     <!-- Default State before Firebase loads -->
@@ -247,7 +261,7 @@
                 </div>
             </div>
         </header>
-
+        
         <main class="scroll-container w-full bg-slate-50" id="main-scroll">
             <div class="max-w-4xl mx-auto p-4 md:p-8">
                 <div class="hidden print:block unit-header-print">
@@ -258,10 +272,18 @@
                 
                 <div id="sbt-source-notice" class="hidden text-center pb-8 mt-8 text-xs font-bold text-slate-400 no-print">
                     <p>Nội dung trích từ: SBT Tiếng Anh 6 - Tập 1 - Global Success</p>
-                    <p>NXB Giáo Dục Việt Nam - Phi lợi nhuận & Dành cho giáo dục</p>
+                    <p>NXB Giáo Dục Việt Nam </p>
+                </div>
+                
+                <div class="hidden print:block text-center mt-12 pt-4 border-t-2 border-slate-400 text-[11pt] font-bold italic text-slate-600">
+                    Giáo án điện tử bởi Mr. Khoa - Zalo: 0901-637-827
                 </div>
             </div>
         </main>
+        
+        <footer class="bg-slate-800 text-white text-center py-2.5 text-sm font-bold no-print z-50 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.1)] border-t border-slate-700 tracking-wide">
+            Giáo án điện tử bởi Mr. Khoa - Zalo: 0901-637-827
+        </footer>
     </div>
 
     <script>
@@ -499,52 +521,114 @@ const sbtUnit1 = {
         {
             id: "sbt_u1_a1", part: "A. Pronunciation", title: "1. Find the word which has a different sound in the part underlined.", type: "choice",
             questions: [
-                { q: "1. A. st<u>u</u>dy B. l<u>u</u>nch C. s<u>u</u>bject D. comp<u>u</u>ter", opts: ["A", "B", "C", "D"], ans: 3, exp: "'computer' /ju:/, còn lại là /ʌ/" },
-                { q: "2. A. c<u>a</u>lculator B. cl<u>a</u>ssmate C. f<u>a</u>st D. f<u>a</u>ther", opts: ["A", "B", "C", "D"], ans: 0, exp: "'calculator' /æ/, còn lại là /ɑ:/" },
-                { q: "3. A. s<u>ch</u>ool B. tea<u>ch</u>ing C. <u>ch</u>ess D. <u>ch</u>alk", opts: ["A", "B", "C", "D"], ans: 0, exp: "'school' /k/, còn lại là /tʃ/" },
-                { q: "4. A. sm<u>ar</u>t B. sh<u>ar</u>pener C. gramm<u>ar</u> D. st<u>ar</u>", opts: ["A", "B", "C", "D"], ans: 2, exp: "'grammar' /ə/, còn lại là /ɑ:/" },
-                { q: "5. A. c<u>o</u>mpass B. h<u>o</u>mework C. s<u>o</u>meone D. w<u>o</u>nderful", opts: ["A", "B", "C", "D"], ans: 1, exp: "'homework' /əʊ/, còn lại là /ʌ/" }
+                { id: "q_a1_1", q: "1.", opts: ["st<u>u</u>dy", "l<u>u</u>nch", "s<u>u</u>bject", "comp<u>u</u>ter"], ans: 3, exp: "'computer' /ju:/, còn lại là /ʌ/" },
+                { id: "q_a1_2", q: "2.", opts: ["c<u>a</u>lculator", "cl<u>a</u>ssmate", "f<u>a</u>st", "f<u>a</u>ther"], ans: 0, exp: "'calculator' /æ/, còn lại là /ɑ:/" },
+                { id: "q_a1_3", q: "3.", opts: ["s<u>ch</u>ool", "tea<u>ch</u>ing", "<u>ch</u>ess", "<u>ch</u>alk"], ans: 0, exp: "'school' /k/, còn lại là /tʃ/" },
+                { id: "q_a1_4", q: "4.", opts: ["sm<u>ar</u>t", "sh<u>ar</u>pener", "gramm<u>ar</u>", "st<u>ar</u>"], ans: 2, exp: "'grammar' /ə/, còn lại là /ɑ:/" },
+                { id: "q_a1_5", q: "5.", opts: ["c<u>o</u>mpass", "h<u>o</u>mework", "s<u>o</u>meone", "w<u>o</u>nderful"], ans: 1, exp: "'homework' /əʊ/, còn lại là /ʌ/" }
             ]
         },
         {
             id: "sbt_u1_b1", part: "B. Vocabulary & Grammar", title: "1. Circle A, B, C, or D to choose the correct activity.", type: "choice",
             questions: [
-                { q: "1. Mary is looking at her book and writing on paper. What is she doing?", opts: ["A. cooking", "B. writing", "C. standing", "D. talking"], ans: 1, exp: "Cô ấy đang viết (writing)." },
-                { q: "2. Tom is sitting at his desk at home with his school books. What is he doing?", opts: ["A. playing the piano", "B. studying lessons", "C. having breakfast", "D. doing homework"], ans: 3, exp: "Học ở nhà với sách vở là làm bài tập (doing homework)." },
-                { q: "3. Students are running and jumping in the schoolyard. What is it?", opts: ["A. physical exercise", "B. computer studies", "C. physics experiment", "D. English practice"], ans: 0, exp: "Chạy nhảy là hoạt động thể chất (physical exercise)." },
-                { q: "4. The bell rings and students go out to play. What time is it?", opts: ["A. dinner time", "B. school day", "C. playing field", "D. break time"], ans: 3, exp: "Giờ ra chơi (break time)." }
+                { id: "q_b1_1", q: "1. Mary is looking at her book and writing on paper. What is she doing?", opts: ["A. cooking", "B. writing", "C. standing", "D. talking"], ans: 1, exp: "Cô ấy đang viết (writing)." },
+                { id: "q_b1_2", q: "2. Tom is sitting at his desk at home with his school books. What is he doing?", opts: ["A. playing the piano", "B. studying lessons", "C. having breakfast", "D. doing homework"], ans: 3, exp: "Học ở nhà với sách vở là làm bài tập (doing homework)." },
+                { id: "q_b1_3", q: "3. Students are running and jumping in the schoolyard. What is it?", opts: ["A. physical exercise", "B. computer studies", "C. physics experiment", "D. English practice"], ans: 0, exp: "Chạy nhảy là hoạt động thể chất (physical exercise)." },
+                { id: "q_b1_4", q: "4. The bell rings and students go out to play. What time is it?", opts: ["A. dinner time", "B. school day", "C. playing field", "D. break time"], ans: 3, exp: "Giờ ra chơi (break time)." }
             ]
         },
         {
-            id: "sbt_u1_b2", part: "B. Vocabulary & Grammar", title: "2. Underline (choose) the right word in brackets.", type: "choice",
+            id: "sbt_u1_b2", part: "B. Vocabulary & Grammar", title: "2. Choose the right word in brackets.", type: "choice",
             questions: [
-                { q: "1. The students at my school can (do / have / study) quietly in the library.", opts: ["do", "have", "study"], ans: 2, exp: "Học tập yên tĩnh trong thư viện (study)." },
-                { q: "2. My grandma (plays / does / studies) morning exercise every day.", opts: ["plays", "does", "studies"], ans: 1, exp: "Tập thể dục đi với động từ 'do' -> does morning exercise." },
-                { q: "3. We don't usually (play / have / study) homework on Saturday.", opts: ["play", "have", "study"], ans: 1, exp: "Có bài tập về nhà -> have homework." },
-                { q: "4. Do you often (play / do / have) team games during the break?", opts: ["play", "do", "have"], ans: 0, exp: "Chơi trò chơi đồng đội -> play team games." },
-                { q: "5. I have two tests tomorrow, but I don't have much time to (do / have / study).", opts: ["do", "have", "study"], ans: 2, exp: "Thời gian để học -> time to study." },
-                { q: "6. On our school's farm, there are a lot of things for us to (play / do / have) at weekends.", opts: ["play", "do", "have"], ans: 1, exp: "Nhiều việc để làm -> things to do." }
+                { id: "q_b2_1", q: "1. The students at my school can _______ quietly in the library.", opts: ["do", "have", "study"], ans: 2, exp: "Học tập yên tĩnh trong thư viện (study)." },
+                { id: "q_b2_2", q: "2. My grandma _______ morning exercise every day.", opts: ["plays", "does", "studies"], ans: 1, exp: "Tập thể dục đi với động từ 'do' -> does morning exercise." },
+                { id: "q_b2_3", q: "3. We don't usually _______ homework on Saturday.", opts: ["play", "have", "study"], ans: 1, exp: "Có bài tập về nhà -> have homework." },
+                { id: "q_b2_4", q: "4. Do you often _______ team games during the break?", opts: ["play", "do", "have"], ans: 0, exp: "Chơi trò chơi đồng đội -> play team games." },
+                { id: "q_b2_5", q: "5. I have two tests tomorrow, but I don't have much time to _______.", opts: ["do", "have", "study"], ans: 2, exp: "Thời gian để học -> time to study." },
+                { id: "q_b2_6", q: "6. On our school's farm, there are a lot of things for us to _______ at weekends.", opts: ["play", "do", "have"], ans: 1, exp: "Nhiều việc để làm -> things to do." }
+            ]
+        },
+        {
+            id: "sbt_u1_b3", part: "B. Vocabulary & Grammar", title: "3. What are these things? Write the words in the spaces.", type: "fill",
+            questions: [
+                { id: "q_b3_1", q: "1. It is a long seat for two or more students to sit on in the classroom. [fill]", ans: [["bench", "a bench"]], exp: "Ghế dài là bench." },
+                { id: "q_b3_2", q: "2. They are of different colours. You draw and colour with them. [fill]", ans: [["coloured pencils", "pencils"]], exp: "Bút chì màu là coloured pencils." },
+                { id: "q_b3_3", q: "3. It has two wheels. Many students ride it to school. [fill]", ans: [["bike", "bicycle", "a bike", "a bicycle"]], exp: "Xe đạp là bike hoặc bicycle." },
+                { id: "q_b3_4", q: "4. It has many letters and words. You use it to look up new words. [fill]", ans: [["dictionary", "a dictionary"]], exp: "Từ điển là dictionary." },
+                { id: "q_b3_5", q: "5. It is a small book of blank paper for writing notes in. [fill]", ans: [["notebook", "a notebook"]], exp: "Sổ tay là notebook." },
+                { id: "q_b3_6", q: "6. It is a small electronic device for calculating with numbers. [fill]", ans: [["calculator", "a calculator"]], exp: "Máy tính là calculator." },
+                { id: "q_b3_7", q: "7. It is a room at your school where there are books, newspapers, etc. for you to read, study, or borrow. [fill]", ans: [["library", "a library"]], exp: "Thư viện là library." },
+                { id: "q_b3_8", q: "8. It is a large picture printed on paper and you put it on a wall as decoration. [fill]", ans: [["poster", "a poster"]], exp: "Áp phích là poster." }
             ]
         },
         {
             id: "sbt_u1_b4", part: "B. Vocabulary & Grammar", title: "4. Put the verbs in brackets in the correct form.", type: "fill",
             questions: [
-                { q: "1. School [fill] (finish) at 4.30 p.m. every day.", ans: "finishes", exp: "Hiện tại đơn, chủ ngữ số ít -> finishes." },
-                { q: "2. [fill] you usually [fill] (write) to your pen pal?", ans: "Do|write", exp: "Câu hỏi HTĐ với 'you' -> Do you write." },
-                { q: "3. [fill] your brother [fill] (like) to have lunch in the canteen? - No. He [fill] (say) that he prefers lunch at home.", ans: "Does|like|says", exp: "Câu hỏi HTĐ ngôi thứ 3 số ít -> Does he like. Câu trả lời -> says." }
+                { id: "q_b4_1", q: "1. School [fill] (finish) at 4.30 p.m. every day.", ans: [["finishes"]], exp: "Hiện tại đơn, chủ ngữ số ít -> finishes." },
+                { id: "q_b4_2", q: "2. [fill] you usually [fill] (write) to your pen pal?", ans: [["Do"], ["write"]], exp: "Câu hỏi HTĐ với 'you' -> Do you write." },
+                { id: "q_b4_3", q: "3. [fill] your brother [fill] (like) to have lunch in the canteen? - No. He [fill] (say) that he prefers lunch at home.", ans: [["Does"], ["like"], ["says"]], exp: "Câu hỏi HTĐ ngôi thứ 3 số ít -> Does he like. Câu trả lời -> says." },
+                { id: "q_b4_4", q: "4. It's warm today. I [fill] (not want) [fill] (stay) home.", ans: [["don't want", "do not want"], ["to stay"]], exp: "Phủ định HTĐ -> don't want. Sau want là to-V -> to stay." },
+                { id: "q_b4_5", q: "5. My classmates and I often [fill] (wear) shorts and T-shirts when we [fill] (go) camping.", ans: [["wear"], ["go"]], exp: "Chủ ngữ số nhiều -> động từ nguyên mẫu wear, go." }
             ]
         },
         {
-            id: "sbt_u1_d1", part: "D. Reading", title: "1. Put a word from the box in each gap.", note: "Words: go, off, their, learn, on, school, all, begins", type: "fill",
+            id: "sbt_u1_b5", part: "B. Vocabulary & Grammar", title: "5. Fill each blank with a word/phrase: ball games, have, English lessons, international, housework, subjects, share, study", type: "fill",
             questions: [
-                { q: "In England, when the schoolchildren come to school, they first (1) [fill] to the cloakroom.", ans: "go", exp: "đi đến phòng thay đồ (go)." },
-                { q: "They take (2) [fill] their coats and hats...", ans: "off", exp: "cởi áo khoác (take off)." },
-                { q: "...and then go to (3) [fill] classroom.", ans: "their", exp: "lớp học của họ (their)." },
-                { q: "Some go to the laboratories where they (4) [fill] physics, chemistry.", ans: "learn", exp: "nơi họ học các môn (learn)." },
-                { q: "When a student is (5) [fill] duty...", ans: "on", exp: "trực nhật (on duty)." },
-                { q: "...he comes to (6) [fill] very early.", ans: "school", exp: "đến trường rất sớm (comes to school)." },
-                { q: "He has to open (7) [fill] the windows...", ans: "all", exp: "mở tất cả cửa sổ (all)." },
-                { q: "At 7:30 the teacher comes and the lesson (8) [fill].", ans: "begins", exp: "bài học bắt đầu (begins)." }
+                { id: "q_b5_1", q: "1. - Do you have [fill] on Monday? - No, on Tuesday.", ans: [["English lessons"]], exp: "Môn tiếng Anh: English lessons." },
+                { id: "q_b5_2", q: "2. My brother wants to [fill] film and photography.", ans: [["study"]], exp: "Học về phim ảnh: study." },
+                { id: "q_b5_3", q: "3. Children like to play [fill].", ans: [["ball games"]], exp: "Chơi các trò chơi với bóng: ball games." },
+                { id: "q_b5_4", q: "4. My sister sometimes helps my mother to do the [fill].", ans: [["housework"]], exp: "Làm việc nhà: do the housework." },
+                { id: "q_b5_5", q: "5. What do you usually [fill] for breakfast? - Bread and milk.", ans: [["have"]], exp: "Ăn sáng: have for breakfast." },
+                { id: "q_b5_6", q: "6. A good friend is ready to [fill] things with his / her classmates.", ans: [["share"]], exp: "Chia sẻ: share." },
+                { id: "q_b5_7", q: "7. There are [fill] schools in Ha Noi and Ho Chi Minh City.", ans: [["international"]], exp: "Trường quốc tế: international schools." },
+                { id: "q_b5_8", q: "8. We have some new [fill] in this school year: science, IT, etc.", ans: [["subjects"]], exp: "Môn học mới: new subjects." }
+            ]
+        },
+        {
+            id: "sbt_u1_b6", part: "B. Vocabulary & Grammar", title: "6. Put the following words and phrases in correct order to make sentences.", type: "fill",
+            questions: [
+                { id: "q_b6_1", q: "1. My grandmother / at home / always/ is / in the evening/.<br>-> [fill]", ans: [["My grandmother is always at home in the evening.", "My grandmother is always at home in the evening"]], exp: "Trạng từ luôn đứng sau động từ to be." },
+                { id: "q_b6_2", q: "2. celebrate / my birthday/ I / usually / with my friends/.<br>-> [fill]", ans: [["I usually celebrate my birthday with my friends.", "I usually celebrate my birthday with my friends"]], exp: "Trạng từ đứng trước động từ thường." },
+                { id: "q_b6_3", q: "3. you / Sunday / What time / usually / do/ on / get up/?<br>-> [fill]", ans: [["What time do you usually get up on Sunday?", "What time do you usually get up on Sunday"]], exp: "Cấu trúc câu hỏi: Wh-word + do/does + S + adv + V?" },
+                { id: "q_b6_4", q: "4. speak/We/our/in/Vietnamese / English class / hardly ever/.<br>-> [fill]", ans: [["We hardly ever speak Vietnamese in our English class.", "We hardly ever speak Vietnamese in our English class"]], exp: "Trạng từ 'hardly ever' đứng trước động từ 'speak'." },
+                { id: "q_b6_5", q: "5. always / The / six forty-five / arrives / school bus / at /.<br>-> [fill]", ans: [["The school bus always arrives at six forty-five.", "The school bus always arrives at six forty-five"]], exp: "Trạng từ đứng trước động từ." }
+            ]
+        },
+        {
+            id: "sbt_u1_d1", part: "D. Reading", title: "1. Put a word from the box in each gap: go, off, their, learn, on, school, all, begins", type: "fill",
+            questions: [
+                { id: "q_d1_1", q: "In England, when the schoolchildren come to school, they first (1) [fill] to the cloakroom.", ans: [["go"]], exp: "đi đến phòng thay đồ (go)." },
+                { id: "q_d1_2", q: "They take (2) [fill] their coats and raincoats...", ans: [["off"]], exp: "cởi áo khoác (take off)." },
+                { id: "q_d1_3", q: "...and then go to (3) [fill] classroom.", ans: [["their"]], exp: "lớp học của họ (their)." },
+                { id: "q_d1_4", q: "Some of the students go to the laboratories and workshops where they (4) [fill] physics, chemistry and art.", ans: [["learn"]], exp: "nơi họ học các môn (learn)." },
+                { id: "q_d1_5", q: "When a student is (5) [fill] duty...", ans: [["on"]], exp: "trực nhật (on duty)." },
+                { id: "q_d1_6", q: "...he comes to (6) [fill] very early.", ans: [["school"]], exp: "đến trường rất sớm (comes to school)." },
+                { id: "q_d1_7", q: "He has to open (7) [fill] the windows...", ans: [["all"]], exp: "mở tất cả cửa sổ (all)." },
+                { id: "q_d1_8", q: "At seven thirty the teacher comes into the room and the lesson (8) [fill].", ans: [["begins"]], exp: "bài học bắt đầu (begins)." }
+            ]
+        },
+        {
+            id: "sbt_u1_d2", part: "D. Reading", title: "2. Read the conversation and answer the questions.", type: "choice",
+            note: `Mr Green: Hey, Tom. How's your first week at the new school?<br>Tom: Well, it's great. But I was a bit nervous at first.<br>Mr Green: Why were you nervous?<br>Tom: The teachers are all new to me. Most of my classmates are new, too.<br>Mr Green: Are they friendly to you?<br>Tom: Ah, yeah. They're all nice to me.<br>Mr Green: What subjects did you have today?<br>Tom: Well, we had maths, geography and IT, my favourite subject.<br>Mr Green: Oh, good. So everything is going well at school?<br>Tom: Right. I had a good first day. And ... Dad, can I join the judo club at school? I like to do judo.<br>Mr Green: Yeah, OK, if you like. But don't forget to do your homework.`,
+            questions: [
+                { id: "q_d2_1", q: "1. Why was Tom nervous at first?", opts: ["A. Because the school is big.", "B. Because the teachers and classmates are new.", "C. Because he has a lot of homework."], ans: 1, exp: "Bài đọc: 'The teachers are all new to me. Most of my classmates are new, too.'" },
+                { id: "q_d2_2", q: "2. What are Tom's teachers and classmates like?", opts: ["A. They are friendly and nice.", "B. They are strict.", "C. They are very noisy."], ans: 0, exp: "Bài đọc: 'They're all nice to me.'" },
+                { id: "q_d2_3", q: "3. What's his favourite subject?", opts: ["A. Maths", "B. Geography", "C. IT"], ans: 2, exp: "Bài đọc: 'IT, my favourite subject.'" },
+                { id: "q_d2_4", q: "4. What club does he want to join?", opts: ["A. Football club", "B. Judo club", "C. Music club"], ans: 1, exp: "Bài đọc: 'Dad, can I join the judo club at school?'" },
+                { id: "q_d2_5", q: "5. Did Tom have a nice first day at his new school?", opts: ["A. Yes, he did.", "B. No, he didn't.", "C. The text doesn't say."], ans: 0, exp: "Bài đọc: 'I had a good first day.'" }
+            ]
+        },
+        {
+            id: "sbt_u1_d3", part: "D. Reading", title: "3. Choose the correct word for each of the gaps to complete the text.", type: "choice",
+            questions: [
+                { id: "q_d3_1", q: "What do you do if you want to (1) _______ a book in a library?", opts: ["A. find", "B. look", "C. take"], ans: 0, exp: "Muốn TÌM một quyển sách -> find." },
+                { id: "q_d3_2", q: "If you know the author's (2) _______ go to the author catalogue.", opts: ["A. address", "B. title", "C. name"], ans: 2, exp: "Biết TÊN tác giả -> author's name." },
+                { id: "q_d3_3", q: "Find the title of the book (3) _______ check the shelf mark.", opts: ["A. and", "B. or", "C. but"], ans: 0, exp: "Và kiểm tra mã kệ -> and." },
+                { id: "q_d3_4", q: "Make a note of this before you look (4) _______ the appropriate shelf.", opts: ["A. at", "B. for", "C. after"], ans: 1, exp: "Tìm kiếm -> look for." },
+                { id: "q_d3_5", q: "If you do not know the author's name, go to the (5) _______ catalogue.", opts: ["A. title", "B. author", "C. subject"], ans: 0, exp: "Danh mục tựa đề -> title catalogue." },
+                { id: "q_d3_6", q: "If there (6) _______ no title catalogue in the library, go to the subject catalogue.", opts: ["A. be", "B. are", "C. is"], ans: 2, exp: "Chủ ngữ 'no title catalogue' số ít -> is." },
+                { id: "q_d3_7", q: "Check all the titles which are under the (7) _______ you want.", opts: ["A. subject", "B. book", "C. index"], ans: 0, exp: "Dưới chủ đề bạn muốn -> subject." },
+                { id: "q_d3_8", q: "Let the librarian stamp it (8) _______ you take it out of the library.", opts: ["A. after", "B. before", "C. when"], ans: 1, exp: "Đóng dấu TRƯỚC KHI mang ra khỏi thư viện -> before." }
             ]
         }
     ]
@@ -558,9 +642,9 @@ const sbtUnit1 = {
             }
         };
 
-        // =========================================================================
-        // KHU VỰC LOGIC CHÍNH CỦA APP (CORE ENGINE)
-        // =========================================================================
+// =========================================================================
+// KHU VỰC LOGIC CHÍNH CỦA APP (CORE ENGINE)
+// =========================================================================
 
         let currentClass = "class-6";
         let currentModule = null;
@@ -636,19 +720,23 @@ const sbtUnit1 = {
             if(database[currentClass].modules.length > 0) loadModule(database[currentClass].modules[0].id);
         }
 
-        function loadModule(moduleId) {
-            if (window.innerWidth < 1024) toggleMenu(); 
+        async function loadModule(moduleId) {
+             if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('open'), document.getElementById('overlay').classList.remove('open');
+    
             const mod = database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            
             const navBtn = document.getElementById('nav-' + moduleId);
             if(navBtn) navBtn.classList.add('active');
             
             document.getElementById('header-title').innerText = mod.title;
+            
             const printClassTitle = document.getElementById('print-class-title');
             if (printClassTitle) printClassTitle.innerText = database[currentClass].name;
+            
             const printModuleTitle = document.getElementById('print-module-title');
             if (printModuleTitle) printModuleTitle.innerText = mod.title;
             
@@ -679,10 +767,31 @@ const sbtUnit1 = {
 
             if (mod.type === 'lesson') renderLessonView(mod, contentArea);
             else if (mod.type === 'exam_module') renderExamSetupView(mod, contentArea);
-            else if (mod.type === 'sbt_module') renderSBTView(mod, contentArea);
-            
+            else if (mod.type === 'sbt_module') {
+                // Teacher Assignment Fetching Logic
+                if (window.currentUser) {
+                    try {
+                        let classIdToFetch = window.currentUser.classId || 'unassigned';
+                        const docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
+                        const docSnap = await window.fGetDoc(docRef);
+                        if (docSnap.exists() && docSnap.data().assignedExercises) {
+                            window.currentAssignedExercises = docSnap.data().assignedExercises;
+                        } else {
+                            window.currentAssignedExercises = mod.exercises.map(e => e.id); // Default ALL
+                        }
+                    } catch(e) { window.currentAssignedExercises = mod.exercises.map(e => e.id); }
+                } else {
+                    window.currentAssignedExercises = mod.exercises.map(e => e.id);
+                }
+                renderSBTView(mod, contentArea);
+            }
+    
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        
+// ---------------------------------------------------------
+// SBT MODULE LOGIC (TEACHER ASSIGNMENT & SINGLE SUBMIT)
+// ---------------------------------------------------------
 
         function renderLessonView(mod, container) {
             let html = '';
@@ -836,6 +945,75 @@ const sbtUnit1 = {
                 </div>
             `;
             container.innerHTML = html;
+        }
+
+        function renderSBTView(mod, container) {
+            let teacherBtnHtml = '';
+            if (window.isAdmin) {
+                teacherBtnHtml = `<button onclick="openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-300 hover:bg-indigo-200 transition-colors shadow-sm flex items-center gap-2">⚙️ Giao Bài Tập</button>`;
+            }
+
+            let html = `<div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b pb-4 border-slate-200">
+                            <div>
+                                <h2 class="text-2xl font-bold text-indigo-800 baloo-font uppercase">${mod.title}</h2>
+                                <p class="text-slate-500 text-sm">Làm lại tối đa 3 lần. Các câu sai sẽ bị bôi đỏ.</p>
+                            </div>
+                            ${teacherBtnHtml}
+                        </div>`;
+    
+        // Khởi tạo state chung cho cả Module
+        if(!window.sbtState[mod.id]) window.sbtState[mod.id] = { attempts: 0, answers: {}, locked: false };
+        
+        let exercisesToRender = mod.exercises;
+        if (window.currentAssignedExercises) {
+            exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+        }
+
+        if (exercisesToRender.length === 0) {
+            container.innerHTML = html + `<div class="glass-card text-center py-10"><p class="text-4xl mb-3">📭</p><p class="text-slate-500 font-bold">Giáo viên chưa giao bài tập nào trong phần này.</p></div>`;
+            return;
+        }
+
+        html += `<div class="flex justify-end mb-4"><span class="text-sm font-bold text-slate-600 bg-slate-200 px-4 py-1.5 rounded-full" id="sbt-global-badge-${mod.id}">Lần thử: ${window.sbtState[mod.id].attempts}/3</span></div>`;
+
+        exercisesToRender.forEach((ex) => {
+            html += `<div class="glass-card mb-8 exercise-container" id="ex-container-${ex.id}">
+                        <div class="border-b-2 border-slate-100 pb-3 mb-4">
+                            <span class="text-xs font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-1 rounded">${ex.part}</span>
+                            <h3 class="font-bold text-lg text-slate-800 mt-2">${ex.title}</h3>
+                        </div>`;
+            
+            if(ex.note) html += `<p class="text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200 mb-5 font-medium shadow-inner">${ex.note}</p>`;
+
+            html += `<div class="space-y-6">`;
+            ex.questions.forEach((q, qIdx) => {
+                html += `<div><p class="font-bold text-slate-800 mb-3 text-[15px] leading-relaxed">${parseSBTQuestion(q.q, q.id)}</p>`;
+                
+                if (ex.type === 'choice') {
+                    html += `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2" id="opts-${q.id}">`;
+                    q.opts.forEach((opt, oIdx) => { 
+                        html += `<div onclick="selectSBTChoice('${mod.id}', '${q.id}', ${oIdx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 shadow-sm">${opt}</div>`; 
+                    });
+                    html += `</div>`;
+                }
+                html += `<div id="exp-${q.id}" class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800"><b>💡 Giải thích:</b> ${q.exp}</div></div>`;
+            });
+            html += `</div></div>`;
+        });
+
+        html += `<div class="mt-8 text-center no-print" id="sbt-action-container-${mod.id}">
+                    <button onclick="submitSBTModule('${mod.id}')" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 text-lg w-full md:w-auto submit-btn">🚀 NỘP TOÀN BỘ BÀI LÀM</button>
+                </div>`;
+                
+        container.innerHTML = html;
+        }
+
+        function parseSBTQuestion(text, qId) {
+            let count = 0;
+            return text.replace(/\[fill\]/g, () => {
+                let html = `<input type="text" id="fill-${qId}-${count}" oninput="saveSBTFill('${window.currentModule.id}', '${qId}', ${count}, this.value)" class="fill-input" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="...">`;
+                count++; return html;
+            });
         }
 
         window.startExam = function(modId) {
@@ -1179,6 +1357,49 @@ const sbtUnit1 = {
             }
         }
 
+        // ADMIN GIAO BÀI TẬP
+        window.openAssignmentModal = function(modId) {
+            const mod = window.currentModule;
+            let html = '';
+            
+            let currentAssigned = window.currentAssignedExercises || mod.exercises.map(e => e.id);
+            
+            mod.exercises.forEach(ex => {
+                let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
+                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50">
+                            <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                            <div>
+                                <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
+                                <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
+                            </div>
+                        </label>`;
+            });
+            
+            document.getElementById('assign-class-name').innerText = window.currentUser.classId ? window.adminClassesData?.find(c => c.id === window.currentUser.classId)?.name || 'đang chọn' : 'của bạn';
+            document.getElementById('assignment-list').innerHTML = html;
+            document.getElementById('assignmentModal').classList.add('active');
+        }
+
+        window.saveAssignment = async function() {
+            let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
+            let selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if(selectedIds.length === 0) return alert("Phải chọn ít nhất 1 bài tập.");
+            
+            try {
+                let classIdToSave = window.currentUser.classId || 'unassigned';
+                await window.fSetDoc(window.fDoc(window.fdb, "assignments", `${classIdToSave}_${window.currentModule.id}`), {
+                    assignedExercises: selectedIds,
+                    updatedAt: Date.now()
+                });
+                
+                window.currentAssignedExercises = selectedIds;
+                document.getElementById('assignmentModal').classList.remove('active');
+                alert("Đã lưu cấu hình giao bài thành công!");
+                loadModule(window.currentModule.id); // Reload to show new config
+            } catch(e) { console.error(e); alert("Có lỗi khi lưu cấu hình."); }
+        }
+        
         // --- TTS AUDIO TỐI ƯU ---
         window.voices = [];
         window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
