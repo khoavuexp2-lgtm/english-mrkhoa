@@ -58,7 +58,7 @@
         .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s;}
         .custom-alert-overlay.active .custom-alert-box { transform: scale(1);}
 
-        @media print {
+ @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             @page { size: A4 portrait; margin: 18mm 15mm 20mm 15mm; } 
             body { background: white !important; font-size: 11.5pt !important; color: #111 !important; line-height: 1.5 !important; overflow: visible !important; }
@@ -77,7 +77,16 @@
             th, td { border: 1px solid #cbd5e1 !important; padding: 8pt !important; font-family: 'Arial', sans-serif !important; font-size: 10.5pt !important;}
             th { background-color: #e2e8f0 !important; color: #0f172a !important;}
         
-        }
+            /* Nếu đang mở Modal Báo Cáo, chỉ in nội dung Modal */
+            body.printing-modal #content-area { display: none !important; }
+            body.printing-modal #studentReportModal { position: relative !important; display: block !important; width: 100% !important; max-width: 100% !important; background: transparent !important; z-index: auto !important; box-shadow: none !important; }
+            body.printing-modal .custom-alert-overlay { background: transparent !important; backdrop-filter: none !important; }
+            body.printing-modal .bg-white.rounded-2xl { box-shadow: none !important; max-height: none !important; overflow: visible !important; }
+            body.printing-modal #reportModalContent { overflow: visible !important; background: white !important; }
+
+            .glass-card { box-shadow: none !important; border: 1px solid #ccc !important; padding: 15px !important; margin-bottom: 15pt !important; background: transparent !important; page-break-inside: avoid !important; }
+        
+    }
     </style>
 
     <!-- FIREBASE INITIALIZATION -->
@@ -551,14 +560,14 @@ const sbtUnit1 = {
         {
             id: "sbt_u1_b3", part: "B. Vocabulary & Grammar", title: "3. What are these things? Write the words in the spaces.", type: "fill",
             questions: [
-                { id: "q_b3_1", q: "1. It is a long seat for two or more students to sit on in the classroom. [fill]", ans: [["bench", "a bench"]], exp: "Ghế dài là bench." },
-                { id: "q_b3_2", q: "2. They are of different colours. You draw and colour with them. [fill]", ans: [["coloured pencils", "pencils"]], exp: "Bút chì màu là coloured pencils." },
-                { id: "q_b3_3", q: "3. It has two wheels. Many students ride it to school. [fill]", ans: [["bike", "bicycle", "a bike", "a bicycle"]], exp: "Xe đạp là bike hoặc bicycle." },
-                { id: "q_b3_4", q: "4. It has many letters and words. You use it to look up new words. [fill]", ans: [["dictionary", "a dictionary"]], exp: "Từ điển là dictionary." },
-                { id: "q_b3_5", q: "5. It is a small book of blank paper for writing notes in. [fill]", ans: [["notebook", "a notebook"]], exp: "Sổ tay là notebook." },
-                { id: "q_b3_6", q: "6. It is a small electronic device for calculating with numbers. [fill]", ans: [["calculator", "a calculator"]], exp: "Máy tính là calculator." },
-                { id: "q_b3_7", q: "7. It is a room at your school where there are books, newspapers, etc. for you to read, study, or borrow. [fill]", ans: [["library", "a library"]], exp: "Thư viện là library." },
-                { id: "q_b3_8", q: "8. It is a large picture printed on paper and you put it on a wall as decoration. [fill]", ans: [["poster", "a poster"]], exp: "Áp phích là poster." }
+                { id: "q_b3_1", q: `<img src="https://images.unsplash.com/photo-1596496350325-1031d85fb621?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>1. It is a long seat for two or more students to sit on in the classroom.<br>-> It is a [fill]`, ans: [["bench", "a bench"]], exp: "Ghế dài là bench." },
+                { id: "q_b3_2", q: `<img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>2. They are of different colours. You draw and colour with them.<br>-> They are [fill]`, ans: [["coloured pencils", "pencils", "colored pencils"]], exp: "Bút chì màu là coloured pencils." },
+                { id: "q_b3_3", q: `<img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>3. It has two wheels. Many students ride it to school.<br>-> It is a [fill]`, ans: [["bike", "bicycle"]], exp: "Xe đạp là bike hoặc bicycle." },
+                { id: "q_b3_4", q: `<img src="https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>4. It has many letters and words. You use it to look up new words.<br>-> It is a [fill]`, ans: [["dictionary"]], exp: "Từ điển là dictionary." },
+                { id: "q_b3_5", q: `<img src="https://images.unsplash.com/photo-1531346878377-244bb688d070?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>5. It is a small book of blank paper for writing notes in.<br>-> It is a [fill]`, ans: [["notebook"]], exp: "Sổ tay là notebook." },
+                { id: "q_b3_6", q: `<img src="https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>6. It is a small electronic device for calculating with numbers.<br>-> It is a [fill]`, ans: [["calculator"]], exp: "Máy tính là calculator." },
+                { id: "q_b3_7", q: `<img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>7. It is a room at your school where there are books, newspapers, etc. for you to read.<br>-> It is a [fill]`, ans: [["library"]], exp: "Thư viện là library." },
+                { id: "q_b3_8", q: `<img src="https://images.unsplash.com/photo-1572375992501-4b0892d50c69?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>8. It is a large picture printed on paper and you put it on a wall as decoration.<br>-> It is a [fill]`, ans: [["poster"]], exp: "Áp phích là poster." }
             ]
         },
         {
@@ -633,7 +642,7 @@ const sbtUnit1 = {
         }
     ]
 };
-//#endregion =====================================================
+//#endregion =====================================================//#endregion =====================================================
 
         const database = {
             "class-6": {
@@ -720,28 +729,26 @@ const sbtUnit1 = {
             if(database[currentClass].modules.length > 0) loadModule(database[currentClass].modules[0].id);
         }
 
+//#region ======================== ENGINE: SBT VÀ BÁO CÁO ========================
         async function loadModule(moduleId) {
-             if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('open'), document.getElementById('overlay').classList.remove('open');
-    
+            if (window.innerWidth < 1024) toggleMenu(); 
+            
             const mod = database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-            
             const navBtn = document.getElementById('nav-' + moduleId);
             if(navBtn) navBtn.classList.add('active');
             
             document.getElementById('header-title').innerText = mod.title;
-            
             const printClassTitle = document.getElementById('print-class-title');
             if (printClassTitle) printClassTitle.innerText = database[currentClass].name;
-            
             const printModuleTitle = document.getElementById('print-module-title');
             if (printModuleTitle) printModuleTitle.innerText = mod.title;
             
             const contentArea = document.getElementById('content-area');
-            contentArea.innerHTML = '';
+            contentArea.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang tải dữ liệu...</div>`;
             
             const sourceNotice = document.getElementById('sbt-source-notice');
             if (mod.type === 'sbt_module') sourceNotice.classList.remove('hidden');
@@ -769,6 +776,7 @@ const sbtUnit1 = {
             else if (mod.type === 'exam_module') renderExamSetupView(mod, contentArea);
             else if (mod.type === 'sbt_module') {
                 // Teacher Assignment Fetching Logic
+                window.sbtShowAll = false; // Mặc định là học sinh chỉ làm bài được giao
                 if (window.currentUser) {
                     try {
                         let classIdToFetch = window.currentUser.classId || 'unassigned';
@@ -785,13 +793,347 @@ const sbtUnit1 = {
                 }
                 renderSBTView(mod, contentArea);
             }
-    
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        window.toggleSBTShowAll = function(isChecked) {
+            window.sbtShowAll = isChecked;
+            renderSBTView(window.currentModule, document.getElementById('content-area'));
+        }
+
+        function renderSBTView(mod, container) {
+            let teacherBtnHtml = '';
+            if (window.isAdmin) {
+                teacherBtnHtml = `<button onclick="openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-300 hover:bg-indigo-200 transition-colors shadow-sm flex items-center gap-2">⚙️ Giao Bài Tập</button>`;
+            }
+
+            // Student Toggle
+            let studentToggleHtml = '';
+            if (!window.isAdmin && window.currentAssignedExercises && window.currentAssignedExercises.length < mod.exercises.length) {
+                let checkState = window.sbtShowAll ? "checked" : "";
+                studentToggleHtml = `
+                    <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+                        <input type="checkbox" class="w-4 h-4 accent-indigo-600" onchange="toggleSBTShowAll(this.checked)" ${checkState}>
+                        <span class="text-sm font-bold text-slate-700">Làm toàn bộ Sách bài tập</span>
+                    </label>
+                `;
+            }
+
+            let html = `<div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b pb-4 border-slate-200">
+                            <div>
+                                <h2 class="text-2xl font-bold text-indigo-800 baloo-font uppercase">${mod.title}</h2>
+                                <p class="text-slate-500 text-sm">Làm lại tối đa 3 lần. Điểm được tính trên số câu hiển thị.</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                                ${studentToggleHtml}
+                                ${teacherBtnHtml}
+                            </div>
+                        </div>`;
+            
+            // Khởi tạo state chung
+            if(!window.sbtState[mod.id]) window.sbtState[mod.id] = { attempts: 0, answers: {}, locked: false };
+            
+            let exercisesToRender = mod.exercises;
+            if (!window.sbtShowAll && window.currentAssignedExercises) {
+                exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+            }
+
+            if (exercisesToRender.length === 0) {
+                container.innerHTML = html + `<div class="glass-card text-center py-10"><p class="text-4xl mb-3">📭</p><p class="text-slate-500 font-bold">Giáo viên chưa giao bài tập nào trong phần này.</p></div>`;
+                return;
+            }
+
+            html += `<div class="flex justify-end mb-4"><span class="text-sm font-bold text-slate-600 bg-slate-200 px-4 py-1.5 rounded-full" id="sbt-global-badge-${mod.id}">Lần thử: ${window.sbtState[mod.id].attempts}/3</span></div>`;
+
+            exercisesToRender.forEach((ex) => {
+                html += `<div class="glass-card mb-8 exercise-container" id="ex-container-${ex.id}">
+                            <div class="border-b-2 border-slate-100 pb-3 mb-4">
+                                <span class="text-xs font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-1 rounded">${ex.part}</span>
+                                <h3 class="font-bold text-lg text-slate-800 mt-2">${ex.title}</h3>
+                            </div>`;
+                
+                if(ex.note) html += `<p class="text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200 mb-5 font-medium shadow-inner">${ex.note}</p>`;
+
+                html += `<div class="space-y-6">`;
+                ex.questions.forEach((q, qIdx) => {
+                    html += `<div><p class="font-bold text-slate-800 mb-3 text-[15px] leading-relaxed">${parseSBTQuestion(q.q, q.id)}</p>`;
+                    
+                    if (ex.type === 'choice') {
+                        html += `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2" id="opts-${q.id}">`;
+                        q.opts.forEach((opt, oIdx) => { 
+                            html += `<div onclick="selectSBTChoice('${mod.id}', '${q.id}', ${oIdx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 shadow-sm">${opt}</div>`; 
+                        });
+                        html += `</div>`;
+                    }
+                    html += `<div id="exp-${q.id}" class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800"><b>💡 Giải thích:</b> ${q.exp}</div></div>`;
+                });
+                html += `</div></div>`;
+            });
+
+            html += `<div class="mt-8 text-center no-print" id="sbt-action-container-${mod.id}">
+                        <button onclick="submitSBTModule('${mod.id}')" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 text-lg w-full md:w-auto submit-btn">🚀 NỘP TOÀN BỘ BÀI LÀM</button>
+                     </div>`;
+                     
+            container.innerHTML = html;
+        }
+
+        function parseSBTQuestion(text, qId) {
+            let count = 0;
+            return text.replace(/\[fill\]/g, () => {
+                let html = `<input type="text" id="fill-${qId}-${count}" oninput="saveSBTFill('${window.currentModule.id}', '${qId}', ${count}, this.value)" class="fill-input" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="...">`;
+                count++; return html;
+            });
+        }
+
+        window.selectSBTChoice = function(modId, qId, choiceIdx) {
+            let state = window.sbtState[modId];
+            if (state.attempts >= 3 || state.locked) return; 
+            if (state.answers[qId] && state.answers[qId].isCorrect) return; 
+            
+            state.answers[qId] = { val: choiceIdx };
+            const parent = document.getElementById(`opts-${qId}`);
+            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+            parent.children[choiceIdx].classList.add('q-selected');
+        }
+
+        window.saveSBTFill = function(modId, qId, fillIdx, val) {
+            let state = window.sbtState[modId];
+            if (state.attempts >= 3 || state.locked) return;
+            
+            if(!state.answers[qId]) state.answers[qId] = { val: [] };
+            if(!Array.isArray(state.answers[qId].val)) state.answers[qId].val = [];
+            state.answers[qId].val[fillIdx] = val.trim();
+        }
+
+        window.submitSBTModule = async function(modId) {
+            const mod = window.currentModule;
+            let state = window.sbtState[modId];
+            if (state.locked) return;
+
+            state.attempts++;
+            document.getElementById(`sbt-global-badge-${modId}`).innerText = `Lần thử: ${state.attempts}/3`;
+            
+            let totalQuestions = 0;
+            let correctCount = 0;
+            let allCorrect = true;
+            let detailedResults = [];
+
+            let exercisesToRender = mod.exercises;
+            if (!window.sbtShowAll && window.currentAssignedExercises) {
+                exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+            }
+
+            exercisesToRender.forEach(ex => {
+                ex.questions.forEach((q) => {
+                    totalQuestions++;
+                    let userAns = state.answers[q.id];
+                    let isQCorrect = false;
+
+                    if (ex.type === 'choice') {
+                        if (userAns !== undefined && userAns.val === q.ans) isQCorrect = true;
+                        
+                        const btns = document.getElementById(`opts-${q.id}`).children;
+                        if (isQCorrect) {
+                            correctCount++;
+                            btns[userAns.val].classList.remove('q-selected', 'q-wrong');
+                            btns[userAns.val].classList.add('q-correct', 'disabled');
+                            state.answers[q.id].isCorrect = true;
+                        } else {
+                            allCorrect = false;
+                            if (userAns !== undefined && userAns.val !== undefined) {
+                                btns[userAns.val].classList.add('q-wrong');
+                            }
+                            if (state.attempts >= 3) {
+                                btns[q.ans].classList.add('q-correct');
+                                document.getElementById(`exp-${q.id}`).classList.remove('hidden');
+                                Array.from(btns).forEach(b => b.classList.add('disabled'));
+                            }
+                        }
+                        
+                        detailedResults.push({
+                            q: q.q.replace(/\[fill\]/g, '___'),
+                            userAns: userAns ? q.opts[userAns.val] : "Bỏ trống",
+                            correctAns: q.opts[q.ans],
+                            isCorrect: isQCorrect
+                        });
+                        
+                    } 
+                    else if (ex.type === 'fill') {
+                        let qCorrect = true;
+                        let uAnsArr = []; let cAnsArr = [];
+                        
+                        q.ans.forEach((allowedAnsArray, fIdx) => {
+                            let uVal = (userAns && userAns.val && userAns.val[fIdx]) ? userAns.val[fIdx].toLowerCase().replace(/\s+/g, ' ').trim() : "";
+                            let isBlankCorrect = allowedAnsArray.some(a => a.toLowerCase().replace(/\s+/g, ' ').trim() === uVal);
+                            let inputEl = document.getElementById(`fill-${q.id}-${fIdx}`);
+                            
+                            uAnsArr.push(uVal || "___");
+                            cAnsArr.push(allowedAnsArray[0]);
+
+                            if (inputEl) {
+                                if (isBlankCorrect) {
+                                    inputEl.classList.remove('fill-wrong'); inputEl.classList.add('fill-correct'); inputEl.disabled = true;
+                                } else {
+                                    qCorrect = false;
+                                    inputEl.classList.add('fill-wrong');
+                                    if (state.attempts >= 3) {
+                                        inputEl.value = allowedAnsArray[0]; 
+                                        inputEl.classList.remove('fill-wrong'); inputEl.classList.add('fill-correct'); inputEl.disabled = true;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        if(qCorrect) {
+                            correctCount++;
+                            state.answers[q.id] = { isCorrect: true };
+                        } else {
+                            allCorrect = false;
+                        }
+                        
+                        if (state.attempts >= 3 && !qCorrect) {
+                            document.getElementById(`exp-${q.id}`).classList.remove('hidden');
+                        }
+                        
+                        detailedResults.push({
+                            q: q.q.replace(/\[fill\]/g, '___'),
+                            userAns: uAnsArr.join(' | '),
+                            correctAns: cAnsArr.join(' | '),
+                            isCorrect: qCorrect
+                        });
+                    }
+                });
+            });
+
+            if (allCorrect || state.attempts >= 3) {
+                state.locked = true;
+                let percentage = (correctCount / totalQuestions) * 10;
+                
+                if (window.currentUser && !window.isAdmin) {
+                    try {
+                        await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
+                            uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
+                            classId: window.currentUser.classId || 'unassigned', testId: modId, level: "SBT",
+                            testName: window.currentModule.title, score: correctCount, total: totalQuestions,
+                            percentage: percentage, timeTaken: 0, timestamp: Date.now(),
+                            isLesson: true, detailedResults: detailedResults 
+                        });
+                    } catch(e) { console.error(e); }
+                }
+
+                const actionContainer = document.getElementById(`sbt-action-container-${modId}`);
+                let resultColor = percentage >= 8 ? "emerald" : (percentage >= 5 ? "amber" : "rose");
+
+                actionContainer.innerHTML = `
+                    <div class="p-6 bg-white border-2 border-${resultColor}-500 rounded-2xl shadow-lg inline-block text-center w-full md:w-auto mb-4">
+                        <h2 class="text-xl font-bold text-slate-800 mb-1 baloo-font">KẾT QUẢ SÁCH BÀI TẬP</h2>
+                        <div class="text-4xl font-extrabold text-${resultColor}-600 mb-1">${correctCount} / ${totalQuestions}</div>
+                        <p class="text-slate-500 font-medium">Điểm số: ${percentage.toFixed(1)} / 10</p>
+                        <p class="text-xs font-bold text-slate-400 mt-2">${allCorrect ? "Hoàn hảo!" : "Đã hết 3 lượt thử. Hãy xem giải thích màu xanh bên trên."}</p>
+                    </div><br>
+                    <button onclick="loadModule('${modId}')" class="bg-slate-200 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-300 shadow-sm transition-transform active:scale-95">🔄 Làm lại từ đầu</button>
+                `;
+                
+                let badge = document.getElementById(`sbt-global-badge-${modId}`);
+                badge.classList.replace('bg-slate-200', 'bg-emerald-200');
+                badge.classList.replace('text-slate-600', 'text-emerald-800');
+                badge.innerText = allCorrect ? "Đã đúng 100%" : "Đã nộp bài (Hết lượt)";
+            }
+        }
+
+        window.openAssignmentModal = function(modId) {
+            const mod = window.currentModule;
+            let html = '';
+            let currentAssigned = window.currentAssignedExercises || mod.exercises.map(e => e.id);
+            
+            mod.exercises.forEach(ex => {
+                let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
+                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50">
+                            <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                            <div>
+                                <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
+                                <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
+                            </div>
+                         </label>`;
+            });
+            
+            document.getElementById('assign-class-name').innerText = window.currentUser.classId ? window.adminClassesData?.find(c => c.id === window.currentUser.classId)?.name || 'đang chọn' : 'của bạn';
+            document.getElementById('assignment-list').innerHTML = html;
+            document.getElementById('assignmentModal').classList.add('active');
+        }
+
+        window.saveAssignment = async function() {
+            let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
+            let selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if(selectedIds.length === 0) return alert("Phải chọn ít nhất 1 bài tập.");
+            
+            try {
+                let classIdToSave = window.currentUser.classId || 'unassigned';
+                await window.fSetDoc(window.fDoc(window.fdb, "assignments", `${classIdToSave}_${window.currentModule.id}`), {
+                    assignedExercises: selectedIds,
+                    updatedAt: Date.now()
+                });
+                
+                window.currentAssignedExercises = selectedIds;
+                document.getElementById('assignmentModal').classList.remove('active');
+                alert("Đã lưu cấu hình giao bài thành công!");
+                loadModule(window.currentModule.id);
+            } catch(e) { console.error(e); alert("Có lỗi khi lưu cấu hình."); }
+        }
+
+        window.viewDetailedTest = function(docId) {
+            const content = document.getElementById('reportModalContent');
+            if(!window.currentStudentResultsCache) return;
+            const data = window.currentStudentResultsCache.find(r => r.docId === docId);
+            if(!data || !data.detailedResults) {
+                content.innerHTML = `<div class="mb-4"><button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
+                return;
+            }
+
+            // Đã thêm thẻ <button onclick="printReport()"> ở đây để thầy In
+            let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
+                            <button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
+                                <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
+                            </div>
+                            <button onclick="printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
+                                🖨️ In PDF 
+                            </button>
+                        </div>
+                        <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
+                            <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
+                            <p class="font-bold">Học sinh: ${data.nickname}</p>
+                            <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
+                        </div>
+                        <div class="space-y-4">`;
+
+            data.detailedResults.forEach((res, i) => {
+                let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
+                let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
+                html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
+                    <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
+                        <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
+                        ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+            content.innerHTML = html;
+            document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
+        }
         
-// ---------------------------------------------------------
-// SBT MODULE LOGIC (TEACHER ASSIGNMENT & SINGLE SUBMIT)
-// ---------------------------------------------------------
+        window.printReport = function() {
+            // Thêm class đặc biệt vào body để CSS giấu đi nền, chỉ in cái report
+            document.body.classList.add('printing-modal');
+            window.print();
+            document.body.classList.remove('printing-modal');
+        }
+
+//#endregion =====================================================
 
         function renderLessonView(mod, container) {
             let html = '';
