@@ -246,9 +246,9 @@
     </div>
 
     <!-- TEACHER ASSIGNMENT MODAL -->
-    <div id="assignmentModal" class="custom-alert-overlay no-print">
-        <div class="bg-white p-6 rounded-2xl w-[90%] max-w-lg shadow-2xl relative max-h-[80vh] flex flex-col">
-            <h2 class="text-xl font-bold baloo-font text-indigo-900 mb-2 border-b pb-2">⚙️ Cấu Hình Giao Bài Tập</h2>
+    <div id="assignmentModal" class="custom-alert-overlay no-print z-[2000]">
+        <div class="bg-white p-6 rounded-2xl w-[90%] max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
+            <h2 class="text-xl font-bold baloo-font text-indigo-900 mb-2 border-b pb-2">⚙️ Giao Bài Tập Cho Học Sinh</h2>
             
             <div class="mb-3 mt-2">
                 <label class="block text-sm font-bold text-slate-700 mb-1">1. Giao bài cho ai?</label>
@@ -262,15 +262,14 @@
                 <label class="block text-sm font-bold text-slate-700 mb-1">Chọn Học sinh:</label>
                 <select id="assign-student-select" class="w-full p-2.5 border rounded-lg font-bold text-slate-700 bg-white outline-none cursor-pointer"></select>
             </div>
-            
-            <p class="text-sm text-slate-500 mb-4">Chọn các bài tập bạn muốn hiển thị cho lớp <b id="assign-class-name" class="text-indigo-600"></b></p>
-            <div id="assignment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-2">
+
+            <p class="text-sm font-bold text-slate-700 mb-2">2. Chọn các câu hỏi / bài tập:</p>
+            <div id="assignment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-2 border border-slate-200 p-3 rounded-xl bg-slate-50">
                 <!-- Checkboxes injected here -->
             </div>
-            
-            <div class="flex gap-3">
+            <div class="flex gap-3 mt-auto">
                 <button onclick="document.getElementById('assignmentModal').classList.remove('active')" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-300">Hủy</button>
-                <button onclick="saveAssignment()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700">Lưu Giao Bài</button>
+                <button onclick="saveAssignment()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition-colors">Lưu Cấu Hình</button>
             </div>
         </div>
     </div>
@@ -597,14 +596,14 @@ const sbtUnit1 = {
         {
             id: "sbt_u1_b3", part: "B. Vocabulary & Grammar", title: "3. What are these things? Write the words in the spaces.", type: "fill",
             questions: [
-                { id: "q_b3_1", q: `<img src="https://images.unsplash.com/photo-1596496350325-1031d85fb621?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>1. It is a long seat for two or more students to sit on in the classroom.<br>-> It is a [fill]`, ans: [["bench", "a bench"]], exp: "Ghế dài là bench." },
-                { id: "q_b3_2", q: `<img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>2. They are of different colours. You draw and colour with them.<br>-> They are [fill]`, ans: [["coloured pencils", "pencils", "colored pencils"]], exp: "Bút chì màu là coloured pencils." },
-                { id: "q_b3_3", q: `<img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>3. It has two wheels. Many students ride it to school.<br>-> It is a [fill]`, ans: [["bike", "bicycle"]], exp: "Xe đạp là bike hoặc bicycle." },
-                { id: "q_b3_4", q: `<img src="https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>4. It has many letters and words. You use it to look up new words.<br>-> It is a [fill]`, ans: [["dictionary"]], exp: "Từ điển là dictionary." },
-                { id: "q_b3_5", q: `<img src="https://images.unsplash.com/photo-1531346878377-244bb688d070?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>5. It is a small book of blank paper for writing notes in.<br>-> It is a [fill]`, ans: [["notebook"]], exp: "Sổ tay là notebook." },
-                { id: "q_b3_6", q: `<img src="https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>6. It is a small electronic device for calculating with numbers.<br>-> It is a [fill]`, ans: [["calculator"]], exp: "Máy tính là calculator." },
-                { id: "q_b3_7", q: `<img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>7. It is a room at your school where there are books, newspapers, etc. for you to read.<br>-> It is a [fill]`, ans: [["library"]], exp: "Thư viện là library." },
-                { id: "q_b3_8", q: `<img src="https://images.unsplash.com/photo-1572375992501-4b0892d50c69?auto=format&fit=crop&w=200&q=80" class="h-24 w-auto rounded border mb-2"><br>8. It is a large picture printed on paper and you put it on a wall as decoration.<br>-> It is a [fill]`, ans: [["poster"]], exp: "Áp phích là poster." }
+                { id: "q_b3_1", q: "1. It is a long seat for two or more students to sit on in the classroom. [fill]", ans: [["bench", "a bench"]], exp: "Ghế dài là bench." },
+                { id: "q_b3_2", q: "2. They are of different colours. You draw and colour with them. [fill]", ans: [["coloured pencils", "pencils"]], exp: "Bút chì màu là coloured pencils." },
+                { id: "q_b3_3", q: "3. It has two wheels. Many students ride it to school. [fill]", ans: [["bike", "bicycle", "a bike", "a bicycle"]], exp: "Xe đạp là bike hoặc bicycle." },
+                { id: "q_b3_4", q: "4. It has many letters and words. You use it to look up new words. [fill]", ans: [["dictionary", "a dictionary"]], exp: "Từ điển là dictionary." },
+                { id: "q_b3_5", q: "5. It is a small book of blank paper for writing notes in. [fill]", ans: [["notebook", "a notebook"]], exp: "Sổ tay là notebook." },
+                { id: "q_b3_6", q: "6. It is a small electronic device for calculating with numbers. [fill]", ans: [["calculator", "a calculator"]], exp: "Máy tính là calculator." },
+                { id: "q_b3_7", q: "7. It is a room at your school where there are books, newspapers, etc. for you to read, study, or borrow. [fill]", ans: [["library", "a library"]], exp: "Thư viện là library." },
+                { id: "q_b3_8", q: "8. It is a large picture printed on paper and you put it on a wall as decoration. [fill]", ans: [["poster", "a poster"]], exp: "Áp phích là poster." }
             ]
         },
         {
@@ -679,7 +678,7 @@ const sbtUnit1 = {
         }
     ]
 };
-//#endregion =====================================================//#endregion =====================================================
+//#endregion =====================================================
 
         const database = {
             "class-6": {
