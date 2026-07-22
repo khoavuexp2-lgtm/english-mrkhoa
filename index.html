@@ -180,7 +180,7 @@
                 window.renderMenu();
             } else {
                 window.currentUser = null; window.isAdmin = false; window.isSuperAdmin = false;
-                authContainer.innerHTML = `<button onclick="window.loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Đăng nhập</button>`;
+                authContainer.innerHTML = `<button onclick="window.loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">Đăng nhập</button>`;
                 window.renderMenu();
             }
         });
@@ -250,6 +250,16 @@
         </div>
     </div>
 
+    <!-- CẢNH BÁO TÙY CHỈNH (CUSTOM ALERT) -->
+    <div id="customAlert" class="custom-alert-overlay no-print z-[3000]">
+        <div class="custom-alert-box bg-white p-6 rounded-3xl shadow-2xl relative flex flex-col items-center">
+            <div id="alertIcon" class="text-5xl mb-3">🔔</div>
+            <h2 id="alertTitle" class="text-xl font-bold baloo-font text-slate-800 mb-2">Thông báo</h2>
+            <p id="alertMessage" class="text-slate-600 mb-6 text-sm font-medium">Nội dung thông báo</p>
+            <button onclick="window.closeCustomAlert()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700 transition-colors">Đóng</button>
+        </div>
+    </div>
+
     <div class="flex flex-col h-screen">
         <header class="flex justify-between items-center bg-white px-4 py-3 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
             <div class="flex items-center gap-3">
@@ -266,7 +276,7 @@
         <main class="scroll-container w-full bg-slate-50" id="main-scroll">
             <div class="max-w-4xl mx-auto p-4 md:p-8">
                 <!-- PRINT HEADER ONLY -->
-                <div class="hidden print:block worksheet-header-print">
+                <div class="hidden print:block unit-header-print">
                     <h1 id="print-module-title">Tên Bài</h1>
                     <div class="student-info">
                         <span>Họ và Tên: ..............................................................</span>
@@ -290,6 +300,7 @@
         const DANH_SACH_BAI_HOC = [];
         function themBaiHoc(duLieu) { DANH_SACH_BAI_HOC.push(duLieu); }
 
+// ↓↓↓↓↓↓↓↓↓↓↓↓↓ DÁN CODE CÁC HÀM "themBaiHoc({...})" CỦA THẦY VÀO DƯỚI DÒNG NÀY ↓↓↓↓↓↓↓↓↓↓↓↓↓
 //======================BÀI HỌC==========================       
 themBaiHoc({
     id: "u1", type: "lesson", title: "Unit 1: My New School",
@@ -619,6 +630,8 @@ themBaiHoc({
 });
 // Kết thúc SBT Unit 5  
 
+// ↑↑↑↑↑↑↑↑↑↑↑↑↑ DÁN CODE CÁC HÀM "themBaiHoc({...})" CỦA THẦY VÀO TRÊN DÒNG NÀY ↑↑↑↑↑↑↑↑↑↑↑↑↑
+
         const database = {
             "class-6": {
                 name: "English 6",
@@ -640,28 +653,7 @@ themBaiHoc({
         window.adminUsersData = [];
         window.adminClassesData = [];
         window.sbtState = {};
-
-        // Hiển thị Custom Alert đẹp mắt thay cho thẻ Alert xấu xí của trình duyệt
-        function showCustomAlert(title, message, icon="🔔") {
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            document.getElementById('customAlert').classList.add('active');
-        }
-        window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
-        window.alert = function(msg) { console.log("ALERT:", msg); }; // Chặn alert rác
-
-        // Nút Trình chiếu trên lớp
-        window.togglePresentation = function() {
-            document.body.classList.toggle('presentation-mode');
-            let btn = document.getElementById('exit-presentation-btn');
-            if (document.body.classList.contains('presentation-mode')) {
-                btn.classList.remove('hidden');
-                document.getElementById('sidebar').classList.remove('open');
-                document.getElementById('overlay').classList.remove('open');
-            } else {
-                btn.classList.add('hidden');
-            }
-        }
+        window.adminViewAssignedOnly = false; // Trạng thái bộ lọc "Bài đã giao" của GV
 
         window.initApp = function() {
             const selector = document.getElementById('class-selector');
@@ -669,7 +661,7 @@ themBaiHoc({
             for (let cId in database) { selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`; }
             window.renderMenu();
             
-            // Lấy lại bài học cuối cùng lưu trong trình duyệt
+            // Mở lại bài học cuối cùng đã xem
             let lastMod = localStorage.getItem('gs6_last_module');
             if(lastMod && database[currentClass].modules.find(m => m.id === lastMod)) {
                 window.loadModule(lastMod);
@@ -750,31 +742,44 @@ themBaiHoc({
                 return;
             }
 
+            // Xử lý nạp Data Assignment cho phần Bài tập & Thi
+            if (mod.type === 'sbt_module' || mod.type === 'exam_module') {
+                window.sbtShowAll = false;
+                window.adminViewAssignedOnly = false; // Reset filter cho Admin
+                
+                if (window.currentUser) {
+                    try {
+                        let classIdToFetch = window.currentUser.classId || 'unassigned';
+                        let uid = window.currentUser.uid;
+                        
+                        if (!window.isAdmin) {
+                            // Học sinh: ưu tiên xem bài giao cho cá nhân, nếu không thì lấy bài lớp
+                            let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}_${uid}`);
+                            let docSnap = await window.fGetDoc(docRef);
+                            if (docSnap.exists() && docSnap.data().assignedExercises) {
+                                window.currentAssignedExercises = docSnap.data().assignedExercises;
+                            } else {
+                                docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
+                                docSnap = await window.fGetDoc(docRef);
+                                window.currentAssignedExercises = docSnap.exists() ? docSnap.data().assignedExercises : [];
+                            }
+                        } else {
+                            // Giáo viên: Lấy bài tập đã giao chung cho lớp để xem
+                            let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
+                            let docSnap = await window.fGetDoc(docRef);
+                            window.currentAssignedExercises = docSnap.exists() ? docSnap.data().assignedExercises : [];
+                        }
+                    } catch(e) { window.currentAssignedExercises = []; }
+                } else { window.currentAssignedExercises = []; }
+            }
+
             if (mod.type === 'lesson') {
                 window.userPracticeAnswers = {}; window.userListeningAnswers = {};
                 window.renderLessonView(mod, contentArea);
             }
             else if (mod.type === 'exam_module') window.renderExamSetupView(mod, contentArea);
-            else if (mod.type === 'sbt_module') {
-                window.sbtShowAll = false;
-                if (window.currentUser) {
-                    try {
-                        let classIdToFetch = window.currentUser.classId || 'unassigned';
-                        let uid = window.currentUser.uid;
-                        let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}_${uid}`);
-                        let docSnap = await window.fGetDoc(docRef);
-                        if (docSnap.exists() && docSnap.data().assignedExercises) {
-                            window.currentAssignedExercises = docSnap.data().assignedExercises;
-                        } else {
-                            docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
-                            docSnap = await window.fGetDoc(docRef);
-                            if (docSnap.exists() && docSnap.data().assignedExercises) window.currentAssignedExercises = docSnap.data().assignedExercises;
-                            else window.currentAssignedExercises = [];
-                        }
-                    } catch(e) { window.currentAssignedExercises = []; }
-                } else { window.currentAssignedExercises = []; }
-                window.renderSBTView(mod, contentArea);
-            }
+            else if (mod.type === 'sbt_module') window.renderSBTView(mod, contentArea);
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -851,7 +856,7 @@ themBaiHoc({
                         q.opts.forEach((opt, idx) => {
                             html += `<div onclick="window.selectListeningChoice(this, '${q.id}', ${idx})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-teal-100">${opt}</div>`;
                         });
-                        html += `</div><div id="exp-list-${q.id}" class="hidden mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800"></div></div>`;
+                        html += `</div><div id="exp-list-${q.id}" class="hidden mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800 print:bg-transparent print:border-none print:p-0 print:text-black"></div></div>`;
                     });
                     html += `</div>
                              <div class="text-center mt-6 no-print" id="action-list-btn">
@@ -1015,13 +1020,20 @@ themBaiHoc({
             }
         }
 
-        // ====================== WORKBOOK (SBT) RENDERER (NỘP BÀI 1 LẦN) ======================
+        // ====================== WORKBOOK (SBT) RENDERER (GIAO BÀI & IN) ======================
+        window.toggleAdminSBTView = function() {
+            window.adminViewAssignedOnly = !window.adminViewAssignedOnly;
+            window.renderSBTView(window.currentModule, document.getElementById('content-area'));
+        }
+
         window.renderSBTView = function(mod, container) {
             let teacherBtnHtml = '';
             if (window.isAdmin) {
-                teacherBtnHtml = `<div class="flex gap-2">
-                                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 hover:bg-slate-700">🖨️ In Đề Trắng</button>
-                                    <button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-300 hover:bg-indigo-200 shadow-sm flex items-center gap-2">⚙️ Giao Bài Tập</button>
+                let viewToggleText = window.adminViewAssignedOnly ? "📖 Xem Tất Cả" : "📋 Bài Đã Giao";
+                teacherBtnHtml = `<div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 hover:bg-slate-700 transition-colors">🖨️ In Đề</button>
+                                    <button onclick="window.toggleAdminSBTView()" class="bg-sky-100 text-sky-700 px-4 py-2 rounded-xl text-sm font-bold border border-sky-300 hover:bg-sky-200 shadow-sm flex items-center gap-2 transition-colors">${viewToggleText}</button>
+                                    <button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-300 hover:bg-indigo-200 shadow-sm flex items-center gap-2 transition-colors">⚙️ Giao Bài Tập</button>
                                   </div>`;
             }
 
@@ -1029,14 +1041,14 @@ themBaiHoc({
             if (!window.isAdmin) {
                 let checkState = window.sbtShowAll ? "checked" : "";
                 studentToggleHtml = `
-                    <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+                    <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200 shadow-sm mt-2 sm:mt-0">
                         <input type="checkbox" class="w-4 h-4 accent-indigo-600" onchange="window.toggleSBTShowAll(this.checked)" ${checkState}>
-                        <span class="text-sm font-bold text-slate-700">Hiển thị toàn bộ Sách bài tập</span>
+                        <span class="text-sm font-bold text-slate-700">Hiển thị toàn bộ SBT</span>
                     </label>
                 `;
             }
 
-            let html = `<div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b pb-4 border-slate-200 no-print">
+            let html = `<div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4 border-b pb-4 border-slate-200 no-print">
                             <div>
                                 <h2 class="text-2xl font-bold text-indigo-800 baloo-font uppercase">${mod.title}</h2>
                                 <p class="text-slate-500 text-sm">Học sinh chỉ được nộp bài 1 lần duy nhất.</p>
@@ -1050,17 +1062,36 @@ themBaiHoc({
             let state = window.sbtState[mod.id];
             
             let exercisesToRender = mod.exercises;
-            if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
-                exercisesToRender = mod.exercises.map(ex => {
-                    let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
-                    return { ...ex, questions: filteredQs };
-                }).filter(ex => ex.questions.length > 0);
-            } else if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length === 0) {
-                exercisesToRender = []; // Chưa giao gì
+            
+            // Xử lý Lọc bộ hiển thị dựa trên Quyền (Admin hay Học sinh)
+            if (window.isAdmin) {
+                if (window.adminViewAssignedOnly) {
+                    if (window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
+                        exercisesToRender = mod.exercises.map(ex => {
+                            let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
+                            return { ...ex, questions: filteredQs };
+                        }).filter(ex => ex.questions.length > 0);
+                    } else {
+                        exercisesToRender = [];
+                    }
+                }
+            } else {
+                // Phân quyền Học sinh
+                if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
+                    exercisesToRender = mod.exercises.map(ex => {
+                        let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
+                        return { ...ex, questions: filteredQs };
+                    }).filter(ex => ex.questions.length > 0);
+                } else if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length === 0) {
+                    exercisesToRender = []; // Chưa giao gì
+                }
             }
 
             if (exercisesToRender.length === 0) {
-                container.innerHTML = html + `<div class="glass-card text-center py-10 no-print"><p class="text-4xl mb-3">📭</p><p class="text-slate-500 font-bold">Giáo viên chưa giao bài tập nào trong phần này.</p></div>`;
+                let emptyMsg = window.isAdmin && window.adminViewAssignedOnly 
+                    ? "Thầy/Cô chưa giao bài tập nào cho lớp này." 
+                    : "Giáo viên chưa giao bài tập nào trong phần này.";
+                container.innerHTML = html + `<div class="glass-card text-center py-10 no-print"><p class="text-4xl mb-3">📭</p><p class="text-slate-500 font-bold">${emptyMsg}</p></div>`;
                 return;
             }
 
@@ -1075,7 +1106,7 @@ themBaiHoc({
 
                 html += `<div class="space-y-6">`;
                 ex.questions.forEach((q) => {
-                    html += `<div><p class="font-bold text-slate-800 mb-3 text-[15px] leading-relaxed">${parseSBTQuestion(q.q, q.id, state.locked, state.answers[q.id])}</p>`;
+                    html += `<div><p class="font-bold text-slate-800 mb-3 text-[15px] leading-relaxed">${window.parseSBTQuestion(q.q, q.id, state.locked, state.answers[q.id])}</p>`;
                     
                     if (ex.type === 'choice') {
                         html += `<div class="flex flex-wrap gap-2" id="opts-${q.id}">`;
@@ -1103,11 +1134,11 @@ themBaiHoc({
                 html += `</div></div>`;
             });
 
-            if (!state.locked) {
+            if (!state.locked && !window.isAdmin) {
                 html += `<div class="mt-8 text-center no-print" id="sbt-action-container-${mod.id}">
                             <button onclick="window.submitSBTModule('${mod.id}')" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 text-lg w-full md:w-auto submit-btn">🚀 NỘP BÀI (1 LẦN DUY NHẤT)</button>
                          </div>`;
-            } else {
+            } else if (state.locked) {
                 html += `<div class="mt-8 text-center no-print"><button onclick="window.loadModule('${mod.id}')" class="bg-slate-200 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-300 shadow-sm transition-transform active:scale-95">🔄 Tải lại trang</button></div>`;
             }
                      
@@ -1119,7 +1150,7 @@ themBaiHoc({
             window.renderSBTView(window.currentModule, document.getElementById('content-area'));
         }
 
-        function parseSBTQuestion(text, qId, isLocked, answerData) {
+        window.parseSBTQuestion = function(text, qId, isLocked, answerData) {
             let count = 0;
             return text.replace(/\[fill\]/g, () => {
                 let userVal = answerData && answerData.val && answerData.val[count] ? answerData.val[count] : "";
@@ -1184,7 +1215,6 @@ themBaiHoc({
 
                     if (ex.type === 'choice') {
                         if (userAns.val === q.ans) isQCorrect = true;
-                        
                         if(isQCorrect) correctCount++;
                         state.answers[q.id].isCorrect = isQCorrect;
 
@@ -1227,7 +1257,6 @@ themBaiHoc({
 
             let percentage = (correctCount / totalQuestions) * 10;
             
-            // Save to Firebase
             if (window.currentUser && !window.isAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
@@ -1282,11 +1311,18 @@ themBaiHoc({
             const testData = mod.tests[testId];
             let safeAudio = (testData.listeningScript || "").replace(/"/g, '&quot;');
 
+            let examTeacherBtns = '';
+            if (window.isAdmin) {
+                examTeacherBtns = `
+                    <button onclick="window.print()" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-slate-700 text-sm flex items-center gap-1 transition-colors">🖨️ In Đề</button>
+                    <button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-200 border border-indigo-200 text-sm flex items-center gap-1 transition-colors">⚙️ Giao Đề</button>
+                `;
+            }
+
             let html = `<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center sticky top-0 z-50 no-print">
                     <h2 class="text-xl font-bold text-slate-800 baloo-font uppercase text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
                     <div class="flex gap-2 items-center">
-                        ${window.isAdmin ? `<button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-700">🖨️ In Đề</button>` : ''}
-                        ${window.isAdmin ? `<button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold hover:bg-indigo-200 border border-indigo-200">⚙️ Giao Đề</button>` : ''}
+                        ${examTeacherBtns}
                         <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold text-lg border border-rose-200 shadow-inner tracking-widest" id="exam-timer-display">45:00</div>
                     </div>
                 </div>`;
@@ -1511,14 +1547,10 @@ themBaiHoc({
         }
 
         window.openAssignmentModal = async function(modId) {
-            // Tải ngầm danh sách học sinh nếu chưa tải
-            if (!window.adminUsersData || window.adminUsersData.length === 0) {
-                await window.loadAdminUsersSilent();
-            }
+            if (!window.adminUsersData || window.adminUsersData.length === 0) { await window.loadAdminUsersSilent(); }
 
             const mod = window.currentModule;
             let html = '';
-            
             let currentAssigned = window.currentAssignedExercises || []; 
             
             if (mod.type === 'sbt_module') {
@@ -1536,7 +1568,7 @@ themBaiHoc({
                 });
             } else if (mod.type === 'exam_module') {
                 html += `<div class="p-4 bg-rose-50 border border-rose-200 rounded-xl mb-2 text-rose-800 font-medium shadow-inner">
-                            <span class="font-bold text-rose-600 text-lg">Lưu ý:</span> Bài kiểm tra 45 phút sẽ được giao nguyên bài để học sinh làm và tính giờ. Bấm "Lưu Cấu Hình" để xác nhận giao đề này.
+                            <span class="font-bold text-rose-600 text-lg">Lưu ý:</span> Bài kiểm tra sẽ được giao nguyên vẹn để học sinh làm tính giờ. Bấm "Lưu Cấu Hình" để xác nhận giao đề.
                          </div>
                          <input type="hidden" value="exam_full" class="assign-checkbox" checked>`;
             }
@@ -1547,11 +1579,8 @@ themBaiHoc({
                     ? window.adminUsersData.filter(u => u.role === 'student') 
                     : window.adminUsersData.filter(u => u.classId === window.currentUser?.classId && u.role === 'student');
                 
-                if(myStudents.length === 0) {
-                    stdHtml = `<option value="">Không có học sinh nào</option>`;
-                } else {
-                    myStudents.forEach(u => { stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`; });
-                }
+                if(myStudents.length === 0) { stdHtml = `<option value="">Không có học sinh nào</option>`; } 
+                else { myStudents.forEach(u => { stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`; }); }
                 document.getElementById('assign-student-select').innerHTML = stdHtml;
             }
 
@@ -1662,11 +1691,7 @@ themBaiHoc({
         window.playSpeakingSample = function(text) { window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance); };
         window.playReadingText = function(text) { window.highlightAudioRow(window.event); window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight; window.speechSynthesis.speak(utterance); }
 
-        // =======================================================================
-        // KHU VỰC 8: SYSTEM INITIALIZATION
-        // =======================================================================
         window.onload = window.initApp;
-
     </script>
 </body>
 </html>
