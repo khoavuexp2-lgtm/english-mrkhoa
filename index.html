@@ -1746,7 +1746,90 @@ window.closeStudentReportModal = function() { document.getElementById('studentRe
 // =======================================================================
 window.adminClassesData = [];
 window.adminUsersData = [];
+// ======================== ADMIN GIAO BÀI TẬP ========================
+window.openAssignmentModal = function(modId) {
+    const mod = window.currentModule;
+    let html = '';
+    
+    // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
+    let currentAssigned = window.currentAssignedExercises || mod.exercises.map(e => e.id); 
+    
+    // Tạo danh sách các phần bài tập để tick chọn
+    mod.exercises.forEach(ex => {
+        let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
+        html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                    <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                    <div>
+                        <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
+                        <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
+                    </div>
+                 </label>`;
+    });
+    
+    // Nạp danh sách học sinh vào ô chọn (Nếu giao cho cá nhân)
+    if (window.adminUsersData) {
+        let stdHtml = '';
+        // Chỉ lấy những user có role là student thuộc lớp của giáo viên
+        let myStudents = window.isSuperAdmin 
+            ? window.adminUsersData.filter(u => u.role === 'student') 
+            : window.adminUsersData.filter(u => u.classId === window.currentUser.classId && u.role === 'student');
+        
+        if(myStudents.length === 0) {
+            stdHtml = `<option value="">Không có học sinh nào trong lớp</option>`;
+        } else {
+            myStudents.forEach(u => {
+                stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`;
+            });
+        }
+        document.getElementById('assign-student-select').innerHTML = stdHtml;
+    }
 
+    document.getElementById('assignment-list').innerHTML = html;
+    document.getElementById('assignmentModal').classList.add('active');
+}
+
+window.toggleStudentSelect = function(val) {
+    if(val === 'individual') {
+        document.getElementById('student-select-container').classList.remove('hidden');
+    } else {
+        document.getElementById('student-select-container').classList.add('hidden');
+    }
+}
+
+window.saveAssignment = async function() {
+    let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
+    let selectedIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if(selectedIds.length === 0) return alert("Phải chọn ít nhất 1 bài tập để giao.");
+    
+    let targetMode = document.getElementById('assign-target-select').value;
+    let classIdToSave = window.currentUser.classId || 'unassigned';
+    
+    // Tạo khóa lưu trữ (lưu cho cả lớp hoặc lưu cho 1 UID cụ thể)
+    let saveKey = `${classIdToSave}_${window.currentModule.id}`;
+    
+    if (targetMode === 'individual') {
+        let stdId = document.getElementById('assign-student-select').value;
+        if(!stdId) return alert("Vui lòng chọn 1 học sinh cụ thể.");
+        saveKey += `_${stdId}`;
+    }
+    
+    try {
+        await window.fSetDoc(window.fDoc(window.fdb, "assignments", saveKey), {
+            assignedExercises: selectedIds,
+            updatedAt: Date.now()
+        });
+        
+        window.currentAssignedExercises = selectedIds;
+        document.getElementById('assignmentModal').classList.remove('active');
+        
+        showCustomAlert("Thành công", "Đã lưu cấu hình giao bài!", "✅");
+        window.loadModule(window.currentModule.id); // Tải lại bài học để cập nhật
+    } catch(e) { 
+        console.error(e); 
+        alert("Có lỗi kết nối khi lưu cấu hình."); 
+    }
+}
 window.loadClassesFromDB = async function() {
     if(!window.isAdmin) return;
     try {
