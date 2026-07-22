@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- ======================================================================= -->
-    <!-- KHU VỰC 1: CSS GIAO DIỆN & TỐI ƯU IN ẤN BẢN VĂN BẢN (PRINT MEDIA)       -->
+    <!-- KHU VỰC 1: CSS GIAO DIỆN, IN ẤN & CHẾ ĐỘ TRÌNH CHIẾU                    -->
     <!-- ======================================================================= -->
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #f1f5f9; color: #1e293b; overflow: hidden; }
@@ -59,16 +59,25 @@
         .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s;}
         .custom-alert-overlay.active .custom-alert-box { transform: scale(1);}
 
-        /* ===== CSS DÀNH RIÊNG KHI IN RA GIẤY ===== */
+        /* CHẾ ĐỘ TRÌNH CHIẾU BÀI GIẢNG (PRESENTATION MODE) */
+        body.presentation-mode .sidebar { display: none !important; }
+        body.presentation-mode header { display: none !important; }
+        body.presentation-mode footer { display: none !important; }
+        body.presentation-mode .scroll-container { height: 100vh !important; font-size: 130%; background-color: #f8fafc; padding-top: 40px; }
+        body.presentation-mode .max-w-4xl { max-width: 1400px !important; margin: 0 auto; }
+        body.presentation-mode .glass-card { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 2px solid #cbd5e1; }
+
+        /* TỐI ƯU HÓA IN ẤN ĐỀ BÀI (PRINT CSS) */
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             @page { size: A4 portrait; margin: 15mm; } 
-            body { background: white !important; font-size: 11pt !important; color: #000 !important; line-height: 1.5 !important; overflow: visible !important; }
+            body { background: white !important; font-size: 11.5pt !important; color: #000 !important; line-height: 1.5 !important; overflow: visible !important; }
             .scroll-container { height: auto !important; overflow: visible !important; padding: 0 !important; }
             
             .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .submit-btn, .audio-row:hover, #listening-action-buttons { display: none !important; }
             
             #content-area { padding: 0 !important; max-width: 100% !important; }
+            
             .glass-card { box-shadow: none !important; border: none !important; padding: 0 !important; margin-bottom: 12pt !important; background: transparent !important; page-break-inside: auto !important; }
             .exercise-container, section, .vocab-item-print { page-break-inside: avoid !important; margin-bottom: 15pt !important; }
             
@@ -84,7 +93,6 @@
             .q-btn { display: inline-block !important; border: 1px solid #000 !important; padding: 3px 8px !important; margin-right: 15px !important; margin-bottom: 5px !important; background: transparent !important; color: #000 !important; font-weight: normal !important; width: auto !important;}
             .fill-input { border-bottom: 1px dashed #000 !important; color: #000 !important; background: transparent !important; }
 
-            /* Modal Report khi in */
             body.printing-modal #content-area { display: none !important; }
             body.printing-modal #studentReportModal { position: relative !important; display: block !important; width: 100% !important; max-width: 100% !important; background: transparent !important; z-index: auto !important; box-shadow: none !important; }
             body.printing-modal .custom-alert-overlay { background: transparent !important; backdrop-filter: none !important; }
@@ -94,7 +102,7 @@
     </style>
 
     <!-- ======================================================================= -->
-    <!-- KHU VỰC 2: FIREBASE & AUTHENTICATION (ĐĂNG NHẬP VÀ DATABASE)            -->
+    <!-- KHU VỰC 2: FIREBASE & AUTHENTICATION                                    -->
     <!-- ======================================================================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -155,12 +163,17 @@
                 window.isAdmin = window.isSuperAdmin || userRole === 'teacher';
                 window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: userRole, classId: classId };
 
+                let presentationBtn = window.isAdmin ? `<button onclick="window.togglePresentation()" class="hidden md:flex text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold border border-indigo-200 hover:bg-indigo-200 mr-2 items-center gap-1 shadow-sm">📺 Trình Chiếu</button>` : '';
+
                 authContainer.innerHTML = `
-                    <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="window.showNicknameModal()">
-                        <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
-                        <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
+                    <div class="flex items-center gap-1">
+                        ${presentationBtn}
+                        <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100 shadow-sm" onclick="window.showNicknameModal()">
+                            <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
+                            <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[150px]">${nickname}</span>
+                        </div>
+                        <button onclick="window.logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Đăng xuất</button>
                     </div>
-                    <button onclick="window.logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Đăng xuất</button>
                 `;
                 
                 if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
@@ -177,12 +190,14 @@
     <div id="overlay" class="sidebar-overlay no-print" onclick="window.toggleMenu()"></div>
     
     <!-- ======================================================================= -->
-    <!-- KHU VỰC 3: SIDEBAR VÀ CÁC CỬA SỔ (MODALS) POPUP                         -->
+    <!-- KHU VỰC 3: CỬA SỔ POP-UP (MODALS) & NÚT THOÁT TRÌNH CHIẾU               -->
     <!-- ======================================================================= -->
+    <button id="exit-presentation-btn" onclick="window.togglePresentation()" class="fixed bottom-6 right-6 bg-rose-600 text-white px-6 py-4 rounded-full shadow-2xl hidden font-extrabold z-[9999] active:scale-95 transition-transform border-4 border-white text-lg tracking-wide hover:bg-rose-700 no-print">❌ Thoát Trình Chiếu</button>
+
     <aside id="sidebar" class="sidebar no-print">
         <div class="p-6 border-b border-slate-100 bg-indigo-50 flex justify-between items-center">
             <select id="class-selector" class="bg-transparent font-bold text-xl text-slate-800 baloo-font outline-none cursor-pointer" onchange="window.changeClass()"></select>
-            <button onclick="window.toggleMenu()" class="text-slate-500 text-2xl font-bold">×</button>
+            <button onclick="window.toggleMenu()" class="text-slate-500 text-2xl font-bold hover:text-rose-500 transition-colors">×</button>
         </div>
         <div class="p-4 overflow-y-auto flex-1" id="nav-menu"></div>
     </aside>
@@ -199,7 +214,7 @@
 
     <!-- TEACHER ASSIGNMENT MODAL -->
     <div id="assignmentModal" class="custom-alert-overlay no-print z-[2000]">
-        <div class="bg-white p-6 rounded-2xl w-[90%] max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
+        <div class="bg-white p-6 rounded-3xl w-[90%] max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
             <h2 class="text-xl font-bold baloo-font text-indigo-900 mb-2 border-b pb-2">⚙️ Giao Bài Tập Cho Học Sinh</h2>
             <div class="mb-3 mt-2">
                 <label class="block text-sm font-bold text-slate-700 mb-1">1. Giao bài cho ai?</label>
@@ -212,10 +227,13 @@
                 <label class="block text-sm font-bold text-slate-700 mb-1">Chọn Học sinh:</label>
                 <select id="assign-student-select" class="w-full p-2.5 border rounded-lg font-bold text-slate-700 bg-white outline-none cursor-pointer"></select>
             </div>
-            <p class="text-sm font-bold text-slate-700 mb-2">2. Chọn các bài tập giao:</p>
+            <div class="flex justify-between items-center mb-2">
+                <p class="text-sm font-bold text-slate-700">2. Chọn các bài tập giao:</p>
+                <button onclick="window.selectAllAssignments()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded">Chọn tất cả</button>
+            </div>
             <div id="assignment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-2 border border-slate-200 p-3 rounded-xl bg-slate-50"></div>
             <div class="flex gap-3 mt-auto">
-                <button onclick="document.getElementById('assignmentModal').classList.remove('active')" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-300">Hủy</button>
+                <button onclick="document.getElementById('assignmentModal').classList.remove('active')" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-300 transition-colors">Hủy</button>
                 <button onclick="window.saveAssignment()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition-colors">Lưu Cấu Hình</button>
             </div>
         </div>
@@ -223,7 +241,7 @@
 
     <!-- STUDENT REPORT MODAL -->
     <div id="studentReportModal" class="custom-alert-overlay no-print z-[2000]">
-        <div class="bg-white rounded-2xl w-[95%] max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative">
+        <div class="bg-white rounded-2xl w-[95%] max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative border border-slate-200">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl no-print">
                 <h3 class="font-bold text-xl text-indigo-800 baloo-font" id="reportModalTitle">Báo Cáo Học Viên</h3>
                 <button onclick="window.closeStudentReportModal()" class="text-slate-500 font-bold text-2xl px-2 hover:text-rose-600 transition-colors">&times;</button>
@@ -232,18 +250,15 @@
         </div>
     </div>
 
-    <!-- MAIN APP STRUCTURE -->
     <div class="flex flex-col h-screen">
         <header class="flex justify-between items-center bg-white px-4 py-3 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
             <div class="flex items-center gap-3">
-                <button onclick="window.toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50">☰ Menu</button>
+                <button onclick="window.toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50 transition-colors shadow-sm">☰ Menu</button>
                 <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate hidden sm:block">Loading...</h2>
             </div>
             <div class="flex items-center gap-3">
                 <div id="auth-container">
-                    <button onclick="window.loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-                        Đăng nhập
-                    </button>
+                    <button onclick="window.loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">Đăng nhập</button>
                 </div>
             </div>
         </header>
@@ -262,7 +277,7 @@
                 <div id="content-area"></div>
                 
                 <div id="sbt-source-notice" class="hidden text-center pb-8 mt-8 text-xs font-bold text-slate-400 no-print">
-                    <p>Nội dung trích từ: SBT Tiếng Anh 6 - Tập 1 - Global Success</p>
+                    <p>Nội dung trích từ: Sách Bài Tập Tiếng Anh 6 - Tập 1 - Global Success</p>
                 </div>
             </div>
         </main>
@@ -274,7 +289,6 @@
     <script>
         const DANH_SACH_BAI_HOC = [];
         function themBaiHoc(duLieu) { DANH_SACH_BAI_HOC.push(duLieu); }
-
 
 //======================BÀI HỌC==========================       
 themBaiHoc({
@@ -605,14 +619,6 @@ themBaiHoc({
 });
 // Kết thúc SBT Unit 5  
 
-// HỆ THỐNG TỰ ĐỘNG GOM DATA (Thầy không cần sửa phần này nữa)
-
-
-
-
-// ↑↑↑↑↑↑↑↑↑↑↑↑↑ DÁN CODE CÁC HÀM "themBaiHoc({...})" CỦA THẦY VÀO TRÊN DÒNG NÀY ↑↑↑↑↑↑↑↑↑↑↑↑↑
-
-        // Tự động đóng gói Data
         const database = {
             "class-6": {
                 name: "English 6",
@@ -635,12 +641,41 @@ themBaiHoc({
         window.adminClassesData = [];
         window.sbtState = {};
 
+        // Hiển thị Custom Alert đẹp mắt thay cho thẻ Alert xấu xí của trình duyệt
+        function showCustomAlert(title, message, icon="🔔") {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.add('active');
+        }
+        window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
+        window.alert = function(msg) { console.log("ALERT:", msg); }; // Chặn alert rác
+
+        // Nút Trình chiếu trên lớp
+        window.togglePresentation = function() {
+            document.body.classList.toggle('presentation-mode');
+            let btn = document.getElementById('exit-presentation-btn');
+            if (document.body.classList.contains('presentation-mode')) {
+                btn.classList.remove('hidden');
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('open');
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
         window.initApp = function() {
             const selector = document.getElementById('class-selector');
             selector.innerHTML = '';
             for (let cId in database) { selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`; }
             window.renderMenu();
-            if(database[currentClass].modules.length > 0) window.loadModule(database[currentClass].modules[0].id);
+            
+            // Lấy lại bài học cuối cùng lưu trong trình duyệt
+            let lastMod = localStorage.getItem('gs6_last_module');
+            if(lastMod && database[currentClass].modules.find(m => m.id === lastMod)) {
+                window.loadModule(lastMod);
+            } else if(database[currentClass].modules.length > 0) {
+                window.loadModule(database[currentClass].modules[0].id);
+            }
         }
 
         window.renderDashboardMenu = function() {
@@ -686,6 +721,8 @@ themBaiHoc({
             
             const mod = database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
+            
+            localStorage.setItem('gs6_last_module', moduleId);
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
@@ -839,12 +876,12 @@ themBaiHoc({
                                         <p class="text-[15px] font-bold text-slate-800 mb-3">${ex.q}</p>
                                         <div class="flex flex-wrap gap-2 print:block" id="opts-prac-${ex.id}">`;
                             ex.opts.forEach((opt, idx) => {
-                                html += `<div onclick="window.selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50">${opt}</div>`;
+                                html += `<div onclick="window.selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 print:border-none print:p-1 print:inline">${opt}</div>`;
                             });
                             html += `</div><div id="exp-prac-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"></div></div>`;
                         });
                         html += `<div class="text-center mt-6 no-print" id="action-prac-btn">
-                                    <button onclick="window.submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md">✅ Submit Practice</button>
+                                    <button onclick="window.submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">✅ Submit Practice</button>
                                  </div></div>`;
                     }
                 }
@@ -978,7 +1015,7 @@ themBaiHoc({
             }
         }
 
-        // ====================== WORKBOOK (SBT) RENDERER (1-TIME SUBMIT) ======================
+        // ====================== WORKBOOK (SBT) RENDERER (NỘP BÀI 1 LẦN) ======================
         window.renderSBTView = function(mod, container) {
             let teacherBtnHtml = '';
             if (window.isAdmin) {
@@ -1153,7 +1190,7 @@ themBaiHoc({
 
                         detailedResults.push({
                             q: q.q.replace(/\[fill\]/g, '___'),
-                            userAns: userAns.val !== null ? q.opts[userAns.val] : "Bỏ trống",
+                            userAns: userAns.val !== null && userAns.val !== undefined ? q.opts[userAns.val] : "Bỏ trống",
                             correctAns: q.opts[q.ans],
                             isCorrect: isQCorrect
                         });
@@ -1190,6 +1227,7 @@ themBaiHoc({
 
             let percentage = (correctCount / totalQuestions) * 10;
             
+            // Save to Firebase
             if (window.currentUser && !window.isAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
@@ -1201,6 +1239,7 @@ themBaiHoc({
                     });
                 } catch(e) { console.error(e); }
             }
+
             window.renderSBTView(mod, document.getElementById('content-area'));
         }
 
@@ -1247,6 +1286,7 @@ themBaiHoc({
                     <h2 class="text-xl font-bold text-slate-800 baloo-font uppercase text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
                     <div class="flex gap-2 items-center">
                         ${window.isAdmin ? `<button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-700">🖨️ In Đề</button>` : ''}
+                        ${window.isAdmin ? `<button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold hover:bg-indigo-200 border border-indigo-200">⚙️ Giao Đề</button>` : ''}
                         <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold text-lg border border-rose-200 shadow-inner tracking-widest" id="exam-timer-display">45:00</div>
                     </div>
                 </div>`;
@@ -1413,7 +1453,7 @@ themBaiHoc({
             });
 
             let percentage = (score / currentExam.questions.length) * 10;
-            if (window.currentUser && !window.isSuperAdmin) {
+            if (window.currentUser && !window.isAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
                         uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
@@ -1430,13 +1470,13 @@ themBaiHoc({
 
             actionContainer.innerHTML = `
                 <div class="p-8 bg-white border-2 border-${resultColor}-500 rounded-2xl shadow-lg inline-block text-center w-full md:w-auto mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2 baloo-font">EXAM RESULT</h2>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2 baloo-font">KẾT QUẢ BÀI THI</h2>
                     <div class="text-5xl font-extrabold text-${resultColor}-600 mb-2">${score} / ${currentExam.questions.length}</div>
-                    <p class="text-slate-500 font-medium">Your score: ${percentage.toFixed(1)} / 10</p>
+                    <p class="text-slate-500 font-medium">Điểm số: ${percentage.toFixed(1)} / 10</p>
                 </div>
                 <div class="flex justify-center gap-4">
-                    <button onclick="window.loadModule('${window.currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold">🔄 Làm Lại</button>
-                    <button onclick="window.explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold">💡 Xem Đáp Án</button>
+                    <button onclick="window.loadModule('${window.currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 transition-colors">🔄 Làm Lại</button>
+                    <button onclick="window.explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors">💡 Xem Đáp Án</button>
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1453,720 +1493,180 @@ themBaiHoc({
             const scriptDiv = document.getElementById('exam-audio-script');
             if(scriptDiv) scriptDiv.classList.remove('hidden');
         }
-    // =======================================================================
-// KHU VỰC 8: ENGINE - ÂM THANH TEXT-TO-SPEECH (TTS HELPERS)
-// =======================================================================
-window.voices = [];
-window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
-window.getVoiceByGender = function(gender, lang = 'en-US') {
-    if (window.voices.length === 0) window.voices = window.speechSynthesis.getVoices();
-    const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
-    const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
-    let selectedVoice = null;
-    if (gender === 'female') { selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
-    else if (gender === 'male') { selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
-    if (!selectedVoice) { selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0])); }
-    return selectedVoice;
-};
 
-window.highlightAudioRow = function(event) {
-    document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
-    if(event && event.currentTarget && event.currentTarget.classList.contains('audio-row')) {
-        event.currentTarget.classList.add('active-audio');
-    }
-};
-window.removeHighlight = function() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); };
+        // =======================================================================
+        // KHU VỰC 6: ADMIN - GIAO BÀI TẬP VÀ ĐỀ THI
+        // =======================================================================
+        window.loadAdminUsersSilent = async function() {
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
+                let users = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+                window.adminUsersData = users;
 
-window.playAudio = function(text, lang = 'en-US') {
-    window.highlightAudioRow(window.event);
-    window.speechSynthesis.cancel();
-    if(!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang; utterance.rate = 0.85;
-    let voice = window.voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
-    if(voice) utterance.voice = voice;
-    utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
-    window.speechSynthesis.speak(utterance);
-};
-
-window.playDialogueLine = function(text, gender) {
-    window.highlightAudioRow(window.event);
-    window.speechSynthesis.cancel();
-    if(!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = window.getVoiceByGender(gender, 'en-US');
-    if(voice) utterance.voice = voice;
-    utterance.lang = 'en-US'; utterance.rate = 0.85;
-    utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
-    window.speechSynthesis.speak(utterance);
-};
-
-window.playAllDialogue = function() {
-    window.speechSynthesis.cancel(); window.removeHighlight();
-    let listeningSec = window.currentModule.sections.find(s => s.type === 'listening' || s.type === 'dialogue');
-    if(!listeningSec || !listeningSec.lines) return;
-    let currentLine = 0;
-    function speakNextLine() {
-        if(currentLine >= listeningSec.lines.length) return;
-        let l = listeningSec.lines[currentLine];
-        let utterance = new SpeechSynthesisUtterance(l.t || l.text);
-        const voice = window.getVoiceByGender(l.gender, l.loc || 'en-US');
-        if(voice) utterance.voice = voice;
-        utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
-        utterance.onend = () => { currentLine++; speakNextLine(); };
-        window.speechSynthesis.speak(utterance);
-    }
-    speakNextLine();
-};
-
-window.playSpeakingSample = function(text) {
-    window.speechSynthesis.cancel();
-    if(!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US'; utterance.rate = 0.85;
-    window.speechSynthesis.speak(utterance);
-};
-
-window.playReadingText = function(text) {
-     window.highlightAudioRow(window.event);
-     window.speechSynthesis.cancel();
-     if(!text) return;
-     const utterance = new SpeechSynthesisUtterance(text);
-     utterance.lang = 'en-US'; utterance.rate = 0.85;
-     utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
-     window.speechSynthesis.speak(utterance);
-}
-
-window.toggleTranscript = function(btn) {
-    const container = btn.closest('.glass-card');
-    const el = container.querySelector('.audio-transcript');
-    if(el) {
-        if(el.classList.contains('hidden')) el.classList.remove('hidden');
-        else el.classList.add('hidden');
-    }
-}
-
-// =======================================================================
-// KHU VỰC 9: ENGINE - BÁO CÁO & BẢNG XẾP HẠNG (REPORTS & LEADERBOARD)
-// =======================================================================
-window.showMyProgress = async function() {
-    if (!window.currentUser) { showCustomAlert("Notice", "Vui lòng đăng nhập để xem tiến độ.", "🔒"); return; }
-    document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-    if(document.getElementById('nav-progress')) document.getElementById('nav-progress').classList.add('active');
-    document.getElementById('header-title').innerText = "My Progress";
-    if (window.innerWidth < 1024) toggleMenu();
-
-    const container = document.getElementById('content-area');
-    container.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading progress...</div>`;
-
-    try {
-        const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-        let completedModules = {};
-        snapshot.forEach(doc => {
-            let d = doc.data();
-            if(d.uid === window.currentUser.uid && d.isLesson) {
-                completedModules[d.testId] = true;
-            }
-        });
-
-        let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
-        database[currentClass].modules.forEach(mod => {
-            if(mod.type === 'lesson' || mod.type === 'sbt_module') {
-                let isCompleted = completedModules[mod.id];
-                let statusUI = isCompleted 
-                    ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
-                    : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
-                    
-                html += `<div class="p-4 border rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
-                    <p class="font-bold text-slate-800">${mod.title}</p>
-                    ${statusUI}
-                </div>`;
-            }
-        });
-        html += `</div></div>`;
-        container.innerHTML = html;
-    } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
-}
-
-window.showLeaderboard = async function() {
-    document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-    if(document.getElementById('nav-leaderboard')) document.getElementById('nav-leaderboard').classList.add('active');
-    document.getElementById('header-title').innerText = "Leaderboard";
-    if (window.innerWidth < 1024) toggleMenu();
-
-    let html = `
-        <div class="glass-card border-t-4 border-amber-500 mb-6">
-            <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
-                    <option value="test1">Review 1 - Test 1</option>
-                    <option value="test2">Review 1 - Test 2</option>
-                </select>
-                <select id="lb-level-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
-                    <option value="normal">Level: Normal</option>
-                    <option value="hard">Level: Hard</option>
-                </select>
-                <button onclick="fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
-            </div>
-        </div>
-        <div id="lb-results"></div>
-    `;
-    document.getElementById('content-area').innerHTML = html;
-    window.fetchLeaderboardData();
-}
-
-window.fetchLeaderboardData = async function() {
-    const testId = document.getElementById('lb-test-select').value;
-    const level = document.getElementById('lb-level-select').value;
-    const resContainer = document.getElementById('lb-results');
-    resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
-
-    try {
-        const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-        let results = [];
-        snapshot.forEach(doc => {
-            let d = doc.data();
-            if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
-        });
-
-        results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
-
-        let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm">
-            <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
-        
-        if (results.length === 0) {
-            html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
-        } else {
-            results.slice(0, 10).forEach((r, idx) => {
-                let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
-                let isMe = (window.currentUser && r.uid === window.currentUser.uid) ? "bg-amber-100 font-bold" : "";
-                html += `<tr class="border-b ${isMe}">
-                    <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
-                    <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
-                    <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
-                </tr>`;
-            });
+                const snapClasses = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
+                window.adminClassesData = [];
+                snapClasses.forEach(doc => { window.adminClassesData.push({id: doc.id, ...doc.data()}) });
+            } catch(e) { console.error("Error silently loading users", e); }
         }
-        html += `</table></div>`;
-        resContainer.innerHTML = html;
-    } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
-}
 
-window.openStudentReportModal = async function(uid, nickname) {
-    document.getElementById('reportModalTitle').innerText = `Báo cáo Học viên: ${nickname}`;
-    const content = document.getElementById('reportModalContent');
-    content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu...</div>`;
-    document.getElementById('studentReportModal').classList.add('active');
+        window.openAssignmentModal = async function(modId) {
+            // Tải ngầm danh sách học sinh nếu chưa tải
+            if (!window.adminUsersData || window.adminUsersData.length === 0) {
+                await window.loadAdminUsersSilent();
+            }
 
-    try {
-        const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
-        const snapshot = await window.fGetDocs(q);
-        let results = [];
-        snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
-        results.sort((a,b) => b.timestamp - a.timestamp); 
-
-        window.currentStudentResultsCache = results;
-        if (results.length === 0) { content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh chưa hoàn thành bài nào.</p></div>`; return; }
-
-        let html = `<div class="space-y-3">`;
-        results.forEach(r => {
-            let date = new Date(r.timestamp).toLocaleString('vi-VN');
-            let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
-            let badge = r.level === 'SBT' ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập</span>` : 
-                       (r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Lý Thuyết</span>` : 
-                                    `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Kiểm Tra</span>`);
+            const mod = window.currentModule;
+            let html = '';
             
-            html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300">
-                <div>
-                    <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
-                    <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
-                    <button onclick="viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">🔍 Lỗi Sai</button>
-                </div>
-            </div>`;
-        });
-        html += `</div>`;
-        content.innerHTML = html;
-    } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
-}
-
-window.viewDetailedTest = function(docId) {
-    const content = document.getElementById('reportModalContent');
-    if(!window.currentStudentResultsCache) return;
-    const data = window.currentStudentResultsCache.find(r => r.docId === docId);
-    if(!data || !data.detailedResults) {
-        content.innerHTML = `<div class="mb-4"><button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
-        return;
-    }
-
-    let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
-                    <button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
-                        <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
-                    </div>
-                    <button onclick="printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
-                        🖨️ In PDF 
-                    </button>
-                </div>
-                <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
-                    <p class="font-bold">Học sinh: ${data.nickname}</p>
-                    <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
-                </div>
-                <div class="space-y-4">`;
-
-    data.detailedResults.forEach((res, i) => {
-        let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
-        let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
-        html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
-            <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
-            <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
-                <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
-                ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
-            </div>
-        </div>`;
-    });
-    html += `</div>`;
-    content.innerHTML = html;
-    document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.printReport = function() {
-    document.body.classList.add('printing-modal');
-    window.print();
-    document.body.classList.remove('printing-modal');
-}
-window.closeStudentReportModal = function() { document.getElementById('studentReportModal').classList.remove('active'); }
-
-// =======================================================================
-// KHU VỰC 10: QUẢN TRỊ VIÊN (ADMIN DASHBOARD)
-// =======================================================================
-window.adminClassesData = [];
-window.adminUsersData = [];
-// ======================== ADMIN GIAO BÀI TẬP ========================
-window.openAssignmentModal = function(modId) {
-    const mod = window.currentModule;
-    let html = '';
-    
-    // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
-    let currentAssigned = window.currentAssignedExercises || mod.exercises.map(e => e.id); 
-    
-    // Tạo danh sách các phần bài tập để tick chọn
-    mod.exercises.forEach(ex => {
-        let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
-        html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
-                    <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
-                    <div>
-                        <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
-                        <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
-                    </div>
-                 </label>`;
-    });
-    
-    // Nạp danh sách học sinh vào ô chọn (Nếu giao cho cá nhân)
-    if (window.adminUsersData) {
-        let stdHtml = '';
-        // Chỉ lấy những user có role là student thuộc lớp của giáo viên
-        let myStudents = window.isSuperAdmin 
-            ? window.adminUsersData.filter(u => u.role === 'student') 
-            : window.adminUsersData.filter(u => u.classId === window.currentUser.classId && u.role === 'student');
-        
-        if(myStudents.length === 0) {
-            stdHtml = `<option value="">Không có học sinh nào trong lớp</option>`;
-        } else {
-            myStudents.forEach(u => {
-                stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`;
-            });
-        }
-        document.getElementById('assign-student-select').innerHTML = stdHtml;
-    }
-
-    document.getElementById('assignment-list').innerHTML = html;
-    document.getElementById('assignmentModal').classList.add('active');
-}
-
-window.toggleStudentSelect = function(val) {
-    if(val === 'individual') {
-        document.getElementById('student-select-container').classList.remove('hidden');
-    } else {
-        document.getElementById('student-select-container').classList.add('hidden');
-    }
-}
-
-window.saveAssignment = async function() {
-    let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
-    let selectedIds = Array.from(checkboxes).map(cb => cb.value);
-    
-    if(selectedIds.length === 0) return alert("Phải chọn ít nhất 1 bài tập để giao.");
-    
-    let targetMode = document.getElementById('assign-target-select').value;
-    let classIdToSave = window.currentUser.classId || 'unassigned';
-    
-    // Tạo khóa lưu trữ (lưu cho cả lớp hoặc lưu cho 1 UID cụ thể)
-    let saveKey = `${classIdToSave}_${window.currentModule.id}`;
-    
-    if (targetMode === 'individual') {
-        let stdId = document.getElementById('assign-student-select').value;
-        if(!stdId) return alert("Vui lòng chọn 1 học sinh cụ thể.");
-        saveKey += `_${stdId}`;
-    }
-    
-    try {
-        await window.fSetDoc(window.fDoc(window.fdb, "assignments", saveKey), {
-            assignedExercises: selectedIds,
-            updatedAt: Date.now()
-        });
-        
-        window.currentAssignedExercises = selectedIds;
-        document.getElementById('assignmentModal').classList.remove('active');
-        
-        showCustomAlert("Thành công", "Đã lưu cấu hình giao bài!", "✅");
-        window.loadModule(window.currentModule.id); // Tải lại bài học để cập nhật
-    } catch(e) { 
-        console.error(e); 
-        alert("Có lỗi kết nối khi lưu cấu hình."); 
-    }
-}
-window.loadClassesFromDB = async function() {
-    if(!window.isAdmin) return;
-    try {
-        const snap = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
-        window.adminClassesData = [];
-        snap.forEach(doc => { window.adminClassesData.push({id: doc.id, ...doc.data()}) });
-        
-        let sidebarSelect = document.getElementById('sidebar-class-filter');
-        if(sidebarSelect) {
-            let currentVal = sidebarSelect.value;
-            let opts = `<option value="all">Tất cả lớp học</option><option value="unassigned">Chưa xếp lớp</option>`;
-            window.adminClassesData.forEach(c => {
-                opts += `<option value="${c.id}">Lớp ${c.name}</option>`;
-            });
-            sidebarSelect.innerHTML = opts;
-            if(currentVal) sidebarSelect.value = currentVal;
-        }
-    } catch(e) { console.error("Lỗi tải danh sách lớp:", e); }
-}
-
-window.createNewClass = async function() {
-    if(!window.isSuperAdmin) { alert("Chỉ Admin cấp cao mới có quyền tạo lớp mới."); return; }
-    const nameInput = document.getElementById('new-class-name');
-    const name = nameInput.value.trim();
-    if(!name) { alert("Vui lòng nhập tên lớp!"); return; }
-
-    try {
-        await window.fAddDoc(window.fCollection(window.fdb, "classes"), { name: name, createdAt: Date.now() });
-        nameInput.value = '';
-        await window.loadClassesFromDB(); 
-        window.showClassManagement('all'); 
-        showCustomAlert("Thành công", "Đã tạo lớp thành công!", "✅");
-    } catch(e) { console.error(e); alert("Lỗi khi tạo lớp."); }
-}
-
-window.showClassManagement = async function(filterClassId = 'all') {
-    if(!window.isAdmin) return;
-    document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-    if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.add('active');
-    document.getElementById('header-title').innerText = "Class Management";
-    if (window.innerWidth < 1024) toggleMenu();
-
-    let createClassHtml = "";
-    if (window.isSuperAdmin) {
-        createClassHtml = `
-            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-6 flex flex-col sm:flex-row gap-3 items-center shadow-sm">
-                <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl shrink-0">+</div>
-                <input type="text" id="new-class-name" placeholder="Tạo lớp mới (Ví dụ: 6A1, 6A2)..." class="flex-1 p-3 rounded-lg border border-slate-300 font-bold outline-none focus:border-indigo-500 w-full text-slate-700">
-                <button onclick="createNewClass()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-sm w-full sm:w-auto whitespace-nowrap transition-colors">Tạo Lớp</button>
-            </div>
-        `;
-    }
-
-    let html = `
-        <div class="glass-card border-t-4 border-indigo-500 mb-8">
-            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold baloo-font text-indigo-700">🏫 Quản Lý Học Viên & Phân Lớp</h2>
-                <button onclick="exportUsersToCSV()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center justify-center gap-2 transition-colors">
-                    📥 Xuất Excel (CSV)
-                </button>
-            </div>
-            ${createClassHtml}
-            <div class="flex justify-between items-center mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200">
-                <div class="flex items-center gap-3 w-full">
-                    <span class="font-bold text-slate-700 shrink-0">Lọc danh sách:</span>
-                    <select id="main-class-filter" onchange="loadAdminUsers(this.value)" class="flex-1 p-2.5 border border-slate-300 rounded-lg font-bold text-indigo-700 outline-none cursor-pointer bg-white">
-                        <option value="all">Tất cả học viên</option>
-                        <option value="unassigned">Học viên chưa xếp lớp</option>
-                    </select>
-                </div>
-            </div>
-            <div class="bg-slate-50 p-2 sm:p-4 rounded-xl border border-slate-200">
-                <div id="admin-users-list" class="space-y-3 max-h-[600px] overflow-y-auto">
-                    <div class="text-center py-10 font-bold text-slate-500">Đang tải dữ liệu từ máy chủ...</div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('content-area').innerHTML = html;
-    await window.loadClassesFromDB();
-    
-    let filterSelect = document.getElementById('main-class-filter');
-    if(filterSelect) {
-        let opts = `<option value="all">Tất cả học viên</option><option value="unassigned">Học viên chưa xếp lớp</option>`;
-        window.adminClassesData.forEach(c => {
-            opts += `<option value="${c.id}" ${filterClassId === c.id ? 'selected' : ''}>Lớp ${c.name}</option>`;
-        });
-        filterSelect.innerHTML = opts;
-    }
-
-    let sidebarSelect = document.getElementById('sidebar-class-filter');
-    if(sidebarSelect) sidebarSelect.value = filterClassId;
-
-    window.loadAdminUsers(filterClassId);
-}
-
-window.loadAdminUsers = async function(filterClassId = 'all') {
-    try {
-        const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
-        let users = [];
-        snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
-        users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
-        window.adminUsersData = users;
-
-        let filteredUsers = users;
-        
-        if (!window.isSuperAdmin) {
-            filteredUsers = users.filter(u => u.classId === window.currentUser.classId);
-        } else {
-            if(filterClassId !== 'all') {
-                if(filterClassId === 'unassigned') filteredUsers = users.filter(u => !u.classId);
-                else filteredUsers = users.filter(u => u.classId === filterClassId);
-            }
-        }
-
-        let uHtml = "";
-        filteredUsers.forEach(data => {
-            const isBlocked = data.status === 'blocked';
-            const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
-            let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+            let currentAssigned = window.currentAssignedExercises || []; 
             
-            let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
-            let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Đã Khóa</span>` : 
-                              (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Hết Hạn</span>` : 
-                              `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Đang Hoạt Động</span>`);
-
-            let classSelectHtml = `<span class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Lớp: ${window.adminClassesData.find(c => c.id === data.classId)?.name || 'Chưa Xếp'}</span>`;
-            let actionButtons = "";
-            let roleSelectHtml = `<span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">${data.role === 'teacher' ? 'Giáo Viên' : 'Học Sinh'}</span>`;
-
-            if (window.isSuperAdmin) {
-                let classOptions = `<option value="">-- Xếp Lớp --</option>`;
-                window.adminClassesData.forEach(c => { classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Lớp ${c.name}</option>`; });
-                classSelectHtml = `
-                    <select onchange="updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer focus:border-indigo-500 shadow-sm w-full sm:w-auto">
-                        ${classOptions}
-                    </select>
-                `;
-
-                roleSelectHtml = `
-                    <select onchange="updateUserRole('${data.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 bg-white text-slate-700 outline-none cursor-pointer uppercase tracking-wider">
-                        <option value="student" ${data.role === 'student' ? 'selected' : ''}>HỌC SINH</option>
-                        <option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>GIÁO VIÊN</option>
-                    </select>
-                `;
-
-                actionButtons = `
-                    <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
-                        <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Dùng thử 7 Ngày</option>
-                        <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Tháng</option>
-                        <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Tháng</option>
-                        <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Vĩnh Viễn</option>
-                    </select>
-                    <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-colors w-full sm:w-20">${isBlocked ? 'Mở Khóa' : 'Khóa TK'}</button>
-                    <button onclick="deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 transition-colors w-full sm:w-auto">Xóa</button>
-                `;
+            if (mod.type === 'sbt_module') {
+                mod.exercises.forEach(ex => {
+                    html += `<div class="mb-3"><div class="font-bold text-sm text-indigo-700 bg-indigo-50 p-2 rounded">${ex.part} - ${ex.title}</div>`;
+                    ex.questions.forEach(q => {
+                        let isChecked = (currentAssigned.length === 0 || currentAssigned.includes(q.id)) ? 'checked' : '';
+                        let qText = q.q.replace(/<[^>]*>?/gm, '').substring(0, 80) + '...'; 
+                        html += `<label class="flex items-start gap-3 p-2 bg-white rounded-lg border-b border-slate-100 cursor-pointer hover:bg-slate-50 ml-4">
+                                    <input type="checkbox" value="${q.id}" class="mt-1 w-4 h-4 accent-indigo-600 assign-checkbox" ${isChecked}>
+                                    <div class="text-sm text-slate-700 font-medium">${qText}</div>
+                                 </label>`;
+                    });
+                    html += `</div>`;
+                });
+            } else if (mod.type === 'exam_module') {
+                html += `<div class="p-4 bg-rose-50 border border-rose-200 rounded-xl mb-2 text-rose-800 font-medium shadow-inner">
+                            <span class="font-bold text-rose-600 text-lg">Lưu ý:</span> Bài kiểm tra 45 phút sẽ được giao nguyên bài để học sinh làm và tính giờ. Bấm "Lưu Cấu Hình" để xác nhận giao đề này.
+                         </div>
+                         <input type="hidden" value="exam_full" class="assign-checkbox" checked>`;
+            }
+            
+            if(window.adminUsersData) {
+                let stdHtml = '';
+                let myStudents = window.isSuperAdmin 
+                    ? window.adminUsersData.filter(u => u.role === 'student') 
+                    : window.adminUsersData.filter(u => u.classId === window.currentUser?.classId && u.role === 'student');
+                
+                if(myStudents.length === 0) {
+                    stdHtml = `<option value="">Không có học sinh nào</option>`;
+                } else {
+                    myStudents.forEach(u => { stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`; });
+                }
+                document.getElementById('assign-student-select').innerHTML = stdHtml;
             }
 
-            uHtml += `
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between xl:items-center gap-4 transition-all hover:border-indigo-300 hover:shadow-md">
-                <div class="flex gap-4 items-center">
-                    <div class="w-12 h-12 rounded-full ${data.role === 'teacher' ? 'bg-purple-100 border-purple-300' : 'bg-slate-100 border-slate-300'} flex items-center justify-center text-xl shrink-0 border shadow-inner">
-                        ${data.role === 'teacher' ? '👨‍🏫' : '🎓'}
-                    </div>
-                    <div>
-                        <div class="font-bold text-slate-800 text-lg flex flex-wrap items-center gap-2">
-                            ${data.nickname} 
-                            ${roleSelectHtml}
-                            <button onclick="openStudentReportModal('${data.id}', '${data.nickname}')" class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300 px-2 py-0.5 rounded font-bold hover:bg-indigo-200 shadow-sm ml-2">🔍 Xem Bài Làm</button>
-                        </div>
-                        <div class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${data.email}</span>
-                            <span>| Hết hạn: <b class="${isExpired ? 'text-rose-600' : 'text-indigo-600'}">${expStr}</b></span>
-                            <span>| ${statusBadge}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 w-full xl:w-auto">
-                    ${classSelectHtml}
-                    ${actionButtons}
-                </div>
-            </div>`;
-        });
-        
-        document.getElementById('admin-users-list').innerHTML = uHtml || `
-            <div class="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
-                <div class="text-5xl mb-3">📭</div>
-                <p class="text-slate-500 font-bold text-lg">Không có học viên nào trong danh sách này.</p>
-            </div>`;
-    } catch(e) { console.error(e); document.getElementById('admin-users-list').innerHTML = "<p class='text-rose-600 font-bold text-center'>Lỗi kết nối CSDL.</p>"; }
-}
+            document.getElementById('assignment-list').innerHTML = html;
+            document.getElementById('assignmentModal').classList.add('active');
+        }
 
-window.updateUserClass = async function(uid, classId) { try { await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classId: classId }); window.loadAdminUsers(document.getElementById('main-class-filter').value); } catch(e) { console.error(e); alert("Có lỗi khi chuyển lớp."); } }
-window.updateUserRole = async function(uid, role) { try { await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { role: role }); window.loadAdminUsers(document.getElementById('main-class-filter').value); } catch(e) { console.error(e); alert("Có lỗi khi đổi quyền."); } }
-window.updateUserPlan = async function(uid, plan) {
-    let expiryDate = null;
-    let now = Date.now();
-    if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
-    else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
-    else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
-    
-    try {
-        await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
-        let filterClassId = document.getElementById('main-class-filter').value;
-        window.loadAdminUsers(filterClassId);
-    } catch(e) { console.error(e); alert("Có lỗi khi chuyển gói."); }
-}
+        window.selectAllAssignments = function() {
+            let checkboxes = document.querySelectorAll('.assign-checkbox');
+            let allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
 
-window.toggleUserStatus = async function(uid, status) {
-    try {
-        await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { status: status });
-        let filterClassId = document.getElementById('main-class-filter').value;
-        window.loadAdminUsers(filterClassId);
-    } catch(e) { console.error(e); alert("Có lỗi khi khóa tài khoản."); }
-}
+        window.toggleStudentSelect = function(val) {
+            if(val === 'individual') document.getElementById('student-select-container').classList.remove('hidden');
+            else document.getElementById('student-select-container').classList.add('hidden');
+        }
 
-window.deleteUser = async function(uid) {
-    if(confirm("XÓA TÀI KHOẢN VĨNH VIỄN?\nBạn có chắc chắn muốn xóa dữ liệu người dùng này không?")) {
-        try {
-            await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
-            let filterClassId = document.getElementById('main-class-filter').value;
-            window.loadAdminUsers(filterClassId);
-        } catch(e) { console.error(e); alert("Có lỗi khi xóa tài khoản."); }
-    }
-}
-
-window.exportUsersToCSV = function() {
-    if(!window.adminUsersData || window.adminUsersData.length === 0) return;
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    csvContent += "Nickname,Email,Role,Class,Join Date,Plan,Expiry Date,Status\n";
-    
-    window.adminUsersData.forEach(user => {
-        let className = window.adminClassesData.find(c => c.id === user.classId)?.name || 'Unassigned';
-        let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
-        let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
-        let row = `"${user.nickname}","${user.email}","${user.role}","${className}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"`;
-        csvContent += row + "\n";
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "students_list.csv");
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-}
-
-window.openStudentReportModal = async function(uid, nickname) {
-    document.getElementById('reportModalTitle').innerText = `Báo cáo Học viên: ${nickname}`;
-    const content = document.getElementById('reportModalContent');
-    content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu...</div>`;
-    document.getElementById('studentReportModal').classList.add('active');
-
-    try {
-        const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
-        const snapshot = await window.fGetDocs(q);
-        let results = [];
-        snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
-        results.sort((a,b) => b.timestamp - a.timestamp); 
-
-        window.currentStudentResultsCache = results;
-        if (results.length === 0) { content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh chưa hoàn thành bài nào.</p></div>`; return; }
-
-        let html = `<div class="space-y-3">`;
-        results.forEach(r => {
-            let date = new Date(r.timestamp).toLocaleString('vi-VN');
-            let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
-            let badge = r.level === 'SBT' ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập</span>` : 
-                       (r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Lý Thuyết</span>` : 
-                                    `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Kiểm Tra</span>`);
+        window.saveAssignment = async function() {
+            let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
+            let selectedIds = Array.from(checkboxes).map(cb => cb.value);
             
-            html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300">
-                <div>
-                    <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
-                    <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
-                    <button onclick="window.viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">🔍 Lỗi Sai</button>
-                </div>
-            </div>`;
-        });
-        html += `</div>`;
-        content.innerHTML = html;
-    } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
-}
+            if(selectedIds.length === 0) return showCustomAlert("Lỗi", "Phải chọn ít nhất 1 bài tập.", "⚠️");
+            
+            let targetMode = document.getElementById('assign-target-select').value;
+            let classIdToSave = window.currentUser.classId || 'unassigned';
+            let saveKey = `${classIdToSave}_${window.currentModule.id}`;
+            
+            if (targetMode === 'individual') {
+                let stdId = document.getElementById('assign-student-select').value;
+                if(!stdId) return showCustomAlert("Lỗi", "Vui lòng chọn 1 học sinh.", "⚠️");
+                saveKey += `_${stdId}`;
+            }
+            
+            try {
+                await window.fSetDoc(window.fDoc(window.fdb, "assignments", saveKey), { assignedExercises: selectedIds, updatedAt: Date.now() });
+                window.currentAssignedExercises = selectedIds;
+                document.getElementById('assignmentModal').classList.remove('active');
+                showCustomAlert("Thành công", "Đã lưu cấu hình giao bài thành công!", "✅");
+                window.loadModule(window.currentModule.id);
+            } catch(e) { console.error(e); showCustomAlert("Lỗi", "Có lỗi khi lưu cấu hình.", "❌"); }
+        }
 
-window.viewDetailedTest = function(docId) {
-    const content = document.getElementById('reportModalContent');
-    if(!window.currentStudentResultsCache) return;
-    const data = window.currentStudentResultsCache.find(r => r.docId === docId);
-    if(!data || !data.detailedResults) {
-        content.innerHTML = `<div class="mb-4"><button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
-        return;
-    }
+        // =======================================================================
+        // KHU VỰC 7: TEXT-TO-SPEECH (ÂM THANH ĐỌC CHỮ)
+        // =======================================================================
+        window.voices = [];
+        window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
+        window.getVoiceByGender = function(gender, lang = 'en-US') {
+            if (window.voices.length === 0) window.voices = window.speechSynthesis.getVoices();
+            const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
+            const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
+            let selectedVoice = null;
+            if (gender === 'female') { selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
+            else if (gender === 'male') { selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
+            if (!selectedVoice) { selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0])); }
+            return selectedVoice;
+        };
 
-    let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
-                    <button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
-                        <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
-                    </div>
-                    <button onclick="window.printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
-                        🖨️ In PDF 
-                    </button>
-                </div>
-                <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
-                    <p class="font-bold">Học sinh: ${data.nickname}</p>
-                    <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
-                </div>
-                <div class="space-y-4">`;
+        window.highlightAudioRow = function(event) {
+            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
+            if(event && event.currentTarget && event.currentTarget.classList.contains('audio-row')) event.currentTarget.classList.add('active-audio');
+        };
+        window.removeHighlight = function() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); };
 
-    data.detailedResults.forEach((res, i) => {
-        let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
-        let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
-        html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
-            <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
-            <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
-                <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
-                ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
-            </div>
-        </div>`;
-    });
-    html += `</div>`;
-    content.innerHTML = html;
-    document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
-}
+        window.playAudio = function(text, lang = 'en-US') {
+            window.highlightAudioRow(window.event);
+            window.speechSynthesis.cancel();
+            if(!text) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang; utterance.rate = 0.85;
+            let voice = window.voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
+            if(voice) utterance.voice = voice;
+            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
+            window.speechSynthesis.speak(utterance);
+        };
 
-window.printReport = function() {
-    document.body.classList.add('printing-modal');
-    window.print();
-    document.body.classList.remove('printing-modal');
-}
+        window.playDialogueLine = function(text, gender) {
+            window.highlightAudioRow(window.event);
+            window.speechSynthesis.cancel();
+            if(!text) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = window.getVoiceByGender(gender, 'en-US');
+            if(voice) utterance.voice = voice;
+            utterance.lang = 'en-US'; utterance.rate = 0.85;
+            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
+            window.speechSynthesis.speak(utterance);
+        };
 
-window.closeStudentReportModal = function() { document.getElementById('studentReportModal').classList.remove('active'); }
+        window.playAllDialogue = function() {
+            window.speechSynthesis.cancel(); window.removeHighlight();
+            let listeningSec = window.currentModule.sections.find(s => s.type === 'listening' || s.type === 'dialogue');
+            if(!listeningSec || !listeningSec.lines) return;
+            let currentLine = 0;
+            function speakNextLine() {
+                if(currentLine >= listeningSec.lines.length) return;
+                let l = listeningSec.lines[currentLine];
+                let utterance = new SpeechSynthesisUtterance(l.t || l.text);
+                const voice = window.getVoiceByGender(l.gender, l.loc || 'en-US');
+                if(voice) utterance.voice = voice;
+                utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
+                utterance.onend = () => { currentLine++; speakNextLine(); };
+                window.speechSynthesis.speak(utterance);
+            }
+            speakNextLine();
+        };
 
-</script>
+        window.playSpeakingSample = function(text) { window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance); };
+        window.playReadingText = function(text) { window.highlightAudioRow(window.event); window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight; window.speechSynthesis.speak(utterance); }
+
+        // =======================================================================
+        // KHU VỰC 8: SYSTEM INITIALIZATION
+        // =======================================================================
+        window.onload = window.initApp;
+
+    </script>
 </body>
 </html>
