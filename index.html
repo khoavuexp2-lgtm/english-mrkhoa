@@ -767,34 +767,27 @@ themBaiHoc({
                 if (window.currentUser) {
                     try {
                         let hasAssigned = false;
+                        let targetClassId = window.currentUser.classId || 'unassigned';
                         
-                        // 1. Ưu tiên kiểm tra xem có bài tập giao riêng cho CÁ NHÂN không
-                        let studentDocRef = window.fDoc(window.fdb, "assignments", `student_${window.currentUser.uid}_${mod.id}`);
-                        let studentDocSnap = await window.fGetDoc(studentDocRef);
-                        
-                        if (studentDocSnap.exists() && studentDocSnap.data().assignedExercises) {
-                            window.currentAssignedExercises = studentDocSnap.data().assignedExercises;
-                            hasAssigned = true;
+                        // 1. Nếu là học sinh, ƯU TIÊN tìm bài tập cá nhân trước
+                        if (window.currentUser.role === 'student') {
+                            let studentDocRef = window.fDoc(window.fdb, "assignments", `student_${window.currentUser.uid}_${mod.id}`);
+                            let studentDocSnap = await window.fGetDoc(studentDocRef);
+                            
+                            if (studentDocSnap.exists() && studentDocSnap.data().assignedExercises) {
+                                window.currentAssignedExercises = studentDocSnap.data().assignedExercises;
+                                hasAssigned = true;
+                            }
                         }
                         
-                        // 2. Nếu không có bài tập cá nhân, lấy theo LỚP
+                        // 2. Nếu không có bài cá nhân (Hoặc là Giáo viên đang xem), lấy cấu hình của LỚP
                         if (!hasAssigned) {
-                            let classIdToFetch = window.currentUser.classId || 'unassigned';
-                            let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
+                            let docRef = window.fDoc(window.fdb, "assignments", `${targetClassId}_${mod.id}`);
                             let docSnap = await window.fGetDoc(docRef);
                             
                             if (docSnap.exists() && docSnap.data().assignedExercises) {
                                 window.currentAssignedExercises = docSnap.data().assignedExercises;
                                 hasAssigned = true;
-                            }
-                        }
-                        
-                        // 3. Dự phòng: Nạp cấu hình giao bài mặc định chung (unassigned)
-                        if (!hasAssigned) {
-                            let defaultRef = window.fDoc(window.fdb, "assignments", `unassigned_${mod.id}`);
-                            let defaultSnap = await window.fGetDoc(defaultRef);
-                            if (defaultSnap.exists() && defaultSnap.data().assignedExercises) {
-                                window.currentAssignedExercises = defaultSnap.data().assignedExercises;
                             }
                         }
                     } catch(e) { console.warn("Lỗi tải bài tập giao:", e); }
@@ -805,6 +798,7 @@ themBaiHoc({
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        
         // ====================== LESSON: RENDER LÝ THUYẾT & PRACTICE ======================
         window.renderLessonView = function(mod, container) {
             let html = '';
@@ -1570,21 +1564,60 @@ themBaiHoc({
             } catch(e) { console.error("Error silently loading users", e); }
         }
 
-        window.openAssignmentModal = function(modId) {
+        window.openAssignmentModal = async function(modId) {
+            document.getElementById('assignmentModal').classList.add('active');
+            document.getElementById('assignment-list').innerHTML = '<div class="text-center py-8 font-bold text-indigo-600">Đang tải cấu hình từ máy chủ...</div>';
+            
+            // Xóa rỗng danh sách học sinh cũ nếu có
+            let studentContainer = document.getElementById('student-select-container');
+            if(studentContainer) studentContainer.classList.add('hidden');
+            document.getElementById('assign-target-select').value = 'class';
+            
+            // Đồng bộ giao diện ngay khi mở
+            await window.syncAssignmentUI();
+        }
+        
+        // HÀM MỚI: Đồng bộ danh sách bài tập từ Firebase dựa trên đối tượng đang chọn
+        window.syncAssignmentUI = async function() {
             const mod = window.currentModule;
-            let html = '';
+            let targetType = document.getElementById('assign-target-select').value;
+            let targetId = '';
             
-            // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
-            let currentAssigned = window.currentAssignedExercises || []; 
-            if (currentAssigned.length === 0 && mod.exercises) {
-                currentAssigned = mod.exercises.map(e => e.id);
+            if (targetType === 'class') {
+                targetId = window.currentUser.classId || 'unassigned';
+            } else {
+                let studentSelect = document.getElementById('assign-student-select');
+                targetId = studentSelect ? studentSelect.value : '';
+                if(!targetId) {
+                    document.getElementById('assignment-list').innerHTML = '<div class="text-center p-4 text-rose-500 font-bold">Vui lòng chọn 1 học sinh cụ thể!</div>';
+                    return;
+                }
             }
+
+            // Truy xuất cơ sở dữ liệu dựa trên Target ID
+            let docId = targetType === 'class' ? `${targetId}_${mod.id}` : `student_${targetId}_${mod.id}`;
+            let currentAssigned = [];
             
-            // Tạo danh sách các phần bài tập để tick chọn
+            try {
+                let docSnap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", docId));
+                if (docSnap.exists() && docSnap.data().assignedExercises) {
+                    currentAssigned = docSnap.data().assignedExercises;
+                } else {
+                    // Mặc định nếu chưa lưu gì thì tự động chọn hết
+                    if (mod.type === 'sbt_module') currentAssigned = mod.exercises.map(e => e.id);
+                    else currentAssigned = ['exam_full'];
+                }
+            } catch(e) {
+                console.error("Lỗi fetch dữ liệu giao bài:", e);
+                currentAssigned = mod.exercises ? mod.exercises.map(e => e.id) : [];
+            }
+
+            // RENDER HTML CHECKBOXES
+            let html = '';
             if (mod.type === 'sbt_module') {
                 mod.exercises.forEach(ex => {
                     let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
-                    html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                    html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm transition-colors">
                                 <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
                                 <div>
                                     <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
@@ -1593,8 +1626,8 @@ themBaiHoc({
                              </label>`;
                 });
             } else if (mod.type === 'exam_module') {
-                let isChecked = currentAssigned.includes('exam_full') || currentAssigned.length === 0 ? 'checked' : '';
-                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                let isChecked = currentAssigned.includes('exam_full') ? 'checked' : '';
+                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm transition-colors">
                             <input type="checkbox" value="exam_full" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
                             <div>
                                 <div class="font-bold text-sm text-indigo-700">Giao toàn bộ đề thi</div>
@@ -1604,11 +1637,12 @@ themBaiHoc({
             }
             
             document.getElementById('assignment-list').innerHTML = html;
-            document.getElementById('assignmentModal').classList.add('active');
         }
         
-        window.toggleStudentSelect = function(val) {
+        window.toggleStudentSelect = async function(val) {
             const container = document.getElementById('student-select-container');
+            const assignList = document.getElementById('assignment-list');
+            
             if (val === 'individual') {
                 container.classList.remove('hidden');
                 let selectHtml = '';
@@ -1617,8 +1651,19 @@ themBaiHoc({
                     students.forEach(s => { selectHtml += `<option value="${s.id}">${s.nickname} (${s.email})</option>`; });
                 }
                 if (selectHtml === '') selectHtml = '<option value="">Chưa có học sinh nào trong lớp</option>';
-                document.getElementById('assign-student-select').innerHTML = selectHtml;
-            } else { container.classList.add('hidden'); }
+                
+                const selectEl = document.getElementById('assign-student-select');
+                selectEl.innerHTML = selectHtml;
+                
+                // Gắn event onchange cho dropdown học sinh để tự fetch dữ liệu của học sinh đó
+                selectEl.onchange = window.syncAssignmentUI;
+                
+            } else { 
+                container.classList.add('hidden'); 
+            }
+            
+            assignList.innerHTML = '<div class="text-center py-8 font-bold text-indigo-600">Đang tải cấu hình...</div>';
+            await window.syncAssignmentUI();
         }
 
         window.saveAssignment = async function() {
@@ -1640,26 +1685,29 @@ themBaiHoc({
             }
             
             try {
+                let saveBtn = document.querySelector('#assignmentModal button.bg-indigo-600');
+                let originalText = saveBtn.innerText;
+                saveBtn.innerText = "Đang lưu..."; saveBtn.disabled = true;
+
                 await window.fSetDoc(window.fDoc(window.fdb, "assignments", docId), {
                     assignedExercises: selectedIds,
                     updatedAt: Date.now(),
                     assignedBy: window.currentUser.email
                 });
                 
-                // Đồng bộ mảng hiển thị nếu giao cho cả lớp
-                if (targetType === 'class') {
-                    window.currentAssignedExercises = selectedIds;
-                }
-                
+                saveBtn.innerText = originalText; saveBtn.disabled = false;
                 document.getElementById('assignmentModal').classList.remove('active');
-                alert("Đã lưu cấu hình giao bài thành công!");
+                alert("Đã lưu cấu hình giao bài thành công vào máy chủ!");
+                
+                // Load lại trang để giáo viên xem kết quả ngay
                 window.loadModule(window.currentModule.id);
             } catch(e) { 
                 console.error(e); 
-                alert("Có lỗi khi lưu cấu hình. Vui lòng kiểm tra kết nối mạng."); 
+                alert("Có lỗi khi lưu cấu hình. Vui lòng kiểm tra quyền truy cập Firestore hoặc mạng."); 
+                let saveBtn = document.querySelector('#assignmentModal button.bg-indigo-600');
+                if(saveBtn) { saveBtn.innerText = "Lưu Cấu Hình"; saveBtn.disabled = false; }
             }
-        }
-        
+        }  
         window.loadClassesFromDB = async function() {
     if(!window.isAdmin) return;
     try {
