@@ -706,16 +706,17 @@ themBaiHoc({
         }
 
         window.toggleMenu = function() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
+        
         window.changeClass = function() {
             currentClass = document.getElementById('class-selector').value;
             window.renderMenu();
-            if(window.database[currentClass].modules.length > 0) window.loadModule(window.database[currentClass].modules[0].id);
+            if(database[currentClass].modules.length > 0) window.loadModule(database[currentClass].modules[0].id);
         }
 
         window.loadModule = async function(moduleId) {
             if (window.innerWidth < 1024) window.toggleMenu(); 
             
-            const mod = window.database[currentClass].modules.find(m => m.id === moduleId);
+            const mod = database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
 
             window.currentModule = mod;
@@ -724,7 +725,7 @@ themBaiHoc({
             
             document.getElementById('header-title').innerText = mod.title;
             const printClassTitle = document.getElementById('print-class-title');
-            if (printClassTitle) printClassTitle.innerText = window.database[currentClass].name;
+            if (printClassTitle) printClassTitle.innerText = database[currentClass].name;
             const printModuleTitle = document.getElementById('print-module-title');
             if (printModuleTitle) printModuleTitle.innerText = mod.title;
             
@@ -765,19 +766,35 @@ themBaiHoc({
                 
                 if (window.currentUser) {
                     try {
-                        let classIdToFetch = window.currentUser.classId || 'unassigned';
-                        let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
-                        let docSnap = await window.fGetDoc(docRef);
+                        let hasAssigned = false;
                         
-                        if (docSnap.exists() && docSnap.data().assignedExercises) {
-                            // Ưu tiên nạp bài tập của lớp
-                            window.currentAssignedExercises = docSnap.data().assignedExercises;
-                        } else {
-                            // Dự phòng: Nạp cấu hình giao bài chung (unassigned) nếu lớp chưa có
-                            docRef = window.fDoc(window.fdb, "assignments", `unassigned_${mod.id}`);
-                            docSnap = await window.fGetDoc(docRef);
+                        // 1. Ưu tiên kiểm tra xem có bài tập giao riêng cho CÁ NHÂN không
+                        let studentDocRef = window.fDoc(window.fdb, "assignments", `student_${window.currentUser.uid}_${mod.id}`);
+                        let studentDocSnap = await window.fGetDoc(studentDocRef);
+                        
+                        if (studentDocSnap.exists() && studentDocSnap.data().assignedExercises) {
+                            window.currentAssignedExercises = studentDocSnap.data().assignedExercises;
+                            hasAssigned = true;
+                        }
+                        
+                        // 2. Nếu không có bài tập cá nhân, lấy theo LỚP
+                        if (!hasAssigned) {
+                            let classIdToFetch = window.currentUser.classId || 'unassigned';
+                            let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
+                            let docSnap = await window.fGetDoc(docRef);
+                            
                             if (docSnap.exists() && docSnap.data().assignedExercises) {
                                 window.currentAssignedExercises = docSnap.data().assignedExercises;
+                                hasAssigned = true;
+                            }
+                        }
+                        
+                        // 3. Dự phòng: Nạp cấu hình giao bài mặc định chung (unassigned)
+                        if (!hasAssigned) {
+                            let defaultRef = window.fDoc(window.fdb, "assignments", `unassigned_${mod.id}`);
+                            let defaultSnap = await window.fGetDoc(defaultRef);
+                            if (defaultSnap.exists() && defaultSnap.data().assignedExercises) {
+                                window.currentAssignedExercises = defaultSnap.data().assignedExercises;
                             }
                         }
                     } catch(e) { console.warn("Lỗi tải bài tập giao:", e); }
@@ -788,7 +805,6 @@ themBaiHoc({
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
         // ====================== LESSON: RENDER LÝ THUYẾT & PRACTICE ======================
         window.renderLessonView = function(mod, container) {
             let html = '';
@@ -953,6 +969,7 @@ themBaiHoc({
                 }
             });
         }
+        
         window.resetListening = function() { window.userListeningAnswers = {}; window.loadModule(window.currentModule.id); }
 
         window.selectChoice = function(btn, exId, choiceIdx) {
@@ -1015,6 +1032,7 @@ themBaiHoc({
                 }
             });
         }
+        
         window.resetPractice = function() { window.userPracticeAnswers = {}; window.loadModule(window.currentModule.id); }
 
         window.toggleTranscript = function(btn) {
@@ -1588,6 +1606,7 @@ themBaiHoc({
             document.getElementById('assignment-list').innerHTML = html;
             document.getElementById('assignmentModal').classList.add('active');
         }
+        
         window.toggleStudentSelect = function(val) {
             const container = document.getElementById('student-select-container');
             if (val === 'individual') {
@@ -1600,11 +1619,6 @@ themBaiHoc({
                 if (selectHtml === '') selectHtml = '<option value="">Chưa có học sinh nào trong lớp</option>';
                 document.getElementById('assign-student-select').innerHTML = selectHtml;
             } else { container.classList.add('hidden'); }
-        }
-        window.selectAllAssignments = function() {
-            let checkboxes = document.querySelectorAll('.assign-checkbox');
-            let allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            checkboxes.forEach(cb => cb.checked = !allChecked);
         }
 
         window.saveAssignment = async function() {
@@ -1645,10 +1659,8 @@ themBaiHoc({
                 alert("Có lỗi khi lưu cấu hình. Vui lòng kiểm tra kết nối mạng."); 
             }
         }
-
-
-
-window.loadClassesFromDB = async function() {
+        
+        window.loadClassesFromDB = async function() {
     if(!window.isAdmin) return;
     try {
         const snap = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
@@ -1668,7 +1680,7 @@ window.loadClassesFromDB = async function() {
     } catch(e) { console.error("Lỗi tải danh sách lớp:", e); }
 }
 
-window.createNewClass = async function() {
+        window.createNewClass = async function() {
     if(!window.isSuperAdmin) { alert("Chỉ Admin cấp cao mới có quyền tạo lớp mới."); return; }
     const nameInput = document.getElementById('new-class-name');
     const name = nameInput.value.trim();
@@ -1683,7 +1695,7 @@ window.createNewClass = async function() {
     } catch(e) { console.error(e); alert("Lỗi khi tạo lớp."); }
 }
 
-window.showClassManagement = async function(filterClassId = 'all') {
+        window.showClassManagement = async function(filterClassId = 'all') {
     if(!window.isAdmin) return;
     document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
     if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.add('active');
@@ -1745,245 +1757,246 @@ window.showClassManagement = async function(filterClassId = 'all') {
     window.loadAdminUsers(filterClassId);
 }
 
-window.loadAdminUsers = async function(filterClassId = 'all') {
-    try {
-        const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
-        let users = [];
-        snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
-        users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
-        window.adminUsersData = users;
+        window.loadAdminUsers = async function(filterClassId = 'all') {
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
+                let users = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+                users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
+                window.adminUsersData = users;
 
-        let filteredUsers = users;
-        
-        if (!window.isSuperAdmin) {
-            filteredUsers = users.filter(u => u.classId === window.currentUser.classId);
-        } else {
-            if(filterClassId !== 'all') {
-                if(filterClassId === 'unassigned') filteredUsers = users.filter(u => !u.classId);
-                else filteredUsers = users.filter(u => u.classId === filterClassId);
+                let filteredUsers = users;
+                
+                if (!window.isSuperAdmin) {
+                    filteredUsers = users.filter(u => u.classId === window.currentUser.classId);
+                } else {
+                    if(filterClassId !== 'all') {
+                        if(filterClassId === 'unassigned') filteredUsers = users.filter(u => !u.classId);
+                        else filteredUsers = users.filter(u => u.classId === filterClassId);
+                    }
+                }
+
+                let uHtml = "";
+                filteredUsers.forEach(data => {
+                    const isBlocked = data.status === 'blocked';
+                    const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                    let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                    
+                    let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
+                    let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Đã Khóa</span>` : 
+                                    (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Hết Hạn</span>` : 
+                                    `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Đang Hoạt Động</span>`);
+
+                    let classSelectHtml = `<span class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Lớp: ${window.adminClassesData.find(c => c.id === data.classId)?.name || 'Chưa Xếp'}</span>`;
+                    let actionButtons = "";
+                    let roleSelectHtml = `<span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">${data.role === 'teacher' ? 'Giáo Viên' : 'Học Sinh'}</span>`;
+
+                    if (window.isSuperAdmin) {
+                        let classOptions = `<option value="">-- Xếp Lớp --</option>`;
+                        window.adminClassesData.forEach(c => { classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Lớp ${c.name}</option>`; });
+                        classSelectHtml = `
+                            <select onchange="updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer focus:border-indigo-500 shadow-sm w-full sm:w-auto">
+                                ${classOptions}
+                            </select>
+                        `;
+
+                        roleSelectHtml = `
+                            <select onchange="updateUserRole('${data.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 bg-white text-slate-700 outline-none cursor-pointer uppercase tracking-wider">
+                                <option value="student" ${data.role === 'student' ? 'selected' : ''}>HỌC SINH</option>
+                                <option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>GIÁO VIÊN</option>
+                            </select>
+                        `;
+
+                        actionButtons = `
+                            <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+                                <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Dùng thử 7 Ngày</option>
+                                <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Tháng</option>
+                                <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Tháng</option>
+                                <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Vĩnh Viễn</option>
+                            </select>
+                            <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-colors w-full sm:w-20">${isBlocked ? 'Mở Khóa' : 'Khóa TK'}</button>
+                            <button onclick="deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 transition-colors w-full sm:w-auto">Xóa</button>
+                        `;
+                    }
+
+                    uHtml += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between xl:items-center gap-4 transition-all hover:border-indigo-300 hover:shadow-md">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-12 h-12 rounded-full ${data.role === 'teacher' ? 'bg-purple-100 border-purple-300' : 'bg-slate-100 border-slate-300'} flex items-center justify-center text-xl shrink-0 border shadow-inner">
+                                ${data.role === 'teacher' ? '👨‍🏫' : '🎓'}
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-lg flex flex-wrap items-center gap-2">
+                                    ${data.nickname} 
+                                    ${roleSelectHtml}
+                                    <button onclick="openStudentReportModal('${data.id}', '${data.nickname}')" class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300 px-2 py-0.5 rounded font-bold hover:bg-indigo-200 shadow-sm ml-2">🔍 Xem Bài Làm</button>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${data.email}</span>
+                                    <span>| Hết hạn: <b class="${isExpired ? 'text-rose-600' : 'text-indigo-600'}">${expStr}</b></span>
+                                    <span>| ${statusBadge}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 w-full xl:w-auto">
+                            ${classSelectHtml}
+                            ${actionButtons}
+                        </div>
+                    </div>`;
+                });
+                
+                document.getElementById('admin-users-list').innerHTML = uHtml || `
+                    <div class="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
+                        <div class="text-5xl mb-3">📭</div>
+                        <p class="text-slate-500 font-bold text-lg">Không có học viên nào trong danh sách này.</p>
+                    </div>`;
+            } catch(e) { console.error(e); document.getElementById('admin-users-list').innerHTML = "<p class='text-rose-600 font-bold text-center'>Lỗi kết nối CSDL.</p>"; }
+        }
+
+        window.updateUserClass = async function(uid, classId) { try { await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classId: classId }); window.loadAdminUsers(document.getElementById('main-class-filter').value); } catch(e) { console.error(e); alert("Có lỗi khi chuyển lớp."); } }
+        window.updateUserRole = async function(uid, role) { try { await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { role: role }); window.loadAdminUsers(document.getElementById('main-class-filter').value); } catch(e) { console.error(e); alert("Có lỗi khi đổi quyền."); } }
+        window.updateUserPlan = async function(uid, plan) {
+            let expiryDate = null;
+            let now = Date.now();
+            if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
+            else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
+            else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
+            
+            try {
+                await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
+                let filterClassId = document.getElementById('main-class-filter').value;
+                window.loadAdminUsers(filterClassId);
+            } catch(e) { console.error(e); alert("Có lỗi khi chuyển gói."); }
+        }
+
+        window.toggleUserStatus = async function(uid, status) {
+            try {
+                await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { status: status });
+                let filterClassId = document.getElementById('main-class-filter').value;
+                window.loadAdminUsers(filterClassId);
+            } catch(e) { console.error(e); alert("Có lỗi khi khóa tài khoản."); }
+        }
+
+        window.deleteUser = async function(uid) {
+            if(confirm("XÓA TÀI KHOẢN VĨNH VIỄN?\nBạn có chắc chắn muốn xóa dữ liệu người dùng này không?")) {
+                try {
+                    await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
+                    let filterClassId = document.getElementById('main-class-filter').value;
+                    window.loadAdminUsers(filterClassId);
+                } catch(e) { console.error(e); alert("Có lỗi khi xóa tài khoản."); }
             }
         }
 
-        let uHtml = "";
-        filteredUsers.forEach(data => {
-            const isBlocked = data.status === 'blocked';
-            const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
-            let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+        window.exportUsersToCSV = function() {
+            if(!window.adminUsersData || window.adminUsersData.length === 0) return;
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "Nickname,Email,Role,Class,Join Date,Plan,Expiry Date,Status\n";
             
-            let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
-            let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Đã Khóa</span>` : 
-                              (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Hết Hạn</span>` : 
-                              `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Đang Hoạt Động</span>`);
+            window.adminUsersData.forEach(user => {
+                let className = window.adminClassesData.find(c => c.id === user.classId)?.name || 'Unassigned';
+                let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                let row = `"${user.nickname}","${user.email}","${user.role}","${className}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"`;
+                csvContent += row + "\n";
+            });
 
-            let classSelectHtml = `<span class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Lớp: ${window.adminClassesData.find(c => c.id === data.classId)?.name || 'Chưa Xếp'}</span>`;
-            let actionButtons = "";
-            let roleSelectHtml = `<span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">${data.role === 'teacher' ? 'Giáo Viên' : 'Học Sinh'}</span>`;
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "students_list.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
 
-            if (window.isSuperAdmin) {
-                let classOptions = `<option value="">-- Xếp Lớp --</option>`;
-                window.adminClassesData.forEach(c => { classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Lớp ${c.name}</option>`; });
-                classSelectHtml = `
-                    <select onchange="updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer focus:border-indigo-500 shadow-sm w-full sm:w-auto">
-                        ${classOptions}
-                    </select>
-                `;
+        window.openStudentReportModal = async function(uid, nickname) {
+            document.getElementById('reportModalTitle').innerText = `Báo cáo Học viên: ${nickname}`;
+            const content = document.getElementById('reportModalContent');
+            content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu...</div>`;
+            document.getElementById('studentReportModal').classList.add('active');
 
-                roleSelectHtml = `
-                    <select onchange="updateUserRole('${data.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 bg-white text-slate-700 outline-none cursor-pointer uppercase tracking-wider">
-                        <option value="student" ${data.role === 'student' ? 'selected' : ''}>HỌC SINH</option>
-                        <option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>GIÁO VIÊN</option>
-                    </select>
-                `;
+            try {
+                const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
+                const snapshot = await window.fGetDocs(q);
+                let results = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
+                results.sort((a,b) => b.timestamp - a.timestamp); 
 
-                actionButtons = `
-                    <select onchange="updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
-                        <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Dùng thử 7 Ngày</option>
-                        <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Tháng</option>
-                        <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Tháng</option>
-                        <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Vĩnh Viễn</option>
-                    </select>
-                    <button onclick="toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-colors w-full sm:w-20">${isBlocked ? 'Mở Khóa' : 'Khóa TK'}</button>
-                    <button onclick="deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 transition-colors w-full sm:w-auto">Xóa</button>
-                `;
+                window.currentStudentResultsCache = results;
+                if (results.length === 0) { content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh chưa hoàn thành bài nào.</p></div>`; return; }
+
+                let html = `<div class="space-y-3">`;
+                results.forEach(r => {
+                    let date = new Date(r.timestamp).toLocaleString('vi-VN');
+                    let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
+                    let badge = r.level === 'SBT' ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập</span>` : 
+                            (r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Lý Thuyết</span>` : 
+                                            `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Kiểm Tra</span>`);
+                    
+                    html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300">
+                        <div>
+                            <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
+                            <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
+                            <button onclick="window.viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">🔍 Lỗi Sai</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+            } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
+        }
+
+        window.viewDetailedTest = function(docId) {
+            const content = document.getElementById('reportModalContent');
+            if(!window.currentStudentResultsCache) return;
+            const data = window.currentStudentResultsCache.find(r => r.docId === docId);
+            if(!data || !data.detailedResults) {
+                content.innerHTML = `<div class="mb-4"><button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
+                return;
             }
 
-            uHtml += `
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between xl:items-center gap-4 transition-all hover:border-indigo-300 hover:shadow-md">
-                <div class="flex gap-4 items-center">
-                    <div class="w-12 h-12 rounded-full ${data.role === 'teacher' ? 'bg-purple-100 border-purple-300' : 'bg-slate-100 border-slate-300'} flex items-center justify-center text-xl shrink-0 border shadow-inner">
-                        ${data.role === 'teacher' ? '👨‍🏫' : '🎓'}
-                    </div>
-                    <div>
-                        <div class="font-bold text-slate-800 text-lg flex flex-wrap items-center gap-2">
-                            ${data.nickname} 
-                            ${roleSelectHtml}
-                            <button onclick="openStudentReportModal('${data.id}', '${data.nickname}')" class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300 px-2 py-0.5 rounded font-bold hover:bg-indigo-200 shadow-sm ml-2">🔍 Xem Bài Làm</button>
+            let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
+                            <button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
+                                <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
+                            </div>
+                            <button onclick="window.printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
+                                🖨️ In PDF 
+                            </button>
                         </div>
-                        <div class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${data.email}</span>
-                            <span>| Hết hạn: <b class="${isExpired ? 'text-rose-600' : 'text-indigo-600'}">${expStr}</b></span>
-                            <span>| ${statusBadge}</span>
+                        <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
+                            <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
+                            <p class="font-bold">Học sinh: ${data.nickname}</p>
+                            <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
                         </div>
+                        <div class="space-y-4">`;
+
+            data.detailedResults.forEach((res, i) => {
+                let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
+                let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
+                html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
+                    <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
+                        <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
+                        ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
                     </div>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 w-full xl:w-auto">
-                    ${classSelectHtml}
-                    ${actionButtons}
-                </div>
-            </div>`;
-        });
+                </div>`;
+            });
+            html += `</div>`;
+            content.innerHTML = html;
+            document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.printReport = function() {
+            document.body.classList.add('printing-modal');
+            window.print();
+            document.body.classList.remove('printing-modal');
+        }
+
+        window.closeStudentReportModal = function() { document.getElementById('studentReportModal').classList.remove('active'); }
         
-        document.getElementById('admin-users-list').innerHTML = uHtml || `
-            <div class="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
-                <div class="text-5xl mb-3">📭</div>
-                <p class="text-slate-500 font-bold text-lg">Không có học viên nào trong danh sách này.</p>
-            </div>`;
-    } catch(e) { console.error(e); document.getElementById('admin-users-list').innerHTML = "<p class='text-rose-600 font-bold text-center'>Lỗi kết nối CSDL.</p>"; }
-}
-
-window.updateUserClass = async function(uid, classId) { try { await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classId: classId }); window.loadAdminUsers(document.getElementById('main-class-filter').value); } catch(e) { console.error(e); alert("Có lỗi khi chuyển lớp."); } }
-window.updateUserRole = async function(uid, role) { try { await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { role: role }); window.loadAdminUsers(document.getElementById('main-class-filter').value); } catch(e) { console.error(e); alert("Có lỗi khi đổi quyền."); } }
-window.updateUserPlan = async function(uid, plan) {
-    let expiryDate = null;
-    let now = Date.now();
-    if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
-    else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
-    else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
-    
-    try {
-        await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
-        let filterClassId = document.getElementById('main-class-filter').value;
-        window.loadAdminUsers(filterClassId);
-    } catch(e) { console.error(e); alert("Có lỗi khi chuyển gói."); }
-}
-
-window.toggleUserStatus = async function(uid, status) {
-    try {
-        await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { status: status });
-        let filterClassId = document.getElementById('main-class-filter').value;
-        window.loadAdminUsers(filterClassId);
-    } catch(e) { console.error(e); alert("Có lỗi khi khóa tài khoản."); }
-}
-
-window.deleteUser = async function(uid) {
-    if(confirm("XÓA TÀI KHOẢN VĨNH VIỄN?\nBạn có chắc chắn muốn xóa dữ liệu người dùng này không?")) {
-        try {
-            await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
-            let filterClassId = document.getElementById('main-class-filter').value;
-            window.loadAdminUsers(filterClassId);
-        } catch(e) { console.error(e); alert("Có lỗi khi xóa tài khoản."); }
-    }
-}
-
-window.exportUsersToCSV = function() {
-    if(!window.adminUsersData || window.adminUsersData.length === 0) return;
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-    csvContent += "Nickname,Email,Role,Class,Join Date,Plan,Expiry Date,Status\n";
-    
-    window.adminUsersData.forEach(user => {
-        let className = window.adminClassesData.find(c => c.id === user.classId)?.name || 'Unassigned';
-        let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
-        let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
-        let row = `"${user.nickname}","${user.email}","${user.role}","${className}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"`;
-        csvContent += row + "\n";
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "students_list.csv");
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-}
-
-window.openStudentReportModal = async function(uid, nickname) {
-    document.getElementById('reportModalTitle').innerText = `Báo cáo Học viên: ${nickname}`;
-    const content = document.getElementById('reportModalContent');
-    content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu...</div>`;
-    document.getElementById('studentReportModal').classList.add('active');
-
-    try {
-        const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
-        const snapshot = await window.fGetDocs(q);
-        let results = [];
-        snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
-        results.sort((a,b) => b.timestamp - a.timestamp); 
-
-        window.currentStudentResultsCache = results;
-        if (results.length === 0) { content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh chưa hoàn thành bài nào.</p></div>`; return; }
-
-        let html = `<div class="space-y-3">`;
-        results.forEach(r => {
-            let date = new Date(r.timestamp).toLocaleString('vi-VN');
-            let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
-            let badge = r.level === 'SBT' ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập</span>` : 
-                       (r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Lý Thuyết</span>` : 
-                                    `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Kiểm Tra</span>`);
-            
-            html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300">
-                <div>
-                    <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
-                    <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
-                    <button onclick="window.viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">🔍 Lỗi Sai</button>
-                </div>
-            </div>`;
-        });
-        html += `</div>`;
-        content.innerHTML = html;
-    } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
-}
-
-window.viewDetailedTest = function(docId) {
-    const content = document.getElementById('reportModalContent');
-    if(!window.currentStudentResultsCache) return;
-    const data = window.currentStudentResultsCache.find(r => r.docId === docId);
-    if(!data || !data.detailedResults) {
-        content.innerHTML = `<div class="mb-4"><button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
-        return;
-    }
-
-    let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
-                    <button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
-                        <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
-                    </div>
-                    <button onclick="window.printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
-                        🖨️ In PDF 
-                    </button>
-                </div>
-                <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
-                    <p class="font-bold">Học sinh: ${data.nickname}</p>
-                    <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
-                </div>
-                <div class="space-y-4">`;
-
-    data.detailedResults.forEach((res, i) => {
-        let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
-        let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
-        html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
-            <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
-            <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
-                <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
-                ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
-            </div>
-        </div>`;
-    });
-    html += `</div>`;
-    content.innerHTML = html;
-    document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.printReport = function() {
-    document.body.classList.add('printing-modal');
-    window.print();
-    document.body.classList.remove('printing-modal');
-}
-
-window.closeStudentReportModal = function() { document.getElementById('studentReportModal').classList.remove('active'); }
         // =======================================================================
         // KHU VỰC 7: TEXT-TO-SPEECH (ÂM THANH ĐỌC CHỮ)
         // =======================================================================
@@ -2051,200 +2064,200 @@ window.closeStudentReportModal = function() { document.getElementById('studentRe
         window.playSpeakingSample = function(text) { window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance); };
         window.playReadingText = function(text) { window.highlightAudioRow(window.event); window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight; window.speechSynthesis.speak(utterance); }
 
-// =======================================================================
+        // =======================================================================
 // KHU VỰC 8: ENGINE - BÁO CÁO & BẢNG XẾP HẠNG (REPORTS & LEADERBOARD)
 // =======================================================================
-window.showMyProgress = async function() {
-    if (!window.currentUser) { showCustomAlert("Notice", "Vui lòng đăng nhập để xem tiến độ.", "🔒"); return; }
-    document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-    if(document.getElementById('nav-progress')) document.getElementById('nav-progress').classList.add('active');
-    document.getElementById('header-title').innerText = "My Progress";
-    if (window.innerWidth < 1024) toggleMenu();
+        window.showMyProgress = async function() {
+            if (!window.currentUser) { showCustomAlert("Notice", "Vui lòng đăng nhập để xem tiến độ.", "🔒"); return; }
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-progress')) document.getElementById('nav-progress').classList.add('active');
+            document.getElementById('header-title').innerText = "My Progress";
+            if (window.innerWidth < 1024) toggleMenu();
 
-    const container = document.getElementById('content-area');
-    container.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading progress...</div>`;
+            const container = document.getElementById('content-area');
+            container.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading progress...</div>`;
 
-    try {
-        const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-        let completedModules = {};
-        snapshot.forEach(doc => {
-            let d = doc.data();
-            if(d.uid === window.currentUser.uid && d.isLesson) {
-                completedModules[d.testId] = true;
-            }
-        });
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let completedModules = {};
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.uid === window.currentUser.uid && d.isLesson) {
+                        completedModules[d.testId] = true;
+                    }
+                });
 
-        let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
-        database[currentClass].modules.forEach(mod => {
-            if(mod.type === 'lesson' || mod.type === 'sbt_module') {
-                let isCompleted = completedModules[mod.id];
-                let statusUI = isCompleted 
-                    ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
-                    : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
-                    
-                html += `<div class="p-4 border rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
-                    <p class="font-bold text-slate-800">${mod.title}</p>
-                    ${statusUI}
-                </div>`;
-            }
-        });
-        html += `</div></div>`;
-        container.innerHTML = html;
-    } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
-}
-
-window.showLeaderboard = async function() {
-    document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-    if(document.getElementById('nav-leaderboard')) document.getElementById('nav-leaderboard').classList.add('active');
-    document.getElementById('header-title').innerText = "Leaderboard";
-    if (window.innerWidth < 1024) toggleMenu();
-
-    let html = `
-        <div class="glass-card border-t-4 border-amber-500 mb-6">
-            <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
-                    <option value="test1">Review 1 - Test 1</option>
-                    <option value="test2">Review 1 - Test 2</option>
-                </select>
-                <select id="lb-level-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
-                    <option value="normal">Level: Normal</option>
-                    <option value="hard">Level: Hard</option>
-                </select>
-                <button onclick="fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
-            </div>
-        </div>
-        <div id="lb-results"></div>
-    `;
-    document.getElementById('content-area').innerHTML = html;
-    window.fetchLeaderboardData();
-}
-
-window.fetchLeaderboardData = async function() {
-    const testId = document.getElementById('lb-test-select').value;
-    const level = document.getElementById('lb-level-select').value;
-    const resContainer = document.getElementById('lb-results');
-    resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
-
-    try {
-        const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-        let results = [];
-        snapshot.forEach(doc => {
-            let d = doc.data();
-            if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
-        });
-
-        results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
-
-        let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm">
-            <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
-        
-        if (results.length === 0) {
-            html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
-        } else {
-            results.slice(0, 10).forEach((r, idx) => {
-                let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
-                let isMe = (window.currentUser && r.uid === window.currentUser.uid) ? "bg-amber-100 font-bold" : "";
-                html += `<tr class="border-b ${isMe}">
-                    <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
-                    <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
-                    <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
-                </tr>`;
-            });
+                let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
+                database[currentClass].modules.forEach(mod => {
+                    if(mod.type === 'lesson' || mod.type === 'sbt_module') {
+                        let isCompleted = completedModules[mod.id];
+                        let statusUI = isCompleted 
+                            ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
+                            : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
+                            
+                        html += `<div class="p-4 border rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="loadModule('${mod.id}')">
+                            <p class="font-bold text-slate-800">${mod.title}</p>
+                            ${statusUI}
+                        </div>`;
+                    }
+                });
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
         }
-        html += `</table></div>`;
-        resContainer.innerHTML = html;
-    } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
-}
 
-window.openStudentReportModal = async function(uid, nickname) {
-    document.getElementById('reportModalTitle').innerText = `Báo cáo Học viên: ${nickname}`;
-    const content = document.getElementById('reportModalContent');
-    content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu...</div>`;
-    document.getElementById('studentReportModal').classList.add('active');
+        window.showLeaderboard = async function() {
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-leaderboard')) document.getElementById('nav-leaderboard').classList.add('active');
+            document.getElementById('header-title').innerText = "Leaderboard";
+            if (window.innerWidth < 1024) toggleMenu();
 
-    try {
-        const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
-        const snapshot = await window.fGetDocs(q);
-        let results = [];
-        snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
-        results.sort((a,b) => b.timestamp - a.timestamp); 
-
-        window.currentStudentResultsCache = results;
-        if (results.length === 0) { content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh chưa hoàn thành bài nào.</p></div>`; return; }
-
-        let html = `<div class="space-y-3">`;
-        results.forEach(r => {
-            let date = new Date(r.timestamp).toLocaleString('vi-VN');
-            let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
-            let badge = r.level === 'SBT' ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập</span>` : 
-                       (r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Lý Thuyết</span>` : 
-                                    `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Kiểm Tra</span>`);
-            
-            html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300">
-                <div>
-                    <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
-                    <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
-                    <button onclick="viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">🔍 Lỗi Sai</button>
-                </div>
-            </div>`;
-        });
-        html += `</div>`;
-        content.innerHTML = html;
-    } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
-}
-
-window.viewDetailedTest = function(docId) {
-    const content = document.getElementById('reportModalContent');
-    if(!window.currentStudentResultsCache) return;
-    const data = window.currentStudentResultsCache.find(r => r.docId === docId);
-    if(!data || !data.detailedResults) {
-        content.innerHTML = `<div class="mb-4"><button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
-        return;
-    }
-
-    let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
-                    <button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
-                        <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
+            let html = `
+                <div class="glass-card border-t-4 border-amber-500 mb-6">
+                    <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="test1">Review 1 - Test 1</option>
+                            <option value="test2">Review 1 - Test 2</option>
+                        </select>
+                        <select id="lb-level-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        <button onclick="fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
                     </div>
-                    <button onclick="printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
-                        🖨️ In PDF 
-                    </button>
                 </div>
-                <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
-                    <p class="font-bold">Học sinh: ${data.nickname}</p>
-                    <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
-                </div>
-                <div class="space-y-4">`;
+                <div id="lb-results"></div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+            window.fetchLeaderboardData();
+        }
 
-    data.detailedResults.forEach((res, i) => {
-        let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
-        let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
-        html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
-            <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
-            <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
-                <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
-                ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
-            </div>
-        </div>`;
-    });
-    html += `</div>`;
-    content.innerHTML = html;
-    document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
-}
+        window.fetchLeaderboardData = async function() {
+            const testId = document.getElementById('lb-test-select').value;
+            const level = document.getElementById('lb-level-select').value;
+            const resContainer = document.getElementById('lb-results');
+            resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
 
-window.printReport = function() {
-    document.body.classList.add('printing-modal');
-    window.print();
-    document.body.classList.remove('printing-modal');
-}
-window.closeStudentReportModal = function() { document.getElementById('studentReportModal').classList.remove('active'); }
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let results = [];
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
+                });
+
+                results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
+
+                let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm">
+                    <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
+                
+                if (results.length === 0) {
+                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
+                } else {
+                    results.slice(0, 10).forEach((r, idx) => {
+                        let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
+                        let isMe = (window.currentUser && r.uid === window.currentUser.uid) ? "bg-amber-100 font-bold" : "";
+                        html += `<tr class="border-b ${isMe}">
+                            <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
+                            <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
+                            <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
+                        </tr>`;
+                    });
+                }
+                html += `</table></div>`;
+                resContainer.innerHTML = html;
+            } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
+        }
+
+        window.openStudentReportModal = async function(uid, nickname) {
+            document.getElementById('reportModalTitle').innerText = `Báo cáo Học viên: ${nickname}`;
+            const content = document.getElementById('reportModalContent');
+            content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu...</div>`;
+            document.getElementById('studentReportModal').classList.add('active');
+
+            try {
+                const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("uid", "==", uid));
+                const snapshot = await window.fGetDocs(q);
+                let results = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.docId = doc.id; results.push(d); });
+                results.sort((a,b) => b.timestamp - a.timestamp); 
+
+                window.currentStudentResultsCache = results;
+                if (results.length === 0) { content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh chưa hoàn thành bài nào.</p></div>`; return; }
+
+                let html = `<div class="space-y-3">`;
+                results.forEach(r => {
+                    let date = new Date(r.timestamp).toLocaleString('vi-VN');
+                    let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
+                    let badge = r.level === 'SBT' ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">Bài Tập</span>` : 
+                            (r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Lý Thuyết</span>` : 
+                                            `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Kiểm Tra</span>`);
+                    
+                    html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300">
+                        <div>
+                            <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
+                            <div class="text-sm text-slate-500 font-medium">Nộp lúc: ${date}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
+                            <button onclick="viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">🔍 Lỗi Sai</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+            } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu.</p>"; }
+        }
+
+        window.viewDetailedTest = function(docId) {
+            const content = document.getElementById('reportModalContent');
+            if(!window.currentStudentResultsCache) return;
+            const data = window.currentStudentResultsCache.find(r => r.docId === docId);
+            if(!data || !data.detailedResults) {
+                content.innerHTML = `<div class="mb-4"><button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Quay lại</button></div><div class="text-center py-10 font-bold text-slate-500">Bài làm này không lưu chi tiết câu sai.</div>`;
+                return;
+            }
+
+            let html = `<div class="flex items-center gap-4 mb-6 border-b pb-4 no-print">
+                            <button onclick="openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Quay lại</button>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
+                                <p class="text-sm text-slate-500">Chi tiết Tờ giấy thi của <b>${data.nickname}</b></p>
+                            </div>
+                            <button onclick="printReport()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 shadow-md flex items-center gap-2 shrink-0">
+                                🖨️ In PDF 
+                            </button>
+                        </div>
+                        <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
+                            <h2 class="text-2xl font-bold text-slate-800">${data.testName}</h2>
+                            <p class="font-bold">Học sinh: ${data.nickname}</p>
+                            <p class="font-bold">Điểm số: ${data.score} / ${data.total} (${data.percentage.toFixed(1)} điểm)</p>
+                        </div>
+                        <div class="space-y-4">`;
+
+            data.detailedResults.forEach((res, i) => {
+                let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
+                let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">ĐÚNG</span>` : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm no-print">SAI</span>`;
+                html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm print:border-slate-300 print:bg-transparent">
+                    <div class="flex items-start justify-between gap-4 mb-3"><div class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600 print:text-black">Câu ${i+1}:</span> ${res.q}</div>${badge}</div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm print:border-none print:p-0">
+                        <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Học sinh chọn:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
+                        ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0 print:text-black">Đáp án chuẩn:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+            content.innerHTML = html;
+            document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.printReport = function() {
+            document.body.classList.add('printing-modal');
+            window.print();
+            document.body.classList.remove('printing-modal');
+        }
+        window.closeStudentReportModal = function() { document.getElementById('studentReportModal').classList.remove('active'); }
 
         window.onload = window.initApp;
     </script>
