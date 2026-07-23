@@ -1546,32 +1546,40 @@ themBaiHoc({
             } catch(e) { console.error("Error silently loading users", e); }
         }
 
-        window.openAssignmentModal = async function(modId) {
-            if (!window.adminUsersData || window.adminUsersData.length === 0) { await window.loadAdminUsersSilent(); }
-
-            const mod = window.currentModule;
-            let html = '';
-            let currentAssigned = window.currentAssignedExercises || []; 
-            
-            if (mod.type === 'sbt_module') {
-                mod.exercises.forEach(ex => {
-                    html += `<div class="mb-3"><div class="font-bold text-sm text-indigo-700 bg-indigo-50 p-2 rounded">${ex.part} - ${ex.title}</div>`;
-                    ex.questions.forEach(q => {
-                        let isChecked = (currentAssigned.length === 0 || currentAssigned.includes(q.id)) ? 'checked' : '';
-                        let qText = q.q.replace(/<[^>]*>?/gm, '').substring(0, 80) + '...'; 
-                        html += `<label class="flex items-start gap-3 p-2 bg-white rounded-lg border-b border-slate-100 cursor-pointer hover:bg-slate-50 ml-4">
-                                    <input type="checkbox" value="${q.id}" class="mt-1 w-4 h-4 accent-indigo-600 assign-checkbox" ${isChecked}>
-                                    <div class="text-sm text-slate-700 font-medium">${qText}</div>
-                                 </label>`;
-                    });
-                    html += `</div>`;
-                });
-            } else if (mod.type === 'exam_module') {
-                html += `<div class="p-4 bg-rose-50 border border-rose-200 rounded-xl mb-2 text-rose-800 font-medium shadow-inner">
-                            <span class="font-bold text-rose-600 text-lg">Lưu ý:</span> Bài kiểm tra sẽ được giao nguyên vẹn để học sinh làm tính giờ. Bấm "Lưu Cấu Hình" để xác nhận giao đề.
-                         </div>
-                         <input type="hidden" value="exam_full" class="assign-checkbox" checked>`;
-            }
+ window.openAssignmentModal = function(modId) {
+    const mod = window.currentModule;
+    let html = '';
+    
+    // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
+    let currentAssigned = window.currentAssignedExercises || []; 
+    if (currentAssigned.length === 0 && mod.exercises) {
+        currentAssigned = mod.exercises.map(e => e.id);
+    }
+    
+    // Tạo danh sách các phần bài tập để tick chọn
+    if (mod.type === 'sbt_module') {
+        mod.exercises.forEach(ex => {
+            let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
+            html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                        <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                        <div>
+                            <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
+                            <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
+                        </div>
+                     </label>`;
+        });
+    } else if (mod.type === 'exam_module') {
+        let isChecked = currentAssigned.includes('exam_full') || currentAssigned.length === 0 ? 'checked' : '';
+        html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                    <input type="checkbox" value="exam_full" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                    <div>
+                        <div class="font-bold text-sm text-indigo-700">Giao toàn bộ đề thi</div>
+                        <div class="text-sm text-slate-700 font-medium">${mod.title}</div>
+                    </div>
+                 </label>`;
+    }
+    
+    // Nạp danh sách học sinh vào ô chọn (Nếu giao cho cá nhân)
             
             if(window.adminUsersData) {
                 let stdHtml = '';
