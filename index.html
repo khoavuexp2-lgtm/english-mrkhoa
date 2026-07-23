@@ -706,24 +706,25 @@ themBaiHoc({
         }
 
         window.toggleMenu = function() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
-        window.changeClass = function() { currentClass = document.getElementById('class-selector').value; window.renderMenu(); if(database[currentClass].modules.length > 0) window.loadModule(database[currentClass].modules[0].id); }
+        window.changeClass = function() {
+            currentClass = document.getElementById('class-selector').value;
+            window.renderMenu();
+            if(window.database[currentClass].modules.length > 0) window.loadModule(window.database[currentClass].modules[0].id);
+        }
 
         window.loadModule = async function(moduleId) {
-            if (window.innerWidth < 1024) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+            if (window.innerWidth < 1024) window.toggleMenu(); 
             
-            const mod = database[currentClass].modules.find(m => m.id === moduleId);
+            const mod = window.database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
-            
-            localStorage.setItem('gs6_last_module', moduleId);
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-            const navBtn = document.getElementById('nav-' + moduleId);
-            if(navBtn) navBtn.classList.add('active');
+            if(document.getElementById('nav-' + moduleId)) document.getElementById('nav-' + moduleId).classList.add('active');
             
             document.getElementById('header-title').innerText = mod.title;
             const printClassTitle = document.getElementById('print-class-title');
-            if (printClassTitle) printClassTitle.innerText = database[currentClass].name;
+            if (printClassTitle) printClassTitle.innerText = window.database[currentClass].name;
             const printModuleTitle = document.getElementById('print-module-title');
             if (printModuleTitle) printModuleTitle.innerText = mod.title;
             
@@ -731,54 +732,59 @@ themBaiHoc({
             contentArea.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang tải dữ liệu...</div>`;
             
             const sourceNotice = document.getElementById('sbt-source-notice');
-            if (mod.type === 'sbt_module') sourceNotice.classList.remove('hidden'); else sourceNotice.classList.add('hidden');
-            if(currentExam.timer) clearInterval(currentExam.timer);
+            if (sourceNotice) {
+                if (mod.type === 'sbt_module') sourceNotice.classList.remove('hidden');
+                else sourceNotice.classList.add('hidden');
+            }
+
+            if(window.currentExam && window.currentExam.timer) clearInterval(window.currentExam.timer);
             
-            let isExamSecure = mod.type === 'exam_module' && mod.id !== 'rev1';
-            let isUnit5Secure = mod.id === 'u5';
+            // 🔒 BẢO MẬT: CHỈ CHO PHÉP XEM UNIT 1, 2, 3, 4 VÀ REVIEW 1 KHI CHƯA ĐĂNG NHẬP
+            const allowedFreeModules = ['u1', 'u2', 'u3', 'u4', 'sbt_u1', 'sbt_u2', 'sbt_u3', 'sbt_u4', 'rev1'];
             
-            if ((isExamSecure || isUnit5Secure) && !window.currentUser) {
-                contentArea.innerHTML = `<div class="glass-card text-center py-16 border-t-4 border-rose-500"><div class="text-6xl mb-4">🔒</div><h2 class="text-2xl font-bold text-slate-800 baloo-font mb-2">Yêu Cầu Đăng Nhập</h2><p class="text-slate-600 mb-6 font-medium">Bạn cần đăng nhập để xem nội dung này.</p><button onclick="window.loginWithGoogle()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 shadow-md">Đăng nhập ngay</button></div>`;
+            if (!window.currentUser && !allowedFreeModules.includes(mod.id)) {
+                contentArea.innerHTML = `
+                    <div class="glass-card text-center py-16 border-t-4 border-rose-500">
+                        <div class="text-6xl mb-4">🔒</div>
+                        <h2 class="text-2xl font-bold text-slate-800 baloo-font mb-2">Yêu Cầu Đăng Nhập</h2>
+                        <p class="text-slate-600 mb-6 font-medium">Nội dung này thuộc hệ thống nâng cao. Bạn cần đăng nhập bằng tài khoản được cấp phép để xem tiếp.</p>
+                        <button onclick="window.loginWithGoogle()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 shadow-md">
+                            Đăng nhập ngay
+                        </button>
+                    </div>`;
                 return;
             }
 
-            // Xử lý nạp Data Assignment cho phần Bài tập & Thi
-            if (mod.type === 'sbt_module' || mod.type === 'exam_module') {
+            if (mod.type === 'lesson') window.renderLessonView(mod, contentArea);
+            else if (mod.type === 'exam_module') {
+                if(window.renderExamSetupView) window.renderExamSetupView(mod, contentArea);
+            }
+            else if (mod.type === 'sbt_module') {
                 window.sbtShowAll = false;
-                window.adminViewAssignedOnly = false; // Reset filter cho Admin
+                window.currentAssignedExercises = mod.exercises.map(e => e.id); // Mặc định mở hết
                 
                 if (window.currentUser) {
                     try {
                         let classIdToFetch = window.currentUser.classId || 'unassigned';
-                        let uid = window.currentUser.uid;
+                        let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
+                        let docSnap = await window.fGetDoc(docRef);
                         
-                        if (!window.isAdmin) {
-                            // Học sinh: ưu tiên xem bài giao cho cá nhân, nếu không thì lấy bài lớp
-                            let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}_${uid}`);
-                            let docSnap = await window.fGetDoc(docRef);
+                        if (docSnap.exists() && docSnap.data().assignedExercises) {
+                            // Ưu tiên nạp bài tập của lớp
+                            window.currentAssignedExercises = docSnap.data().assignedExercises;
+                        } else {
+                            // Dự phòng: Nạp cấu hình giao bài chung (unassigned) nếu lớp chưa có
+                            docRef = window.fDoc(window.fdb, "assignments", `unassigned_${mod.id}`);
+                            docSnap = await window.fGetDoc(docRef);
                             if (docSnap.exists() && docSnap.data().assignedExercises) {
                                 window.currentAssignedExercises = docSnap.data().assignedExercises;
-                            } else {
-                                docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
-                                docSnap = await window.fGetDoc(docRef);
-                                window.currentAssignedExercises = docSnap.exists() ? docSnap.data().assignedExercises : [];
                             }
-                        } else {
-                            // Giáo viên: Lấy bài tập đã giao chung cho lớp để xem
-                            let docRef = window.fDoc(window.fdb, "assignments", `${classIdToFetch}_${mod.id}`);
-                            let docSnap = await window.fGetDoc(docRef);
-                            window.currentAssignedExercises = docSnap.exists() ? docSnap.data().assignedExercises : [];
                         }
-                    } catch(e) { window.currentAssignedExercises = []; }
-                } else { window.currentAssignedExercises = []; }
+                    } catch(e) { console.warn("Lỗi tải bài tập giao:", e); }
+                }
+                
+                window.renderSBTView(mod, contentArea);
             }
-
-            if (mod.type === 'lesson') {
-                window.userPracticeAnswers = {}; window.userListeningAnswers = {};
-                window.renderLessonView(mod, contentArea);
-            }
-            else if (mod.type === 'exam_module') window.renderExamSetupView(mod, contentArea);
-            else if (mod.type === 'sbt_module') window.renderSBTView(mod, contentArea);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1546,133 +1552,99 @@ themBaiHoc({
             } catch(e) { console.error("Error silently loading users", e); }
         }
 
- window.openAssignmentModal = function(modId) {
-    const mod = window.currentModule;
-    let html = '';
-    
-    // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
-    let currentAssigned = window.currentAssignedExercises || []; 
-    if (currentAssigned.length === 0 && mod.exercises) {
-        currentAssigned = mod.exercises.map(e => e.id);
-    }
-    
-    // Tạo danh sách các phần bài tập để tick chọn
-    if (mod.type === 'sbt_module') {
-        mod.exercises.forEach(ex => {
-            let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
-            html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
-                        <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
-                        <div>
-                            <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
-                            <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
-                        </div>
-                     </label>`;
-        });
-    } else if (mod.type === 'exam_module') {
-        let isChecked = currentAssigned.includes('exam_full') || currentAssigned.length === 0 ? 'checked' : '';
-        html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
-                    <input type="checkbox" value="exam_full" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
-                    <div>
-                        <div class="font-bold text-sm text-indigo-700">Giao toàn bộ đề thi</div>
-                        <div class="text-sm text-slate-700 font-medium">${mod.title}</div>
-                    </div>
-                 </label>`;
-    }
-    
-    // Nạp danh sách học sinh vào ô chọn (Nếu giao cho cá nhân)
+        window.openAssignmentModal = function(modId) {
+            const mod = window.currentModule;
+            let html = '';
             
-            if(window.adminUsersData) {
-                let stdHtml = '';
-                let myStudents = window.isSuperAdmin 
-                    ? window.adminUsersData.filter(u => u.role === 'student') 
-                    : window.adminUsersData.filter(u => u.classId === window.currentUser?.classId && u.role === 'student');
-                
-                if(myStudents.length === 0) { stdHtml = `<option value="">Không có học sinh nào</option>`; } 
-                else { myStudents.forEach(u => { stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`; }); }
-                document.getElementById('assign-student-select').innerHTML = stdHtml;
+            // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
+            let currentAssigned = window.currentAssignedExercises || []; 
+            if (currentAssigned.length === 0 && mod.exercises) {
+                currentAssigned = mod.exercises.map(e => e.id);
             }
-
+            
+            // Tạo danh sách các phần bài tập để tick chọn
+            if (mod.type === 'sbt_module') {
+                mod.exercises.forEach(ex => {
+                    let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
+                    html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                                <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                                <div>
+                                    <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
+                                    <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
+                                </div>
+                             </label>`;
+                });
+            } else if (mod.type === 'exam_module') {
+                let isChecked = currentAssigned.includes('exam_full') || currentAssigned.length === 0 ? 'checked' : '';
+                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
+                            <input type="checkbox" value="exam_full" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                            <div>
+                                <div class="font-bold text-sm text-indigo-700">Giao toàn bộ đề thi</div>
+                                <div class="text-sm text-slate-700 font-medium">${mod.title}</div>
+                            </div>
+                         </label>`;
+            }
+            
             document.getElementById('assignment-list').innerHTML = html;
             document.getElementById('assignmentModal').classList.add('active');
         }
-
+        window.toggleStudentSelect = function(val) {
+            const container = document.getElementById('student-select-container');
+            if (val === 'individual') {
+                container.classList.remove('hidden');
+                let selectHtml = '';
+                if (window.adminUsersData) {
+                    let students = window.adminUsersData.filter(u => u.role === 'student' && u.classId === window.currentUser.classId);
+                    students.forEach(s => { selectHtml += `<option value="${s.id}">${s.nickname} (${s.email})</option>`; });
+                }
+                if (selectHtml === '') selectHtml = '<option value="">Chưa có học sinh nào trong lớp</option>';
+                document.getElementById('assign-student-select').innerHTML = selectHtml;
+            } else { container.classList.add('hidden'); }
+        }
         window.selectAllAssignments = function() {
             let checkboxes = document.querySelectorAll('.assign-checkbox');
             let allChecked = Array.from(checkboxes).every(cb => cb.checked);
             checkboxes.forEach(cb => cb.checked = !allChecked);
         }
 
-        window.toggleStudentSelect = function(val) {
-            if(val === 'individual') document.getElementById('student-select-container').classList.remove('hidden');
-            else document.getElementById('student-select-container').classList.add('hidden');
-        }
-
         window.saveAssignment = async function() {
             let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
             let selectedIds = Array.from(checkboxes).map(cb => cb.value);
             
-            if(selectedIds.length === 0) return showCustomAlert("Lỗi", "Phải chọn ít nhất 1 bài tập.", "⚠️");
+            let targetSelect = document.getElementById('assign-target-select');
+            let targetType = targetSelect ? targetSelect.value : 'class';
             
-            let targetMode = document.getElementById('assign-target-select').value;
-            let classIdToSave = window.currentUser.classId || 'unassigned';
-            let saveKey = `${classIdToSave}_${window.currentModule.id}`;
-            
-            if (targetMode === 'individual') {
-                let stdId = document.getElementById('assign-student-select').value;
-                if(!stdId) return showCustomAlert("Lỗi", "Vui lòng chọn 1 học sinh.", "⚠️");
-                saveKey += `_${stdId}`;
+            let docId = '';
+            if (targetType === 'class') {
+                let classIdToSave = window.currentUser.classId || 'unassigned';
+                docId = `${classIdToSave}_${window.currentModule.id}`;
+            } else {
+                let studentSelect = document.getElementById('assign-student-select');
+                let studentId = studentSelect ? studentSelect.value : '';
+                if (!studentId) return alert("Vui lòng chọn học sinh cụ thể!");
+                docId = `student_${studentId}_${window.currentModule.id}`;
             }
             
             try {
-                await window.fSetDoc(window.fDoc(window.fdb, "assignments", saveKey), { assignedExercises: selectedIds, updatedAt: Date.now() });
-                window.currentAssignedExercises = selectedIds;
+                await window.fSetDoc(window.fDoc(window.fdb, "assignments", docId), {
+                    assignedExercises: selectedIds,
+                    updatedAt: Date.now(),
+                    assignedBy: window.currentUser.email
+                });
+                
+                // Đồng bộ mảng hiển thị nếu giao cho cả lớp
+                if (targetType === 'class') {
+                    window.currentAssignedExercises = selectedIds;
+                }
+                
                 document.getElementById('assignmentModal').classList.remove('active');
-                showCustomAlert("Thành công", "Đã lưu cấu hình giao bài thành công!", "✅");
+                alert("Đã lưu cấu hình giao bài thành công!");
                 window.loadModule(window.currentModule.id);
-            } catch(e) { console.error(e); showCustomAlert("Lỗi", "Có lỗi khi lưu cấu hình.", "❌"); }
+            } catch(e) { 
+                console.error(e); 
+                alert("Có lỗi khi lưu cấu hình. Vui lòng kiểm tra kết nối mạng."); 
+            }
         }
-
-        window.openAssignmentModal = function(modId) {
-    const mod = window.currentModule;
-    let html = '';
-    
-    // Lấy danh sách các bài tập đã giao (nếu chưa giao thì mặc định chọn hết)
-    let currentAssigned = window.currentAssignedExercises || mod.exercises.map(e => e.id); 
-    
-    // Tạo danh sách các phần bài tập để tick chọn
-    mod.exercises.forEach(ex => {
-        let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
-        html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
-                    <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
-                    <div>
-                        <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
-                        <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
-                    </div>
-                 </label>`;
-    });
-    
-    // Nạp danh sách học sinh vào ô chọn (Nếu giao cho cá nhân)
-    if (window.adminUsersData) {
-        let stdHtml = '';
-        // Chỉ lấy những user có role là student thuộc lớp của giáo viên
-        let myStudents = window.isSuperAdmin 
-            ? window.adminUsersData.filter(u => u.role === 'student') 
-            : window.adminUsersData.filter(u => u.classId === window.currentUser.classId && u.role === 'student');
-        
-        if(myStudents.length === 0) {
-            stdHtml = `<option value="">Không có học sinh nào trong lớp</option>`;
-        } else {
-            myStudents.forEach(u => {
-                stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`;
-            });
-        }
-        document.getElementById('assign-student-select').innerHTML = stdHtml;
-    }
-
-    document.getElementById('assignment-list').innerHTML = html;
-    document.getElementById('assignmentModal').classList.add('active');
-}
-
 
 
 
