@@ -815,6 +815,7 @@ themBaiHoc({
 });
 // Kết thúc SBT Unit 5  
 
+
         // =========================================================================
         // CORE APP LOGIC & ROUTING
         // =========================================================================
@@ -2119,7 +2120,14 @@ themBaiHoc({
                 let sidebarSelect = document.getElementById('sidebar-class-filter');
                 if(sidebarSelect) {
                     let opts = `<option value="all">All Classes</option><option value="unassigned">Unassigned</option>`;
-                    window.adminClassesData.forEach(c => { opts += `<option value="${c.id}">Class ${c.name}</option>`; });
+                    
+                    // Teachers only see their classes in the sidebar
+                    let displayClasses = window.adminClassesData;
+                    if(!window.isSuperAdmin && window.currentUser && window.currentUser.classIds) {
+                         displayClasses = window.adminClassesData.filter(c => window.currentUser.classIds.includes(c.id));
+                    }
+                    displayClasses.forEach(c => { opts += `<option value="${c.id}">Class ${c.name}</option>`; });
+                    
                     sidebarSelect.innerHTML = opts;
                     sidebarSelect.value = filterClassId;
                 }
@@ -2128,17 +2136,114 @@ themBaiHoc({
             window.loadAdminUsers(filterClassId);
         }
 
-        window.createNewClass = async function() {
-            if(!window.isSuperAdmin) return;
-            const nameInput = document.getElementById('new-class-name');
-            const name = nameInput.value.trim();
-            if(!name) { window.showCustomAlert("Error", "Please enter a class name!", "⚠️"); return; }
+        window.toggleTeacherClass = async function(uid, classId, isChecked) {
+            const user = window.adminUsersData.find(u => u.id === uid);
+            if(!user) return;
+            let currentIds = user.classIds || [];
+            if(isChecked && !currentIds.includes(classId)) currentIds.push(classId);
+            else if(!isChecked) currentIds = currentIds.filter(id => id !== classId);
+            
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classIds: currentIds });
+            // Re-fetch users to reflect changes accurately
+            window.loadAdminUsers(document.getElementById('main-class-filter').value);
+        }
 
+        window.loadAdminUsers = async function(filterClassId = 'all') {
             try {
-                await window.fAddDoc(window.fCollection(window.fdb, "classes"), { name: name, createdAt: Date.now() });
-                nameInput.value = '';
-                window.showClassManagement('all'); 
-                window.showCustomAlert("Success", "Class created successfully!", "✅");
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
+                let users = [];
+                snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+                users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
+                window.adminUsersData = users;
+
+                let filteredUsers = users;
+                if (!window.isSuperAdmin) {
+                    let tClasses = window.currentUser.classIds || [];
+                    filteredUsers = users.filter(u => u.role === 'student' && tClasses.includes(u.classId));
+                } else {
+                    if(filterClassId !== 'all') {
+                        if(filterClassId === 'unassigned') filteredUsers = users.filter(u => u.role === 'student' && !u.classId);
+                        else filteredUsers = users.filter(u => u.role === 'student' && u.classId === filterClassId || (u.role === 'teacher' && u.classIds && u.classIds.includes(filterClassId)));
+                    }
+                }
+
+                let uHtml = "";
+                filteredUsers.forEach(data => {
+                    const isBlocked = data.status === 'blocked';
+                    const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                    let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                    
+                    let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
+                    let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Blocked</span>` : 
+                                      (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Expired</span>` : 
+                                      `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Active</span>`);
+
+                    let classSelectHtml = `<span class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Class: ${window.adminClassesData.find(c => c.id === data.classId)?.name || 'Unassigned'}</span>`;
+                    let actionButtons = "";
+                    let roleSelectHtml = `<span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">${data.role === 'teacher' ? 'Teacher' : 'Student'}</span>`;
+
+                    if (window.isSuperAdmin) {
+                        if (data.role === 'teacher') {
+                             let tClasses = data.classIds || [];
+                             let cbHtml = window.adminClassesData.map(c => `
+                                 <label class="flex items-center gap-2 p-1 hover:bg-slate-50 cursor-pointer text-xs font-bold text-slate-700">
+                                     <input type="checkbox" value="${c.id}" ${tClasses.includes(c.id)?'checked':''} onchange="window.toggleTeacherClass('${data.id}', this.value, this.checked)" class="accent-indigo-600"> 
+                                     ${c.name}
+                                 </label>
+                             `).join('');
+                             classSelectHtml = `<div class="relative group cursor-pointer">
+                                                  <div class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 flex items-center justify-between min-w-[140px]">
+                                                    Manage Classes <span>▼</span>
+                                                  </div>
+                                                  <div class="absolute z-[100] mt-1 hidden group-hover:block bg-white border shadow-xl rounded-lg p-2 max-h-48 overflow-y-auto min-w-[160px]">
+                                                    ${cbHtml}
+                                                  </div>
+                                                </div>`;
+                        } else {
+                            let classOptions = `<option value="">-- Assign Class --</option>`;
+                            window.adminClassesData.forEach(c => {
+                                classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Class ${c.name}</option>`;
+                            });
+                            classSelectHtml = `<select onchange="window.updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer w-full sm:w-auto">${classOptions}</select>`;
+                        }
+
+                        roleSelectHtml = `<select onchange="window.updateUserRole('${data.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 bg-white text-slate-700 outline-none cursor-pointer"><option value="student" ${data.role === 'student' ? 'selected' : ''}>STUDENT</option><option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>TEACHER</option></select>`;
+                        actionButtons = `
+                            <select onchange="window.updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+                                <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Trial 7 Days</option>
+                                <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Months</option>
+                                <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Months</option>
+                                <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Lifetime</option>
+                            </select>
+                            <button onclick="window.toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm w-full sm:w-20">${isBlocked ? 'Unblock' : 'Block'}</button>
+                            <button onclick="window.deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 w-full sm:w-auto">Delete</button>
+                        `;
+                    }
+
+                    uHtml += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between xl:items-center gap-4 hover:border-indigo-300">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-12 h-12 rounded-full ${data.role === 'teacher' ? 'bg-purple-100 border-purple-300' : 'bg-slate-100 border-slate-300'} flex items-center justify-center text-xl shrink-0 border">
+                                ${data.role === 'teacher' ? '👨‍🏫' : '🎓'}
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-lg flex flex-wrap items-center gap-2">
+                                    ${data.nickname} ${roleSelectHtml}
+                                    <button onclick="window.openStudentReportModal('${data.id}', '${data.nickname}')" class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300 px-2 py-0.5 rounded font-bold hover:bg-indigo-200">🔍 View Report</button>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${data.email}</span>
+                                    <span>| Expires: <b class="${isExpired ? 'text-rose-600' : 'text-indigo-600'}">${expStr}</b></span>
+                                    <span>| ${statusBadge}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 w-full xl:w-auto">
+                            ${classSelectHtml} ${actionButtons}
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('admin-users-list').innerHTML = uHtml || `<div class="text-center py-12"><p class="text-slate-500 font-bold">No users found.</p></div>`;
             } catch(e) { console.error(e); }
         }
 
