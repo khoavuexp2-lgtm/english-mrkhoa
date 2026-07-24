@@ -226,10 +226,10 @@
                     return; 
                 }
 
-                window.isAdmin = window.isSuperAdmin || userRole === 'teacher';
-                window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: userRole, classId: classId, classIds: userSnap.exists() ? userSnap.data().classIds || [] : [] };
+        window.isAdmin = window.isSuperAdmin || userRole === 'teacher';
+        window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: userRole, classId: classId, classIds: userSnap.exists() ? userSnap.data().classIds || [] : [] };
 
-                authContainer.innerHTML = `
+        authContainer.innerHTML = `
                     <div class="flex items-center gap-2">
                         <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
                             <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
@@ -240,8 +240,15 @@
                 `;
 
                 if(printBtn) {
-                    if (window.isAdmin) printBtn.classList.remove('hidden');
-                    else printBtn.classList.add('hidden');
+                    if (window.isAdmin) {
+                        printBtn.classList.remove('hidden');
+                        document.getElementById('present-btn').classList.remove('hidden');
+                        window.preloadAdminData(); // PRE-LOAD DATA CHO GIAO BÀI
+                    }
+                    else {
+                        printBtn.classList.add('hidden');
+                        document.getElementById('present-btn').classList.add('hidden');
+                    }
                 }
                 
                 if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
@@ -251,7 +258,10 @@
                 window.currentUser = null; window.isAdmin = false; window.isSuperAdmin = false;
                 authContainer.innerHTML = `<button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign In</button>`;
                 
-                if(printBtn) printBtn.classList.add('hidden');
+                if(printBtn) {
+                    printBtn.classList.add('hidden');
+                    document.getElementById('present-btn').classList.add('hidden');
+                }
                 window.renderMenu();
                 
                 if (window.currentModule && (window.currentModule.type === 'exam_module' || window.currentModule.id === 'u5') && window.currentModule.id !== 'rev1') {
@@ -348,14 +358,9 @@
                 <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate hidden sm:block">Loading...</h2>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="window.print()" id="print-btn" class="bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm hidden">
-                    🖨️ <span class="hidden md:inline">Print </span>
-                </button>
-                <div id="auth-container">
-                    <button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign in
-                    </button>
-                </div>
+                <button onclick="window.togglePresentationMode()" id="present-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-xl hidden text-sm shadow-sm hover:bg-blue-700">🖥️ Present</button>
+                <button onclick="window.print()" id="print-btn" class="bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hidden text-sm shadow-sm hover:bg-slate-700">🖨️ Print</button>
+                <div id="auth-container"></div>
             </div>
         </header>
         
@@ -838,6 +843,21 @@ themBaiHoc({
         }
         window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
 
+         /* TẢI DỮ LIỆU LỚP HỌC NGAY KHI ĐĂNG NHẬP */
+        window.preloadAdminData = async function() {
+            try {
+                // Tải danh sách lớp
+                const classSnap = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
+                window.adminClassesData = [];
+                classSnap.forEach(doc => { window.adminClassesData.push({id: doc.id, ...doc.data()}) });
+
+                // Tải danh sách học sinh
+                const userSnap = await window.fGetDocs(window.fCollection(window.fdb, "users"));
+                let users = [];
+                userSnap.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+                window.adminUsersData = users;
+            } catch(e) { console.error("Lỗi preload data:", e); }
+        }
         window.renderDashboardMenu = function() {
             const menu = document.getElementById('nav-menu');
             let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>`;
@@ -884,9 +904,9 @@ themBaiHoc({
         }
 
         window.changeClass = function() {
-            currentClass = document.getElementById('class-selector').value;
+            window.currentClass = document.getElementById('class-selector').value;
             window.renderMenu();
-            if(window.database[currentClass].modules.length > 0) window.loadModule(window.database[currentClass].modules[0].id);
+            if(window.database[window.currentClass].modules.length > 0) window.loadModule(window.database[window.currentClass].modules[0].id);
         }
 
         window.loadModule = async function(moduleId) {
@@ -1856,10 +1876,12 @@ themBaiHoc({
             document.getElementById('header-title').innerText = "Leaderboard";
             if (window.innerWidth < 1024) window.toggleMenu();
 
+            let resetBtnHtml = window.isAdmin ? `<button onclick="window.resetLeaderboard()" class="w-full sm:w-auto bg-rose-50 text-rose-600 border border-rose-200 font-bold px-4 py-3 rounded-lg hover:bg-rose-100 transition-colors">🗑️ Reset Điểm</button>` : '';
+
             let html = `
                 <div class="glass-card border-t-4 border-amber-500 mb-6">
                     <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
-                    <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex flex-col sm:flex-row gap-3">
                         <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
                             <option value="test1">Review 1 - Test 1</option>
                             <option value="test2">Review 1 - Test 2</option>
@@ -1868,7 +1890,13 @@ themBaiHoc({
                             <option value="normal">Level: Normal</option>
                             <option value="hard">Level: Hard</option>
                         </select>
-                        <button onclick="window.fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
+                        <select id="lb-time-filter" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="all">Tất cả thời gian</option>
+                            <option value="7">7 ngày qua</option>
+                            <option value="30">30 ngày qua</option>
+                        </select>
+                        <button onclick="window.fetchLeaderboardData()" class="w-full sm:w-auto bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">Cập nhật</button>
+                        ${resetBtnHtml}
                     </div>
                 </div>
                 <div id="lb-results"></div>
@@ -1880,15 +1908,25 @@ themBaiHoc({
         window.fetchLeaderboardData = async function() {
             const testId = document.getElementById('lb-test-select').value;
             const level = document.getElementById('lb-level-select').value;
+            const timeFilter = document.getElementById('lb-time-filter').value;
             const resContainer = document.getElementById('lb-results');
-            resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
+            resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading data...</div>`;
+
+            let cutoffTime = 0;
+            let now = Date.now();
+            if (timeFilter === '7') cutoffTime = now - (7 * 24 * 60 * 60 * 1000);
+            if (timeFilter === '30') cutoffTime = now - (30 * 24 * 60 * 60 * 1000);
 
             try {
                 const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
                 let results = [];
                 snapshot.forEach(doc => {
                     let d = doc.data();
-                    if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
+                    if(d.testId === testId && d.level === level && !d.isLesson) {
+                        if (timeFilter === 'all' || d.timestamp >= cutoffTime) {
+                            results.push(d);
+                        }
+                    }
                 });
 
                 results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
@@ -1897,7 +1935,7 @@ themBaiHoc({
                     <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
                 
                 if (results.length === 0) {
-                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
+                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results found in this period.</td></tr>`;
                 } else {
                     results.slice(0, 10).forEach((r, idx) => {
                         let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
@@ -1914,6 +1952,31 @@ themBaiHoc({
             } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
         }
 
+        window.resetLeaderboard = async function() {
+            if(!window.isAdmin) return;
+            const testId = document.getElementById('lb-test-select').value;
+            const level = document.getElementById('lb-level-select').value;
+            
+            if(!confirm(`⚠️ CẢNH BÁO: Thầy/cô có chắc chắn muốn XÓA TOÀN BỘ dữ liệu điểm của ${testId.toUpperCase()} - ${level.toUpperCase()} không?`)) return;
+
+            try {
+                const q = window.fQuery(window.fCollection(window.fdb, "exam_results"), window.fWhere("testId", "==", testId), window.fWhere("level", "==", level), window.fWhere("isLesson", "==", false));
+                const snap = await window.fGetDocs(q);
+                
+                if(snap.empty) {
+                    window.showCustomAlert("Thông báo", "Không có dữ liệu để xóa.", "ℹ️");
+                    return;
+                }
+
+                const deletePromises = [];
+                snap.forEach(doc => { deletePromises.push(window.fDeleteDoc(doc.ref)); });
+                
+                await Promise.all(deletePromises);
+                window.showCustomAlert("Thành công", `Đã xóa ${deletePromises.length} bản ghi điểm.`, "✅");
+                window.fetchLeaderboardData(); // Tải lại bảng trắng
+            } catch(e) { console.error("Lỗi xóa Leaderboard:", e); window.showCustomAlert("Lỗi", "Lỗi khi xóa dữ liệu.", "⚠️");}
+        }
+        
         window.createNewClass = async function() {
             if(!window.isAdmin) return;
             const nameInput = document.getElementById('new-class-name');
