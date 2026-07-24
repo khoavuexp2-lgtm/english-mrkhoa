@@ -60,6 +60,36 @@
         .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s;}
         .custom-alert-overlay.active .custom-alert-box { transform: scale(1);}
 
+        /* CSS Chế độ Trình Chiếu (Presentation Mode) */
+        body.presentation-mode header, 
+        body.presentation-mode .sidebar, 
+        body.presentation-mode .sidebar-overlay,
+        body.presentation-mode .unit-header-print { 
+            display: none !important; 
+        }
+        body.presentation-mode #main-scroll { 
+            height: 100vh !important; 
+            padding-top: 20px; 
+            font-size: 1.25rem !important; 
+        }
+        body.presentation-mode .max-w-4xl {
+            max-width: 72rem !important;
+        }
+        body.presentation-mode .glass-card { 
+            border: 2px solid #4f46e5 !important; 
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.15) !important; 
+            margin-bottom: 40px !important;
+        }
+        .exit-presentation-btn { 
+            display: none; 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 9999; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        body.presentation-mode .exit-presentation-btn { display: flex !important; }
+
         /* CSS In Ấn */
         @media print {
             body.printing-blank-test .q-correct, body.printing-blank-test .q-wrong, body.printing-blank-test .q-selected { background: transparent !important; color: black !important; border-color: #94a3b8 !important; font-weight: normal !important;}
@@ -440,7 +470,7 @@
         // ==========================================
         // DATABASE SECTIONS
         // ==========================================
-        window.themBaiHoc = function(unitData) {
+window.themBaiHoc = function(unitData) {
             if (!window.database) window.database = { "class-6": { name: "English 6", modules: [] } };
             window.database["class-6"].modules.push(unitData);
         };
@@ -773,7 +803,6 @@ themBaiHoc({
     ]
 });
 // Kết thúc SBT Unit 5  
-
         // =========================================================================
         // CORE APP LOGIC & ROUTING
         // =========================================================================
@@ -1084,6 +1113,66 @@ themBaiHoc({
             container.innerHTML = html;
         }
 
+        window.selectChoice = function(btn, exId, choiceIdx) {
+            window.userPracticeAnswers[exId] = choiceIdx;
+            const parent = document.getElementById('opts-' + exId);
+            if(parent) {
+                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+                btn.classList.add('q-selected');
+            }
+        };
+
+        window.submitExercises = function() {
+            let score = 0;
+            let exercises = [];
+            
+            // Tìm tất cả exercises trong các section kiểu practice/reading
+            if (window.currentModule && window.currentModule.sections) {
+                window.currentModule.sections.forEach(s => {
+                    if (s.type === 'reading_practice' || s.type === 'practice' || s.type === 'reading') {
+                        if (s.exercises) exercises = exercises.concat(s.exercises);
+                    }
+                });
+            }
+
+            if(exercises.length === 0) return;
+
+            exercises.forEach(ex => {
+                const expDiv = document.getElementById('exp-' + ex.id);
+                if(expDiv) expDiv.classList.remove('hidden');
+
+                const parent = document.getElementById('opts-' + ex.id);
+                if(!parent) return;
+                
+                const btns = parent.querySelectorAll('.q-btn');
+                const userAns = window.userPracticeAnswers[ex.id];
+                
+                btns.forEach(b => b.classList.add('disabled'));
+
+                if (userAns === ex.ans) {
+                    if(btns[userAns]) {
+                        btns[userAns].classList.remove('q-selected');
+                        btns[userAns].classList.add('q-correct');
+                    }
+                    score++;
+                } else {
+                    if (userAns !== undefined && btns[userAns]) {
+                        btns[userAns].classList.remove('q-selected');
+                        btns[userAns].classList.add('q-wrong');
+                    }
+                    if(btns[ex.ans]) btns[ex.ans].classList.add('q-correct');
+                }
+            });
+
+            const actionContainer = document.getElementById('action-buttons');
+            if(actionContainer) {
+                actionContainer.innerHTML = `
+                    <div class="text-xl font-bold text-indigo-600 mb-4 bg-indigo-50 inline-block px-6 py-2 rounded-xl border border-indigo-200">🎉 Score: ${score} / ${exercises.length}</div><br>
+                    <button onclick="window.loadModule('${window.currentModule.id}')" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">🔄 Try Again</button>
+                `;
+            }
+        };
+
         window.selectListeningChoice = function(btn, qId, choiceIdx) {
             window.userListeningAnswers[qId] = choiceIdx;
             const parent = document.getElementById('opts-' + qId);
@@ -1097,7 +1186,6 @@ themBaiHoc({
             let score = 0;
             let totalQuestions = 0;
             
-            // Tìm section listening_task trong module hiện tại
             let listeningSection = window.currentModule.sections.find(s => s.type === 'listening_task');
             if(!listeningSection || !listeningSection.questions) return;
             
@@ -1109,7 +1197,7 @@ themBaiHoc({
                 const btns = parent.querySelectorAll('.q-btn');
                 const userAns = window.userListeningAnswers[q.id];
                 
-                btns.forEach(b => b.classList.add('disabled')); // Khóa nút
+                btns.forEach(b => b.classList.add('disabled'));
 
                 if (userAns === q.ans) {
                     if(btns[userAns]) btns[userAns].classList.add('q-correct');
@@ -1118,11 +1206,10 @@ themBaiHoc({
                     if (userAns !== undefined && btns[userAns]) {
                         btns[userAns].classList.add('q-wrong');
                     }
-                    if(btns[q.ans]) btns[q.ans].classList.add('q-correct'); // Hiện đáp án đúng
+                    if(btns[q.ans]) btns[q.ans].classList.add('q-correct'); 
                 }
             });
 
-            // Cập nhật UI kết quả
             const actionContainer = document.querySelector('.listening-action-buttons');
             if(actionContainer) {
                 actionContainer.innerHTML = `
@@ -1160,7 +1247,6 @@ themBaiHoc({
             const testSelector = document.getElementById('exam-test-selector');
             const levelSelector = document.getElementById('exam-level-selector');
             
-            // Fix lỗi Try Again (khi làm lại form chọn bị mất)
             const testId = testSelector ? testSelector.value : window.currentExam.testId;
             const level = levelSelector ? levelSelector.value : window.currentExam.level;
             
@@ -1198,7 +1284,6 @@ themBaiHoc({
                     <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold" id="exam-timer-display">45:00</div>
                 </div>`;
 
-            // Xây dựng thanh TABS Parts
             let parts = new Set();
             if (testData.listeningScript) parts.add("LISTENING AUDIO");
             window.currentExam.questions.forEach(q => parts.add(q.part));
@@ -1280,7 +1365,7 @@ themBaiHoc({
                 if(timerEl) timerEl.innerText = displayStr;
                 if (window.currentExam.timeLeft <= 0) { clearInterval(window.currentExam.timer); window.submitExam(true); }
             }, 1000);
-        }
+        };
 
         window.renderExamNavigator = function() {
             let navHtml = '';
@@ -1288,7 +1373,7 @@ themBaiHoc({
                 navHtml += `<button onclick="document.getElementById('exam-q-${idx}').scrollIntoView({behavior: 'smooth', block: 'center'})" id="nav-btn-${idx}" class="w-full aspect-square rounded-lg border-2 border-rose-300 text-rose-500 bg-white flex items-center justify-center font-bold text-[15px] hover:scale-105 hover:bg-rose-50 transition-all shadow-sm">${idx + 1}</button>`;
             });
             document.getElementById('exam-navigator').innerHTML = navHtml;
-        }
+        };
 
         window.updateExamNavigator = function(idx) {
             let btn = document.getElementById('nav-btn-' + idx);
@@ -1307,7 +1392,7 @@ themBaiHoc({
                 btn.classList.add("bg-white", "border-rose-300", "text-rose-500", "hover:bg-rose-50");
                 btn.innerHTML = idx + 1;
             }
-        }
+        };
 
         window.toggleExamFlag = function(idx) {
             window.currentExam.flagged[idx] = !window.currentExam.flagged[idx];
@@ -1320,7 +1405,7 @@ themBaiHoc({
                 flagBtn.classList.add('text-slate-300', 'bg-slate-50', 'border-slate-200');
             }
             window.updateExamNavigator(idx);
-        }
+        };
 
         window.selectExamChoice = function(btn, qIdx, choiceIdx) {
             window.currentExam.answers[qIdx] = choiceIdx;
@@ -1330,7 +1415,7 @@ themBaiHoc({
                 btn.classList.add('q-selected');
             }
             window.updateExamNavigator(qIdx);
-        }
+        };
 
         window.submitExam = async function(isTimeout = false) {
             let unanswered = window.currentExam.questions.length - Object.keys(window.currentExam.answers).length;
@@ -1407,7 +1492,7 @@ themBaiHoc({
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        };
 
         window.explainExam = function() {
             window.currentExam.questions.forEach((q, idx) => {
@@ -1423,10 +1508,10 @@ themBaiHoc({
                 if(exp) exp.classList.remove('hidden');
             });
             window.showCustomAlert("Notice", "Correct answers and explanations are now visible below each question.", "💡");
-        }
+        };
 
         // ==========================================
-        // WORKBOOK (SBT) VIEW (ĐÃ FIX: GV XEM TOÀN BỘ)
+        // WORKBOOK (SBT) VIEW
         // ==========================================
         window.renderSBTView = function(mod, container) {
             let html = `
@@ -1437,7 +1522,6 @@ themBaiHoc({
                     </div>
                 </div>`;
             
-            // Xóa state cũ
             if(!window.sbtState) window.sbtState = {};
             window.sbtState[mod.id] = { answers: {}, locked: false, attempts: 0 };
             
@@ -1507,7 +1591,7 @@ themBaiHoc({
             const mod = window.currentModule;
             let state = window.sbtState[modId];
             if (state.locked) return;
-            state.locked = true; // Khóa luôn
+            state.locked = true; 
             
             let totalQuestions = 0;
             let correctCount = 0;
@@ -1529,7 +1613,7 @@ themBaiHoc({
                                 btns[userAns.val].classList.replace('q-selected', 'q-correct');
                             } else {
                                 if (userAns !== undefined && userAns.val !== undefined) btns[userAns.val].classList.replace('q-selected', 'q-wrong');
-                                if(btns[q.ans]) btns[q.ans].classList.add('q-correct'); // Luôn show đáp án đúng
+                                if(btns[q.ans]) btns[q.ans].classList.add('q-correct');
                             }
                         }
                     } else if (ex.type === 'fill') {
@@ -1543,15 +1627,14 @@ themBaiHoc({
                                 if (isBlankCorrect) inputEl.classList.add('fill-correct');
                                 else {
                                     qCorrect = false;
-                                    inputEl.value = allowedAnsArray[0]; // Ghi đè đáp án đúng
-                                    inputEl.classList.add('fill-correct'); // Bôi xanh
+                                    inputEl.value = allowedAnsArray[0];
+                                    inputEl.classList.add('fill-correct');
                                 }
                             }
                         });
                         if(qCorrect) correctCount++;
                     }
 
-                    // Hiện giải thích
                     const expDiv = document.getElementById(`exp-${q.id}`);
                     if(expDiv) expDiv.classList.remove('hidden');
                 });
@@ -1566,18 +1649,6 @@ themBaiHoc({
                 <button onclick="window.sbtState['${modId}'] = null; window.loadModule('${modId}')" class="bg-slate-200 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-300 shadow-sm transition-transform active:scale-95">🔄 Try Again</button>
             `;
         }
-
-        window.initApp = function() {
-            const selector = document.getElementById('class-selector');
-            selector.innerHTML = '';
-            for (let cId in window.database) {
-                selector.innerHTML += `<option value="${cId}">${window.database[cId].name}</option>`;
-            }
-            window.renderMenu();
-            if(window.database[window.currentClass].modules.length > 0) {
-                window.loadModule(window.database[window.currentClass].modules[0].id);
-            }
-        };
 
         window.onload = function() {
             window.initApp();
