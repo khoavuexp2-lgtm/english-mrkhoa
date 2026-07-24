@@ -205,6 +205,7 @@
                 window.isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email);
                 let userRole = 'student';
                 let classId = '';
+                let lastModuleId = 'u1'; // Thêm biến lưu vết bài học cuối
 
                 if (userSnap.exists()) {
                     const data = userSnap.data();
@@ -219,6 +220,7 @@
                     nickname = data.nickname || nickname;
                     userRole = data.role || 'student';
                     classId = data.classId || '';
+                    if(data.lastModuleId) lastModuleId = data.lastModuleId; // Lấy bài cuối cùng
                 } else {
                     isNewUser = true;
                     window.pendingUser = user;
@@ -227,14 +229,16 @@
                 }
 
                 window.isAdmin = window.isSuperAdmin || userRole === 'teacher';
-                window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: userRole, classId: classId };
+                window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: userRole, classId: classId, classIds: userSnap.exists() ? userSnap.data().classIds || [] : [] };
 
                 authContainer.innerHTML = `
-                    <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
-                        <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
-                        <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
+                            <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
+                            <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
+                        </div>
+                        <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold whitespace-nowrap ml-1">Sign Out</button>
                     </div>
-                    <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Sign Out</button>
                 `;
 
                 if(printBtn) {
@@ -244,6 +248,9 @@
                 
                 if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
                 window.renderMenu();
+                
+                // Tự động chuyển về bài học cuối cùng
+                window.loadModule(lastModuleId);
 
             } else {
                 window.currentUser = null; window.isAdmin = false; window.isSuperAdmin = false;
@@ -251,6 +258,9 @@
                 
                 if(printBtn) printBtn.classList.add('hidden');
                 window.renderMenu();
+                
+                // Mặc định load Unit 1 cho khách chưa đăng nhập
+                if (!window.currentModule) window.loadModule('u1');
                 
                 if (window.currentModule && (window.currentModule.type === 'exam_module' || window.currentModule.id === 'u5') && window.currentModule.id !== 'rev1') {
                     window.showCustomAlert("Required", "Please sign in to continue.", "🔒");
@@ -815,7 +825,6 @@ themBaiHoc({
 });
 // Kết thúc SBT Unit 5  
 
-
         // =========================================================================
         // CORE APP LOGIC & ROUTING
         // =========================================================================
@@ -846,11 +855,11 @@ themBaiHoc({
             if (window.isAdmin) {
                 dashHTML += `
                     <div class="mt-6 mb-2 px-2 bg-indigo-50/50 py-3 rounded-xl border border-indigo-100">
-                        <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">QUẢN LÝ LỚP HỌC</p>
+                        <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">CLASS MANAGEMENT</p>
                         <select id="sidebar-class-filter" onchange="window.showClassManagement(this.value)" class="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm font-bold text-indigo-700 outline-none cursor-pointer shadow-sm">
-                            <option value="">Đang tải lớp...</option>
+                            <option value="">Loading classes...</option>
                         </select>
-                        <button onclick="window.showClassManagement('all')" id="nav-admin" class="w-full mt-3 module-nav-btn !mb-0 bg-indigo-600 text-white border-2 border-indigo-700 shadow-md hover:bg-indigo-700 text-center flex justify-center">👨‍🏫 Quản Lý Học Viên</button>
+                        <button onclick="window.showClassManagement('all')" id="nav-admin" class="w-full mt-3 module-nav-btn !mb-0 bg-indigo-600 text-white border-2 border-indigo-700 shadow-md hover:bg-indigo-700 text-center flex justify-center">👨‍🏫 Manage Users</button>
                     </div>
                 `;
             }
@@ -893,6 +902,11 @@ themBaiHoc({
             
             const mod = window.database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
+
+            // Lưu vết bài đang học cho Học sinh
+            if (window.currentUser && !window.isAdmin) {
+                try { window.fUpdateDoc(window.fDoc(window.fdb, "users", window.currentUser.uid), { lastModuleId: moduleId }); } catch(e){}
+            }
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
@@ -1855,10 +1869,15 @@ themBaiHoc({
             document.getElementById('header-title').innerText = "Leaderboard";
             if (window.innerWidth < 1024) window.toggleMenu();
 
+            let adminControls = "";
+            if (window.isAdmin) {
+                adminControls = `<button onclick="window.resetLeaderboard()" class="bg-rose-600 text-white font-bold px-4 py-3 rounded-lg hover:bg-rose-700 shadow-md flex items-center gap-2 whitespace-nowrap" title="Xóa toàn bộ điểm của bài này">🗑️ Reset Điểm</button>`;
+            }
+
             let html = `
                 <div class="glass-card border-t-4 border-amber-500 mb-6">
                     <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
-                    <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex flex-col lg:flex-row gap-4">
                         <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
                             <option value="test1">Review 1 - Test 1</option>
                             <option value="test2">Review 1 - Test 2</option>
@@ -1867,7 +1886,13 @@ themBaiHoc({
                             <option value="normal">Level: Normal</option>
                             <option value="hard">Level: Hard</option>
                         </select>
-                        <button onclick="window.fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
+                        <select id="lb-time-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="all">Thời gian: Tất cả</option>
+                            <option value="7">7 ngày qua</option>
+                            <option value="30">30 ngày qua</option>
+                        </select>
+                        <button onclick="window.fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md whitespace-nowrap">View Leaderboard</button>
+                        ${adminControls}
                     </div>
                 </div>
                 <div id="lb-results"></div>
@@ -1879,15 +1904,21 @@ themBaiHoc({
         window.fetchLeaderboardData = async function() {
             const testId = document.getElementById('lb-test-select').value;
             const level = document.getElementById('lb-level-select').value;
+            const timeFilter = document.getElementById('lb-time-select').value;
             const resContainer = document.getElementById('lb-results');
             resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
+
+            let cutoffTime = 0;
+            const now = Date.now();
+            if (timeFilter === '7') cutoffTime = now - (7 * 24 * 60 * 60 * 1000);
+            if (timeFilter === '30') cutoffTime = now - (30 * 24 * 60 * 60 * 1000);
 
             try {
                 const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
                 let results = [];
                 snapshot.forEach(doc => {
                     let d = doc.data();
-                    if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
+                    if(d.testId === testId && d.level === level && !d.isLesson && d.timestamp >= cutoffTime) results.push(d);
                 });
 
                 results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
@@ -1896,7 +1927,7 @@ themBaiHoc({
                     <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
                 
                 if (results.length === 0) {
-                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
+                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet for this period.</td></tr>`;
                 } else {
                     results.slice(0, 10).forEach((r, idx) => {
                         let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
@@ -1913,146 +1944,58 @@ themBaiHoc({
             } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
         }
 
-        window.togglePresentationMode = function() {
-            document.body.classList.toggle('presentation-mode');
-            if(document.body.classList.contains('presentation-mode')) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-
-        window.printBlankTest = function() {
-            document.body.classList.add('printing-blank-test');
-            window.print();
-            setTimeout(() => {
-                document.body.classList.remove('printing-blank-test');
-            }, 1000);
-        }
-
-        window.openStudentReportModal = async function(uid, nickname) {
-            document.getElementById('reportModalTitle').innerText = `Report for: ${nickname}`;
-            const content = document.getElementById('reportModalContent');
-            content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Retrieving server data...</div>`;
-            document.getElementById('studentReportModal').classList.add('active');
+        window.resetLeaderboard = async function() {
+            if(!window.isAdmin) return;
+            const testId = document.getElementById('lb-test-select').value;
+            const level = document.getElementById('lb-level-select').value;
+            
+            if(!confirm(`⚠️ NGUY HIỂM:\nThầy/cô có chắc chắn muốn XÓA SẠCH điểm thi của bài [${testId.toUpperCase()} - ${level.toUpperCase()}] trên bảng xếp hạng không? (Dữ liệu không thể khôi phục)`)) return;
+            
+            const btn = event.currentTarget;
+            let originalText = btn.innerHTML;
+            btn.innerHTML = "Đang xóa..."; btn.disabled = true;
 
             try {
                 const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
-                let results = [];
-                snapshot.forEach(doc => { 
-                    let d = doc.data(); 
-                    if (d.uid === uid) {
-                        d.docId = doc.id; 
-                        results.push(d); 
+                let deletePromises = [];
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.testId === testId && d.level === level && !d.isLesson) {
+                        deletePromises.push(window.fDeleteDoc(window.fDoc(window.fdb, "exam_results", doc.id)));
                     }
                 });
-                results.sort((a,b) => b.timestamp - a.timestamp);
-
-                window.currentStudentResultsCache = results;
-
-                if (results.length === 0) {
-                    content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">No completed tasks yet.</p></div>`;
-                    return;
-                }
-
-                let html = `<div class="space-y-3">`;
-                results.forEach(r => {
-                    let date = new Date(r.timestamp).toLocaleString('vi-VN');
-                    let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
-                    let badge = r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Practice</span>` 
-                                           : `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Exam</span>`;
-
-                    html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300 transition-colors">
-                        <div>
-                            <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
-                            <div class="text-sm text-slate-500 font-medium">Submitted: ${date}</div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
-                            <button onclick="window.viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors">🔍 View Details</button>
-                        </div>
-                    </div>`;
-                });
-                html += `</div>`;
-                content.innerHTML = html;
-
-            } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Error loading data.</p>"; }
-        }
-
-        window.viewDetailedTest = function(docId) {
-            const content = document.getElementById('reportModalContent');
-            if(!window.currentStudentResultsCache) return;
-            const data = window.currentStudentResultsCache.find(r => r.docId === docId);
-            if(!data || !data.detailedResults) {
-                content.innerHTML = `
-                    <div class="mb-4"><button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Back</button></div>
-                    <div class="text-center py-10 font-bold text-slate-500">No detailed records saved for this submission.</div>`;
-                return;
-            }
-
-            let html = `
-                <div class="flex items-center gap-4 mb-6 border-b pb-4">
-                    <button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Back</button>
-                    <div>
-                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
-                        <p class="text-sm text-slate-500">Detailed Answer Sheet</p>
-                    </div>
-                </div>
-                <div class="space-y-4">`;
-
-            data.detailedResults.forEach((res, i) => {
-                let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
-                let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">CORRECT</span>` 
-                                          : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">WRONG</span>`;
                 
-                html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm">
-                    <div class="flex items-start justify-between gap-4 mb-3">
-                        <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Q${i+1}:</span> ${res.q}</p>
-                        ${badge}
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm">
-                        <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0">Student chose:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
-                        ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0">Correct Answer:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
-                    </div>
-                </div>`;
-            });
-            html += `</div>`;
-            content.innerHTML = html;
-            document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        window.showCustomAlert = function(title, message, icon="🔔") {
-            document.getElementById('alertIcon').innerText = icon;
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            document.getElementById('customAlert').classList.add('active');
-        }
-        window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
-        window.alert = function(msg) { window.showCustomAlert("Notification", msg); };
-
-        window.saveNickname = async function() {
-            const input = document.getElementById('nicknameInput').value.trim();
-            if (!input) return window.showCustomAlert("Error", "Please enter a nickname.", "⚠️");
-
-            if (window.pendingUser) {
-                const userRef = window.fDoc(window.fdb, "users", window.pendingUser.uid);
-                await window.fSetDoc(userRef, { email: window.pendingUser.email, nickname: input, role: 'student', classId: '', status: 'active', lastLogin: Date.now(), joinDate: Date.now(), plan: 'trial', expiryDate: Date.now() + (7 * 24 * 60 * 60 * 1000) });
-                window.location.reload();
-            } else if (window.currentUser) {
-                const userRef = window.fDoc(window.fdb, "users", window.currentUser.uid);
-                await window.fUpdateDoc(userRef, { nickname: input });
-                window.location.reload();
+                await Promise.all(deletePromises);
+                window.showCustomAlert("Thành công", `Đã làm mới bảng xếp hạng cho bài ${testId.toUpperCase()}`, "✅");
+                window.fetchLeaderboardData();
+            } catch(e) {
+                console.error("Lỗi xóa Leaderboard:", e);
+                window.showCustomAlert("Lỗi", "Không thể xóa dữ liệu lúc này.", "⚠️");
             }
+            btn.innerHTML = originalText; btn.disabled = false;
         }
 
-        window.showNicknameModal = function() {
-            document.getElementById('nicknameInput').value = window.currentUser.nickname;
-            document.getElementById('cancelNicknameBtn').classList.remove('hidden');
-            document.getElementById('nicknameOverlay').classList.add('active');
+        window.createNewClass = async function() {
+            if(!window.isAdmin) return;
+            const nameInput = document.getElementById('new-class-name');
+            const name = nameInput.value.trim();
+            if(!name) { window.showCustomAlert("Error", "Please enter class name!", "⚠️"); return; }
+
+            try {
+                let docRef = await window.fAddDoc(window.fCollection(window.fdb, "classes"), { name: name, createdAt: Date.now() });
+                
+                if (!window.isSuperAdmin && window.currentUser) {
+                    let cIds = window.currentUser.classIds || [];
+                    cIds.push(docRef.id);
+                    await window.fUpdateDoc(window.fDoc(window.fdb, "users", window.currentUser.uid), { classIds: cIds });
+                    window.currentUser.classIds = cIds;
+                }
+                
+                nameInput.value = '';
+                await window.showClassManagement('all'); 
+                window.showCustomAlert("Success", "Class created successfully!", "✅");
+            } catch(e) { console.error(e); window.showCustomAlert("Error", "Failed to create class.", "⚠️"); }
         }
-        
-        // ADMIN CLASSES & USERS
-        window.adminClassesData = [];
-        window.adminUsersData = [];
 
         window.showClassManagement = async function(filterClassId = 'all') {
             if(!window.isAdmin) return;
@@ -2063,12 +2006,12 @@ themBaiHoc({
             if (window.innerWidth < 1024) window.toggleMenu();
 
             let createClassHtml = "";
-            if (window.isSuperAdmin) {
+            if (window.isAdmin) {
                 createClassHtml = `
                     <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-6 flex flex-col sm:flex-row gap-3 items-center shadow-sm">
                         <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl shrink-0">+</div>
                         <input type="text" id="new-class-name" placeholder="Create new class (e.g., 6A1)..." class="flex-1 p-3 rounded-lg border border-slate-300 font-bold outline-none focus:border-indigo-500 w-full text-slate-700">
-                        <button onclick="window.createNewClass()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-sm w-full sm:w-auto whitespace-nowrap transition-colors">Create</button>
+                        <button onclick="window.createNewClass()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-sm w-full sm:w-auto whitespace-nowrap transition-colors">Create Class</button>
                     </div>
                 `;
             }
@@ -2143,9 +2086,8 @@ themBaiHoc({
             if(isChecked && !currentIds.includes(classId)) currentIds.push(classId);
             else if(!isChecked) currentIds = currentIds.filter(id => id !== classId);
             
+            user.classIds = currentIds;
             await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classIds: currentIds });
-            // Re-fetch users to reflect changes accurately
-            window.loadAdminUsers(document.getElementById('main-class-filter').value);
         }
 
         window.loadAdminUsers = async function(filterClassId = 'all') {
@@ -2195,7 +2137,7 @@ themBaiHoc({
                                                   <div class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 flex items-center justify-between min-w-[140px]">
                                                     Manage Classes <span>▼</span>
                                                   </div>
-                                                  <div class="absolute z-[100] mt-1 hidden group-hover:block bg-white border shadow-xl rounded-lg p-2 max-h-48 overflow-y-auto min-w-[160px]">
+                                                  <div class="absolute z-[100] mt-1 hidden group-hover:block bg-white border shadow-xl rounded-lg p-2 max-h-48 overflow-y-auto min-w-[160px] right-0">
                                                     ${cbHtml}
                                                   </div>
                                                 </div>`;
@@ -2218,6 +2160,15 @@ themBaiHoc({
                             <button onclick="window.toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm w-full sm:w-20">${isBlocked ? 'Unblock' : 'Block'}</button>
                             <button onclick="window.deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 w-full sm:w-auto">Delete</button>
                         `;
+                    } else if (window.isAdmin && data.role === 'student') {
+                        let tClasses = window.currentUser.classIds || [];
+                        let classOptions = `<option value="">-- Assign Class --</option>`;
+                        window.adminClassesData.forEach(c => {
+                            if (tClasses.includes(c.id)) {
+                                classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Class ${c.name}</option>`;
+                            }
+                        });
+                        classSelectHtml = `<select onchange="window.updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer w-full sm:w-auto">${classOptions}</select>`;
                     }
 
                     uHtml += `
@@ -2365,10 +2316,82 @@ themBaiHoc({
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        window.onload = function() {
-            window.initApp();
-        };
+        window.openStudentReportModal = async function(uid, nickname) {
+            document.getElementById('reportModalTitle').innerText = `Báo cáo của học viên: ${nickname}`;
+            const content = document.getElementById('reportModalContent');
+            content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang truy xuất dữ liệu máy chủ...</div>`;
+            document.getElementById('studentReportModal').classList.add('active');
 
-    </script>
-</body>
-</html>
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let rawResults = [];
+                snapshot.forEach(doc => { 
+                    let d = doc.data(); 
+                    if (d.uid === uid) {
+                        d.docId = doc.id; 
+                        rawResults.push(d); 
+                    }
+                });
+
+                if (rawResults.length === 0) {
+                    content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">Học sinh này chưa hoàn thành bài nào.</p></div>`;
+                    return;
+                }
+
+                // Gộp bài báo cáo theo (testId + level) để tránh liệt kê dài dòng
+                let groupedResults = {};
+                rawResults.forEach(r => {
+                    let key = `${r.testId}_${r.level || ''}_${r.isLesson}`;
+                    if(!groupedResults[key]) {
+                        // Khởi tạo nhóm mới
+                        groupedResults[key] = { ...r, attemptsCount: 1, bestScore: r.score };
+                    } else {
+                        // Cập nhật thống kê nhóm
+                        groupedResults[key].attemptsCount++;
+                        // Nếu bài đang xét có điểm tốt hơn -> Cập nhật Best Score & Lấy làm doc đại diện
+                        if (r.percentage > groupedResults[key].percentage) {
+                            groupedResults[key].percentage = r.percentage;
+                            groupedResults[key].bestScore = r.score;
+                            groupedResults[key].docId = r.docId; 
+                            groupedResults[key].detailedResults = r.detailedResults; // Lưu detailedResults của lần tốt nhất
+                        }
+                        // Luôn hiển thị thời gian làm bài gần nhất
+                        if (r.timestamp > groupedResults[key].timestamp) {
+                            groupedResults[key].timestamp = r.timestamp;
+                        }
+                    }
+                });
+
+                // Chuyển Obj thành Mảng và xếp theo thời gian gần nhất
+                let finalResults = Object.values(groupedResults).sort((a,b) => b.timestamp - a.timestamp);
+                window.currentStudentResultsCache = finalResults;
+
+                let html = `<div class="space-y-3">`;
+                finalResults.forEach(r => {
+                    let date = new Date(r.timestamp).toLocaleString('vi-VN');
+                    let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
+                    let badge = r.isLesson ? `<span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded text-xs font-bold border border-sky-200">Practice / SBT</span>` 
+                                           : `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold border border-rose-200">Exam Test</span>`;
+                    let lvBadge = r.level && !r.isLesson ? `<span class="text-xs uppercase text-slate-400 font-bold ml-2">(${r.level})</span>` : '';
+
+                    html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300 transition-colors">
+                        <div>
+                            <div class="font-bold text-slate-800 text-lg flex items-center flex-wrap gap-2 mb-1">${r.testName} ${lvBadge} ${badge}</div>
+                            <div class="text-sm text-slate-500 font-medium">Làm gần nhất: ${date} <span class="mx-1">•</span> <b class="text-indigo-500">Đã thử ${r.attemptsCount} lần</b></div>
+                        </div>
+                        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-none pt-3 md:pt-0">
+                            <div class="text-center">
+                                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Best Score</div>
+                                <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.bestScore} <span class="text-sm">/ ${r.total}</span></div>
+                            </div>
+                            <button onclick="window.viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors shrink-0">🔍 Xem Chi Tiết</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+
+            } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Lỗi tải dữ liệu. Xin thử lại.</p>"; }
+        }
+
+        window.viewDetailedTest = function(docId) {
