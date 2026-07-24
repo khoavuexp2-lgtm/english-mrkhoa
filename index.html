@@ -1,28 +1,28 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Global Success 6 - Interactive English LMS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Global Success 6 - Interactive English</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- ======================================================================= -->
-    <!-- KHU VỰC 1: CSS GIAO DIỆN, IN ẤN & CHẾ ĐỘ TRÌNH CHIẾU                    -->
-    <!-- ======================================================================= -->
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f1f5f9; color: #1e293b; overflow: hidden; }
+        body { font-family: 'Nunito', sans-serif; background-color: #f1f5f9; color: #1e293b; overflow-x: hidden; }
         h1, h2, h3, .baloo-font { font-family: 'Baloo 2', cursive; }
         
-        .scroll-container { height: calc(100vh - 110px); overflow-y: auto; scroll-behavior: smooth; padding-bottom: 80px; }
+        .scroll-container { height: calc(100vh - 80px); overflow-y: auto; scroll-behavior: smooth; padding-bottom: 80px; }
         .scroll-container::-webkit-scrollbar { width: 6px; }
         .scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        .glass-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; }
+        .glass-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; }
         
         .audio-row { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; border-radius: 12px; }
         .audio-row:hover { background-color: #f8fafc; border-color: #cbd5e1; transform: translateX(4px); }
         .active-audio { background-color: #fef08a !important; border-color: #eab308 !important; }
+        
+        .chat-left { background: #f1f5f9; border-radius: 16px 16px 16px 0; padding: 12px 16px; display: inline-block; border: 1px solid #e2e8f0; max-width: 90%; }
+        .chat-right { background: #e0e7ff; border-radius: 16px 16px 0 16px; padding: 12px 16px; display: inline-block; color: #1e3a8a; border: 1px solid #c7d2fe; text-align: left; max-width: 90%;}
         
         .q-btn { transition: all 0.2s; cursor: pointer; }
         .q-selected { background-color: #e0e7ff !important; border-color: #4f46e5 !important; color: #3730a3 !important; font-weight: bold; border-width: 2px;}
@@ -30,7 +30,7 @@
         .q-wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; text-decoration: line-through;}
         .disabled { pointer-events: none; opacity: 0.9;}
 
-        .fill-input { border-bottom: 2px solid #cbd5e1; outline: none; background: transparent; text-align: center; font-weight: bold; color: #4f46e5; padding: 0 5px; transition: all 0.2s; min-width: 60px;}
+        .fill-input { border-bottom: 2px solid #cbd5e1; outline: none; background: transparent; text-align: center; font-weight: bold; color: #4f46e5; padding: 0 5px; transition: all 0.2s; }
         .fill-input:focus { border-bottom-color: #4f46e5; }
         .fill-correct { border-bottom-color: #22c55e !important; color: #166534 !important; background-color: #dcfce7; border-radius: 4px;}
         .fill-wrong { border-bottom-color: #ef4444 !important; color: #991b1b !important; background-color: #fee2e2; border-radius: 4px;}
@@ -50,6 +50,7 @@
         .module-nav-btn.exam-btn { border: 1px solid #fecdd3; background-color: #fff1f2; color: #be123c; }
         .module-nav-btn.exam-btn:hover { background-color: #ffe4e6; }
         .module-nav-btn.exam-btn.active { background-color: #fecdd3; color: #9f1239; border-left: 4px solid #e11d48; }
+        
         .sbt-btn { border: 1px solid #fef08a; background-color: #fef9c3; color: #a16207; }
         .sbt-btn:hover { background-color: #fef08a; }
         .sbt-btn.active { background-color: #fde047; color: #854d0e; border-left: 4px solid #eab308; }
@@ -59,51 +60,92 @@
         .custom-alert-box { background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(0.9); transition: transform 0.2s;}
         .custom-alert-overlay.active .custom-alert-box { transform: scale(1);}
 
-        /* CHẾ ĐỘ TRÌNH CHIẾU BÀI GIẢNG (PRESENTATION MODE) */
-        body.presentation-mode .sidebar { display: none !important; }
-        body.presentation-mode header { display: none !important; }
-        body.presentation-mode footer { display: none !important; }
-        body.presentation-mode .scroll-container { height: 100vh !important; font-size: 130%; background-color: #f8fafc; padding-top: 40px; }
-        body.presentation-mode .max-w-4xl { max-width: 1400px !important; margin: 0 auto; }
-        body.presentation-mode .glass-card { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 2px solid #cbd5e1; }
+        /* 1. CSS Chế độ Trình Chiếu (Presentation Mode) */
+        body.presentation-mode header, 
+        body.presentation-mode .sidebar, 
+        body.presentation-mode .sidebar-overlay,
+        body.presentation-mode .unit-header-print { 
+            display: none !important; 
+        }
+        body.presentation-mode #main-scroll { 
+            height: 100vh !important; 
+            padding-top: 20px; 
+            font-size: 1.25rem !important; 
+        }
+        body.presentation-mode .max-w-4xl {
+            max-width: 72rem !important;
+        }
+        body.presentation-mode .glass-card { 
+            border: 2px solid #4f46e5 !important; 
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.15) !important; 
+            margin-bottom: 40px !important;
+        }
+        .exit-presentation-btn { 
+            display: none; 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 9999; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        body.presentation-mode .exit-presentation-btn { display: flex !important; }
 
-        /* TỐI ƯU HÓA IN ẤN ĐỀ BÀI (PRINT CSS) */
+        /* 2. CSS Chế độ In Đề Trắng (Blank Test Print) */
         @media print {
+            body.printing-blank-test .q-correct, 
+            body.printing-blank-test .q-wrong, 
+            body.printing-blank-test .q-selected { 
+                background: transparent !important; 
+                color: black !important; 
+                border-color: #94a3b8 !important; 
+                font-weight: normal !important;
+                text-decoration: none !important;
+            }
+            body.printing-blank-test .q-btn { 
+                background: transparent !important; 
+                border: 1px solid #000 !important; 
+                color: #000 !important; 
+            }
+            body.printing-blank-test .fill-input,
+            body.printing-blank-test .fill-correct,
+            body.printing-blank-test .fill-wrong { 
+                border: none !important; 
+                border-bottom: 1px dotted #000 !important; 
+                color: transparent !important; 
+                background: transparent !important;
+            }
+            body.printing-blank-test #sbt-action-container, 
+            body.printing-blank-test #exam-action-buttons,
+            body.printing-blank-test #exam-navigator,
+            body.printing-blank-test [id^="exp-"], 
+            body.printing-blank-test [id^="exam-exp-"] { 
+                display: none !important; 
+            }
+
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            @page { size: A4 portrait; margin: 15mm; } 
-            body { background: white !important; font-size: 11.5pt !important; color: #000 !important; line-height: 1.5 !important; overflow: visible !important; }
+            @page { size: A4 portrait; margin: 18mm 15mm 20mm 15mm; } 
+            body { background: white !important; font-size: 11.5pt !important; color: #111 !important; line-height: 1.5 !important; overflow: visible !important; }
             .scroll-container { height: auto !important; overflow: visible !important; padding: 0 !important; }
-            
-            .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .submit-btn, .audio-row:hover, #listening-action-buttons { display: none !important; }
+            .no-print, header, .sidebar, .sidebar-overlay, #action-buttons, #exam-action-buttons, .submit-btn, .audio-row:hover, #listening-action-buttons, #exam-navigator { display: none !important; }
             
             #content-area { padding: 0 !important; max-width: 100% !important; }
+            .glass-card { box-shadow: none !important; border: 1px solid #ccc !important; padding: 15px !important; margin-bottom: 15pt !important; background: transparent !important; page-break-inside: avoid !important; }
+            section { page-break-inside: auto !important; margin-bottom: 15pt !important; }
             
-            .glass-card { box-shadow: none !important; border: none !important; padding: 0 !important; margin-bottom: 12pt !important; background: transparent !important; page-break-inside: auto !important; }
-            .exercise-container, section, .vocab-item-print { page-break-inside: avoid !important; margin-bottom: 15pt !important; }
-            
-            .unit-header-print { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 20px; }
-            .unit-header-print h1 { font-family: 'Arial', sans-serif !important; font-size: 18pt !important; font-weight: bold !important; color: #000 !important; margin: 0; text-transform: uppercase; }
-            .unit-header-print .student-info { display: flex; justify-content: space-between; font-size: 12pt; margin-top: 10px; text-align: left; }
-            
-            .print-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10pt !important; }
-            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 10pt !important; }
-            th, td { border: 1px solid #cbd5e1 !important; padding: 6pt !important; font-family: 'Arial', sans-serif !important; font-size: 10.5pt !important;}
-            th { background-color: #e2e8f0 !important; color: #0f172a !important;}
-
-            .q-btn { display: inline-block !important; border: 1px solid #000 !important; padding: 3px 8px !important; margin-right: 15px !important; margin-bottom: 5px !important; background: transparent !important; color: #000 !important; font-weight: normal !important; width: auto !important;}
-            .fill-input { border-bottom: 1px dashed #000 !important; color: #000 !important; background: transparent !important; }
-
+            .unit-header-print { text-align: right; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; margin-bottom: 25px; }
+            .unit-header-print h1 { font-family: 'Arial', sans-serif !important; font-size: 24pt !important; font-weight: 900 !important; color: #4f46e5 !important; margin: 0; text-transform: uppercase; }
+            .unit-header-print h2 { font-family: 'Arial', sans-serif !important; font-size: 12pt !important; font-weight: normal !important; color: #64748b !important; margin: 5px 0 0 0; letter-spacing: 2px; text-transform: uppercase; }
+            .print-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12pt !important; }
+        
             body.printing-modal #content-area { display: none !important; }
             body.printing-modal #studentReportModal { position: relative !important; display: block !important; width: 100% !important; max-width: 100% !important; background: transparent !important; z-index: auto !important; box-shadow: none !important; }
             body.printing-modal .custom-alert-overlay { background: transparent !important; backdrop-filter: none !important; }
-            body.printing-modal .bg-white.rounded-2xl { box-shadow: none !important; border: none !important; max-height: none !important; overflow: visible !important; }
-            body.printing-modal #reportModalContent { overflow: visible !important; background: white !important; padding: 0 !important;}
+            body.printing-modal .bg-white.rounded-2xl { box-shadow: none !important; max-height: none !important; overflow: visible !important; }
+            body.printing-modal #reportModalContent { overflow: visible !important; background: white !important; }
         }
     </style>
 
-    <!-- ======================================================================= -->
-    <!-- KHU VỰC 2: FIREBASE & AUTHENTICATION                                    -->
-    <!-- ======================================================================= -->
+    <!-- FIREBASE INITIALIZATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -122,23 +164,36 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.fauth = auth; window.fdb = db; window.fCollection = collection;
-        window.fAddDoc = addDoc; window.fDoc = doc; window.fSetDoc = setDoc;
-        window.fGetDoc = getDoc; window.fGetDocs = getDocs; window.fUpdateDoc = updateDoc;
-        window.fDeleteDoc = deleteDoc; window.fQuery = query; window.fWhere = where;
+        window.fauth = auth;
+        window.fdb = db;
+        window.fCollection = collection;
+        window.fAddDoc = addDoc;
+        window.fDoc = doc;
+        window.fSetDoc = setDoc;
+        window.fGetDoc = getDoc;
+        window.fGetDocs = getDocs;
+        window.fUpdateDoc = updateDoc;
+        window.fDeleteDoc = deleteDoc;
+        window.fQuery = query;
+        window.fWhere = where;
 
         const SUPER_ADMIN_EMAILS = ["khoavuexp2@gmail.com", "khoavuexp@gmail.com"];
 
         window.loginWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
-            try { await signInWithPopup(auth, provider); } catch (error) { alert("Lỗi đăng nhập."); }
+            try { await signInWithPopup(auth, provider); } 
+            catch (error) { console.error(error); window.showCustomAlert("Error", "Login failed.", "⚠️"); }
         }
 
-        window.logoutGoogle = async function() { await signOut(auth); window.location.reload(); }
+        window.logoutGoogle = async function() {
+            await signOut(auth);
+            window.location.reload();
+        }
 
         onAuthStateChanged(auth, async (user) => {
             const authContainer = document.getElementById('auth-container');
             const nicknameOverlay = document.getElementById('nicknameOverlay');
+            const printBtn = document.getElementById('print-btn');
 
             if (user) {
                 const userRef = doc(db, "users", user.uid);
@@ -148,159 +203,289 @@
                 let isNewUser = false;
                 
                 window.isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email);
-                let userRole = 'student'; let classId = '';
+                let userRole = 'student';
+                let classId = '';
 
                 if (userSnap.exists()) {
                     const data = userSnap.data();
-                    if (data.status === 'blocked') { alert("Tài khoản của bạn đã bị khóa."); await signOut(auth); return; }
-                    if (data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate) { alert("Gói học tập của bạn đã hết hạn."); await signOut(auth); return; }
-                    nickname = data.nickname || nickname; userRole = data.role || 'student'; classId = data.classId || '';
+                    if (data.status === 'blocked') {
+                        window.showCustomAlert("Locked", "Your account has been suspended.", "🔒");
+                        await signOut(auth); return;
+                    }
+                    if (data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate) {
+                        window.showCustomAlert("Expired", "Your learning plan has expired.", "⏳");
+                        await signOut(auth); return;
+                    }
+                    nickname = data.nickname || nickname;
+                    userRole = data.role || 'student';
+                    classId = data.classId || '';
                 } else {
-                    isNewUser = true; window.pendingUser = user;
-                    nicknameOverlay.classList.add('active'); return; 
+                    isNewUser = true;
+                    window.pendingUser = user;
+                    nicknameOverlay.classList.add('active');
+                    return; 
                 }
 
                 window.isAdmin = window.isSuperAdmin || userRole === 'teacher';
                 window.currentUser = { uid: user.uid, email: user.email, nickname: nickname, role: userRole, classId: classId };
 
-                let presentationBtn = window.isAdmin ? `<button onclick="window.togglePresentation()" class="hidden md:flex text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold border border-indigo-200 hover:bg-indigo-200 mr-2 items-center gap-1 shadow-sm">📺 Trình Chiếu</button>` : '';
-
                 authContainer.innerHTML = `
-                    <div class="flex items-center gap-1">
-                        ${presentationBtn}
-                        <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100 shadow-sm" onclick="window.showNicknameModal()">
-                            <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
-                            <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[150px]">${nickname}</span>
-                        </div>
-                        <button onclick="window.logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Đăng xuất</button>
+                    <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 cursor-pointer hover:bg-indigo-100" onclick="showNicknameModal()">
+                        <img src="${user.photoURL || 'https://www.svgrepo.com/show/475656/google-color.svg'}" class="w-6 h-6 rounded-full">
+                        <span class="text-sm font-bold text-indigo-700 truncate max-w-[120px] sm:max-w-[200px]">${nickname}</span>
                     </div>
+                    <button onclick="logoutGoogle()" class="text-xs text-rose-500 hover:text-rose-700 font-bold ml-1">Sign Out</button>
                 `;
+
+                if(printBtn) {
+                    if (window.isAdmin) printBtn.classList.remove('hidden');
+                    else printBtn.classList.add('hidden');
+                }
                 
                 if (!isNewUser) await updateDoc(userRef, { lastLogin: Date.now() });
                 window.renderMenu();
+
             } else {
                 window.currentUser = null; window.isAdmin = false; window.isSuperAdmin = false;
-                authContainer.innerHTML = `<button onclick="window.loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">Đăng nhập</button>`;
+                authContainer.innerHTML = `<button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign In</button>`;
+                
+                if(printBtn) printBtn.classList.add('hidden');
                 window.renderMenu();
+                
+                if (window.currentModule && (window.currentModule.type === 'exam_module' || window.currentModule.id === 'u5') && window.currentModule.id !== 'rev1') {
+                    window.showCustomAlert("Required", "Please sign in to continue.", "🔒");
+                    window.loadModule('u1');
+                }
             }
         });
     </script>
 </head>
 <body>
-    <div id="overlay" class="sidebar-overlay no-print" onclick="window.toggleMenu()"></div>
+    <div id="overlay" class="sidebar-overlay no-print" onclick="toggleMenu()"></div>
     
-    <!-- ======================================================================= -->
-    <!-- KHU VỰC 3: CỬA SỔ POP-UP (MODALS) & NÚT THOÁT TRÌNH CHIẾU               -->
-    <!-- ======================================================================= -->
-    <button id="exit-presentation-btn" onclick="window.togglePresentation()" class="fixed bottom-6 right-6 bg-rose-600 text-white px-6 py-4 rounded-full shadow-2xl hidden font-extrabold z-[9999] active:scale-95 transition-transform border-4 border-white text-lg tracking-wide hover:bg-rose-700 no-print">❌ Thoát Trình Chiếu</button>
-
     <aside id="sidebar" class="sidebar no-print">
         <div class="p-6 border-b border-slate-100 bg-indigo-50 flex justify-between items-center">
-            <select id="class-selector" class="bg-transparent font-bold text-xl text-slate-800 baloo-font outline-none cursor-pointer" onchange="window.changeClass()"></select>
-            <button onclick="window.toggleMenu()" class="text-slate-500 text-2xl font-bold hover:text-rose-500 transition-colors">×</button>
+            <select id="class-selector" class="bg-transparent font-bold text-xl text-slate-800 baloo-font outline-none cursor-pointer" onchange="changeClass()"></select>
+            <button onclick="toggleMenu()" class="text-slate-500 text-2xl font-bold">×</button>
         </div>
         <div class="p-4 overflow-y-auto flex-1" id="nav-menu"></div>
     </aside>
 
-    <div id="nicknameOverlay" class="custom-alert-overlay no-print">
-        <div class="custom-alert-box bg-white p-8 rounded-3xl w-[90%] max-w-sm text-center shadow-2xl">
-            <div class="text-5xl mb-4">📛</div>
-            <h2 class="text-2xl font-bold baloo-font text-indigo-900 mb-2">Tạo Biệt Danh</h2>
-            <input type="text" id="nicknameInput" placeholder="Nhập biệt danh..." class="w-full p-4 border-2 border-slate-200 rounded-xl mb-4 text-center font-bold outline-none" maxlength="20">
-            <button onclick="window.saveNickname()" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-indigo-700 transition-colors">Xác nhận</button>
-            <button onclick="document.getElementById('nicknameOverlay').classList.remove('active')" class="w-full text-slate-400 font-bold py-2 mt-2 text-sm hidden" id="cancelNicknameBtn">Hủy</button>
+    <!-- NOTIFICATION ALERT -->
+    <div id="customAlert" class="custom-alert-overlay no-print">
+        <div class="custom-alert-box">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4" id="alertIcon">🔔</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2" id="alertTitle">Notification</h3>
+            <p class="text-slate-600 mb-6 font-medium" id="alertMessage">Content</p>
+            <button onclick="closeCustomAlert()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl w-full hover:bg-indigo-700 transition-colors shadow-md">Got it</button>
         </div>
     </div>
 
-    <!-- TEACHER ASSIGNMENT MODAL -->
-    <div id="assignmentModal" class="custom-alert-overlay no-print z-[2000]">
-        <div class="bg-white p-6 rounded-3xl w-[90%] max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
-            <h2 class="text-xl font-bold baloo-font text-indigo-900 mb-2 border-b pb-2">⚙️ Giao Bài Tập Cho Học Sinh</h2>
+    <!-- NICKNAME MODAL -->
+    <div id="nicknameOverlay" class="custom-alert-overlay no-print">
+        <div class="custom-alert-box bg-white p-8 rounded-3xl w-[90%] max-w-sm text-center shadow-2xl">
+            <div class="text-5xl mb-4">📛</div>
+            <h2 class="text-2xl font-bold baloo-font text-indigo-900 mb-2">Create Nickname</h2>
+            <p class="text-slate-500 mb-6 text-sm">Displayed on Leaderboard.</p>
+            <input type="text" id="nicknameInput" placeholder="Enter nickname..." class="w-full p-4 border-2 border-slate-200 rounded-xl mb-4 text-center font-bold outline-none" maxlength="20">
+            <button onclick="saveNickname()" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-indigo-700">Confirm</button>
+            <button onclick="document.getElementById('nicknameOverlay').classList.remove('active')" class="w-full text-slate-400 font-bold py-2 mt-2 text-sm hidden" id="cancelNicknameBtn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- TEACHER ASSIGNMENT MODAL (ENGLISH & FIXED LOGIC) -->
+    <div id="assignmentModal" class="custom-alert-overlay no-print">
+        <div class="bg-white p-6 rounded-2xl w-[90%] max-w-lg shadow-2xl relative max-h-[85vh] flex flex-col">
+            <h2 class="text-xl font-bold baloo-font text-indigo-900 mb-2 border-b pb-2">⚙️ Assign Homework</h2>
+            
             <div class="mb-3 mt-2">
-                <label class="block text-sm font-bold text-slate-700 mb-1">1. Giao bài cho ai?</label>
+                <label class="block text-sm font-bold text-slate-700 mb-1">1. Assign to:</label>
                 <select id="assign-target-select" onchange="window.toggleStudentSelect(this.value)" class="w-full p-2.5 border rounded-lg font-bold text-indigo-700 bg-indigo-50 outline-none cursor-pointer">
-                    <option value="class">Giao cho Cả Lớp</option>
-                    <option value="individual">Giao cho Cá Nhân (Học sinh cụ thể)</option>
+                    <option value="class" id="assign-class-option">Entire Class</option>
+                    <option value="individual">Specific Student</option>
                 </select>
             </div>
+            
             <div id="student-select-container" class="hidden mb-3">
-                <label class="block text-sm font-bold text-slate-700 mb-1">Chọn Học sinh:</label>
-                <select id="assign-student-select" onchange="window.refreshAssignmentModalChecks()" class="w-full p-2.5 border rounded-lg font-bold text-slate-700 bg-white outline-none cursor-pointer"></select>
+                <label class="block text-sm font-bold text-slate-700 mb-1">Select Student:</label>
+                <select id="assign-student-select" onchange="window.syncAssignmentUI()" class="w-full p-2.5 border rounded-lg font-bold text-slate-700 bg-white outline-none cursor-pointer"></select>
             </div>
+
             <div class="flex justify-between items-center mb-2">
-                <p class="text-sm font-bold text-slate-700">2. Chọn các bài tập giao:</p>
-                <button onclick="window.selectAllAssignments()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded">Chọn tất cả</button>
+                <p class="text-sm font-bold text-slate-700">2. Select Exercises:</p>
+                <div class="flex gap-2">
+                    <button onclick="window.selectAllAssignments(true)" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold hover:bg-indigo-200">Select All</button>
+                    <button onclick="window.selectAllAssignments(false)" class="text-xs bg-rose-100 text-rose-700 px-2 py-1 rounded font-bold hover:bg-rose-200">Clear</button>
+                </div>
             </div>
-            <div id="assignment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-2 border border-slate-200 p-3 rounded-xl bg-slate-50"></div>
+            <div id="assignment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-2 border border-slate-200 p-3 rounded-xl bg-slate-50">
+                <!-- Checkboxes injected here -->
+            </div>
             <div class="flex gap-3 mt-auto">
-                <button onclick="document.getElementById('assignmentModal').classList.remove('active')" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-300 transition-colors">Hủy</button>
-                <button onclick="window.saveAssignment()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition-colors">Lưu Cấu Hình</button>
+                <button onclick="document.getElementById('assignmentModal').classList.remove('active')" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-300">Cancel</button>
+                <button onclick="window.saveAssignment()" id="btn-save-assign" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition-colors">Save Assignment</button>
             </div>
         </div>
     </div>
 
     <!-- STUDENT REPORT MODAL -->
     <div id="studentReportModal" class="custom-alert-overlay no-print z-[2000]">
-        <div class="bg-white rounded-2xl w-[95%] max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative border border-slate-200">
-            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl no-print">
-                <h3 class="font-bold text-xl text-indigo-800 baloo-font" id="reportModalTitle">Báo Cáo Học Viên</h3>
-                <button onclick="window.closeStudentReportModal()" class="text-slate-500 font-bold text-2xl px-2 hover:text-rose-600 transition-colors">&times;</button>
+        <div class="bg-white rounded-2xl w-[95%] max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl">
+                <h3 class="font-bold text-xl text-indigo-800 baloo-font" id="reportModalTitle">Student Report</h3>
+                <button onclick="document.getElementById('studentReportModal').classList.remove('active');" class="text-slate-500 hover:text-rose-500 font-bold text-2xl px-2">&times;</button>
             </div>
             <div class="p-4 overflow-y-auto flex-1 bg-slate-50" id="reportModalContent"></div>
-        </div>
-    </div>
-
-    <!-- CẢNH BÁO TÙY CHỈNH (CUSTOM ALERT) -->
-    <div id="customAlert" class="custom-alert-overlay no-print z-[3000]">
-        <div class="custom-alert-box bg-white p-6 rounded-3xl shadow-2xl relative flex flex-col items-center">
-            <div id="alertIcon" class="text-5xl mb-3">🔔</div>
-            <h2 id="alertTitle" class="text-xl font-bold baloo-font text-slate-800 mb-2">Thông báo</h2>
-            <p id="alertMessage" class="text-slate-600 mb-6 text-sm font-medium">Nội dung thông báo</p>
-            <button onclick="window.closeCustomAlert()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700 transition-colors">Đóng</button>
         </div>
     </div>
 
     <div class="flex flex-col h-screen">
         <header class="flex justify-between items-center bg-white px-4 py-3 border-b border-slate-200 z-40 shrink-0 shadow-sm no-print">
             <div class="flex items-center gap-3">
-                <button onclick="window.toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50 transition-colors shadow-sm">☰ Menu</button>
+                <button onclick="toggleMenu()" class="px-3 py-2 bg-slate-100 rounded-xl text-slate-700 font-bold hover:bg-indigo-50">☰ Menu</button>
                 <h2 id="header-title" class="text-lg md:text-xl font-extrabold text-indigo-900 baloo-font truncate hidden sm:block">Loading...</h2>
             </div>
             <div class="flex items-center gap-3">
+                <button onclick="window.print()" id="print-btn" class="bg-slate-800 text-white font-bold py-2 px-4 rounded-xl hover:bg-slate-700 shadow-md flex items-center gap-2 text-sm hidden">
+                    🖨️ <span class="hidden md:inline">Print </span>
+                </button>
                 <div id="auth-container">
-                    <button onclick="window.loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">Đăng nhập</button>
+                    <button onclick="loginWithGoogle()" class="flex items-center gap-2 bg-white border border-slate-300 shadow-sm text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4"> Sign in
+                    </button>
                 </div>
             </div>
         </header>
         
         <main class="scroll-container w-full bg-slate-50" id="main-scroll">
             <div class="max-w-4xl mx-auto p-4 md:p-8">
-                <!-- PRINT HEADER ONLY -->
-                <div class="hidden print:block unit-header-print">
-                    <h1 id="print-module-title">Tên Bài</h1>
-                    <div class="student-info">
-                        <span>Họ và Tên: ..............................................................</span>
-                        <span>Lớp: ........................</span>
-                    </div>
-                </div>
+                
+                <!-- TOOLBAR TRÌNH CHIẾU -->
+                <button onclick="window.togglePresentationMode()" class="exit-presentation-btn items-center gap-2 bg-rose-600 text-white px-5 py-3 rounded-full font-bold hover:bg-rose-700 transition-colors">
+                    ⏹️ Exit Presentation
+                </button>
 
+                <div class="hidden print:block unit-header-print">
+                    <h1 id="print-module-title">Unit Title</h1>
+                    <h2 id="print-class-title">ENGLISH 6</h2>
+                </div>
                 <div id="content-area"></div>
                 
                 <div id="sbt-source-notice" class="hidden text-center pb-8 mt-8 text-xs font-bold text-slate-400 no-print">
-                    <p>Nội dung trích từ: Sách Bài Tập Tiếng Anh 6 - Tập 1 - Global Success</p>
+                    <p>Workbook Reference: Tiếng Anh 6 - Global Success</p>
                 </div>
             </div>
         </main>
+        
+        <footer class="bg-slate-800 text-white text-center py-2.5 text-sm font-bold no-print z-50 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.1)] border-t border-slate-700 tracking-wide">
+            Global Success English LMS
+        </footer>
     </div>
 
-    <!-- ======================================================================= -->
-    <!-- KHU VỰC 4: DATABASE - CHỖ ĐỂ THẦY DÁN DỮ LIỆU TỪ FILE CŨ VÀO            -->
-    <!-- ======================================================================= -->
     <script>
-        const DANH_SACH_BAI_HOC = [];
-        function themBaiHoc(duLieu) { DANH_SACH_BAI_HOC.push(duLieu); }
+        // --- TTS AUDIO ENGINE ---
+        window.voices = [];
+        window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
+        window.getVoiceByGender = function(gender, lang = 'en-US') {
+            if (window.voices.length === 0) window.voices = window.speechSynthesis.getVoices();
+            const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
+            const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
+            let selectedVoice = null;
+            if (gender === 'female') { selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
+            else if (gender === 'male') { selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
+            if (!selectedVoice) { selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0])); }
+            return selectedVoice;
+        };
 
-// ↓↓↓↓↓↓↓↓↓↓↓↓↓ DÁN CODE CÁC HÀM "themBaiHoc({...})" CỦA THẦY VÀO DƯỚI DÒNG NÀY ↓↓↓↓↓↓↓↓↓↓↓↓↓
+        window.highlightAudioRow = function(element) {
+            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
+            if(element) {
+                let row = element.closest('.audio-row') || element;
+                if(row.classList) row.classList.add('active-audio');
+            }
+        };
+
+        window.removeHighlight = function() { 
+            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); 
+        };
+
+        window.playAudio = function(element, encodedText, lang = 'en-US') {
+            if(window.event) window.event.stopPropagation();
+            window.highlightAudioRow(element);
+            window.speechSynthesis.cancel();
+            let text = "";
+            try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang; utterance.rate = 0.85;
+            let voice = window.voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
+            if(voice) utterance.voice = voice;
+            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
+            window.speechSynthesis.speak(utterance);
+        };
+
+        window.playDialogueLine = function(element, encodedText, gender) {
+            if(window.event) window.event.stopPropagation();
+            window.highlightAudioRow(element);
+            window.speechSynthesis.cancel();
+            let text = "";
+            try { text = decodeURIComponent(encodedText); } catch(e) { text = encodedText; }
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = window.getVoiceByGender(gender, 'en-US');
+            if(voice) utterance.voice = voice;
+            utterance.lang = 'en-US'; utterance.rate = 0.85;
+            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
+            window.speechSynthesis.speak(utterance);
+        };
+
+        window.toggleTranscript = function(btn) {
+            if(window.event) window.event.stopPropagation();
+            const container = btn.closest('.glass-card');
+            if(!container) return;
+            const el = container.querySelector('.audio-transcript');
+            if(el) {
+                el.classList.toggle('hidden');
+            }
+        };
+
+        window.playAllDialogue = function() {
+            if(window.event) window.event.stopPropagation();
+            window.speechSynthesis.cancel(); window.removeHighlight();
+            let listeningSec = window.currentModule.sections.find(s => s.type === 'listening' || s.type === 'dialogue');
+            if(!listeningSec || !listeningSec.lines) return;
+            let currentLine = 0;
+            
+            function speakNextLine() {
+                if(currentLine >= listeningSec.lines.length) {
+                    window.removeHighlight();
+                    return;
+                }
+                let l = listeningSec.lines[currentLine];
+                
+                document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
+                const dialogueContainer = document.querySelector('.glass-card .space-y-3.mb-8');
+                if(dialogueContainer && dialogueContainer.children[currentLine]) {
+                    dialogueContainer.children[currentLine].classList.add('active-audio');
+                }
+
+                let utterance = new SpeechSynthesisUtterance(l.t || l.text);
+                const voice = window.getVoiceByGender(l.gender, l.loc || 'en-US');
+                if(voice) utterance.voice = voice;
+                utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
+                utterance.onend = () => { currentLine++; speakNextLine(); };
+                utterance.onerror = () => { currentLine++; speakNextLine(); };
+                window.speechSynthesis.speak(utterance);
+            }
+            speakNextLine();
+        };
+
+        // ==========================================
+        // DATABASE SECTIONS
+        // ==========================================
+        window.themBaiHoc = function(unitData) {
+            if (!window.database) window.database = { "class-6": { name: "English 6", modules: [] } };
+            window.database["class-6"].modules.push(unitData);
+        };
+
 
 themBaiHoc({
     id: "u1", type: "lesson", title: "Unit 1: My New School",
@@ -630,81 +815,43 @@ themBaiHoc({
 });
 // Kết thúc SBT Unit 5  
 
-// ↑↑↑↑↑↑↑↑↑↑↑↑↑ DÁN CODE CÁC HÀM "themBaiHoc({...})" CỦA THẦY VÀO TRÊN DÒNG NÀY ↑↑↑↑↑↑↑↑↑↑↑↑↑
+        // =========================================================================
+        // CORE APP LOGIC & ROUTING
+        // =========================================================================
 
-        const database = {
-            "class-6": {
-                name: "English 6",
-                modules: DANH_SACH_BAI_HOC
-            }
-        };
-    </script>
-
-    <!-- ======================================================================= -->
-    <!-- KHU VỰC 5: LOGIC CHÍNH - XỬ LÝ GIAO DIỆN, BÀI HỌC VÀ CHẤM ĐIỂM            -->
-    <!-- ======================================================================= -->
-    <script>
-        let currentClass = "class-6";
-        let currentModule = null;
-        let currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
+        window.currentClass = "class-6";
+        window.currentModule = null;
+        window.currentExam = { testId: null, level: null, answers: {}, flagged: {}, questions: [], timer: null, timeLeft: 0 };
         
         window.userPracticeAnswers = {};
         window.userListeningAnswers = {};
         window.adminUsersData = [];
-        window.adminClassesData = [];
         window.sbtState = {};
-        window.adminViewAssignedOnly = false; // Trạng thái bộ lọc "Bài đã giao" của GV
 
-        // Hiển thị Custom Alert đẹp mắt thay cho thẻ Alert xấu xí của trình duyệt
-        function showCustomAlert(title, message, icon="🔔") {
+        window.showCustomAlert = function(title, message, icon="🔔") {
+            document.getElementById('alertIcon').innerText = icon;
             document.getElementById('alertTitle').innerText = title;
             document.getElementById('alertMessage').innerText = message;
             document.getElementById('customAlert').classList.add('active');
         }
         window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
-        window.alert = function(msg) { console.log("ALERT:", msg); }; // Chặn alert rác
-
-        // Nút Trình chiếu trên lớp
-        window.togglePresentation = function() {
-            document.body.classList.toggle('presentation-mode');
-            let btn = document.getElementById('exit-presentation-btn');
-            if (document.body.classList.contains('presentation-mode')) {
-                btn.classList.remove('hidden');
-                document.getElementById('sidebar').classList.remove('open');
-                document.getElementById('overlay').classList.remove('open');
-            } else {
-                btn.classList.add('hidden');
-            }
-        }
-
-        window.initApp = function() {
-            const selector = document.getElementById('class-selector');
-            selector.innerHTML = '';
-            for (let cId in database) { selector.innerHTML += `<option value="${cId}">${database[cId].name}</option>`; }
-            window.renderMenu();
-            
-            // Lấy lại bài học cuối cùng lưu trong trình duyệt
-            let lastMod = localStorage.getItem('gs6_last_module');
-            if(lastMod && database[currentClass].modules.find(m => m.id === lastMod)) {
-                window.loadModule(lastMod);
-            } else if(database[currentClass].modules.length > 0) {
-                window.loadModule(database[currentClass].modules[0].id);
-            }
-        }
 
         window.renderDashboardMenu = function() {
             const menu = document.getElementById('nav-menu');
-            let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>
-                            <button onclick="window.showMyProgress()" id="nav-progress" class="module-nav-btn bg-sky-50 text-sky-700 border border-sky-200">📈 My Progress</button>
-                            <button onclick="window.showLeaderboard()" id="nav-leaderboard" class="module-nav-btn bg-amber-50 text-amber-700 border border-amber-200 mt-2">🏆 Leaderboard</button>`;
+            let dashHTML = `<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">DASHBOARD</p>`;
+            dashHTML += `<button onclick="window.showMyProgress()" id="nav-progress" class="module-nav-btn bg-sky-50 text-sky-700 border border-sky-200">📈 My Progress</button>`;
+            dashHTML += `<button onclick="window.showLeaderboard()" id="nav-leaderboard" class="module-nav-btn bg-amber-50 text-amber-700 border border-amber-200 mt-2">🏆 Leaderboard</button>`;
+            
             if (window.isAdmin) {
-                dashHTML += `<div class="mt-6 mb-2 px-2 bg-indigo-50/50 py-3 rounded-xl border border-indigo-100">
-                                <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">QUẢN LÝ LỚP HỌC</p>
-                                <select id="sidebar-class-filter" onchange="window.showClassManagement(this.value)" class="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm font-bold text-indigo-700 outline-none cursor-pointer shadow-sm">
-                                    <option value="">Đang tải lớp...</option>
-                                </select>
-                                <button onclick="window.showClassManagement('all')" id="nav-admin" class="w-full mt-3 module-nav-btn !mb-0 bg-indigo-600 text-white border-2 border-indigo-700 shadow-md hover:bg-indigo-700 text-center flex justify-center">👨‍🏫 Quản Lý Học Viên</button>
-                             </div>`;
+                dashHTML += `
+                    <div class="mt-6 mb-2 px-2 bg-indigo-50/50 py-3 rounded-xl border border-indigo-100">
+                        <p class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">QUẢN LÝ LỚP HỌC</p>
+                        <select id="sidebar-class-filter" onchange="window.showClassManagement(this.value)" class="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm font-bold text-indigo-700 outline-none cursor-pointer shadow-sm">
+                            <option value="">Đang tải lớp...</option>
+                        </select>
+                        <button onclick="window.showClassManagement('all')" id="nav-admin" class="w-full mt-3 module-nav-btn !mb-0 bg-indigo-600 text-white border-2 border-indigo-700 shadow-md hover:bg-indigo-700 text-center flex justify-center">👨‍🏫 Quản Lý Học Viên</button>
+                    </div>
+                `;
             }
             if(!menu.innerHTML.includes('DASHBOARD')) menu.innerHTML += dashHTML;
         }
@@ -716,131 +863,135 @@ themBaiHoc({
             let testsHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">EXAMS</p>';
             let sbtHTML = '<p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2">WORKBOOK (SBT)</p>';
             
-            database[currentClass].modules.forEach(mod => {
-                let btn = `<button onclick="window.loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn`;
-                if(mod.type === 'lesson') lessonsHTML += `${btn}">📖 ${mod.title}</button>`;
-                else if(mod.type === 'exam_module') testsHTML += `${btn} exam-btn">📝 ${mod.title}</button>`;
-                else if(mod.type === 'sbt_module') sbtHTML += `${btn} sbt-btn">📙 ${mod.title}</button>`;
-            });
+            if(window.database[currentClass]) {
+                window.database[currentClass].modules.forEach(mod => {
+                    let btn = `<button onclick="window.loadModule('${mod.id}')" id="nav-${mod.id}" class="module-nav-btn`;
+                    if(mod.type === 'lesson') lessonsHTML += `${btn}">📖 ${mod.title}</button>`;
+                    else if(mod.type === 'exam_module') testsHTML += `${btn} exam-btn">📝 ${mod.title}</button>`;
+                    else if(mod.type === 'sbt_module') sbtHTML += `${btn} sbt-btn">📙 ${mod.title}</button>`;
+                });
+            }
             
             menu.innerHTML = lessonsHTML + testsHTML + sbtHTML;
             window.renderDashboardMenu();
         }
 
-        window.toggleMenu = function() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
-        window.changeClass = function() { currentClass = document.getElementById('class-selector').value; window.renderMenu(); if(database[currentClass].modules.length > 0) window.loadModule(database[currentClass].modules[0].id); }
+        window.toggleMenu = function() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        }
 
-        // ==========================================
-        // FETCH THỜI GIAN THỰC CHO BÀI TẬP ĐƯỢC GIAO
-        // ==========================================
-        window.fetchAssignments = async function(modId) {
-            let assigned = [];
-            if (!window.currentUser) {
-                window.currentAssignedExercises = [];
-                return [];
-            }
-            
-            try {
-                if (window.isAdmin) {
-                    // Giáo viên mặc định xem cấu hình chung của cả lớp mình
-                    let cId = window.currentUser.classId || 'unassigned';
-                    let snap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `${cId}_${modId}`));
-                    if (snap.exists()) assigned = snap.data().assignedExercises || [];
-                } else {
-                    // Học sinh: ưu tiên xem bài giao cho cá nhân
-                    let uid = window.currentUser.uid;
-                    let cId = window.currentUser.classId || 'unassigned';
-                    
-                    let snapS = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `student_${uid}_${modId}`));
-                    if (snapS.exists() && snapS.data().assignedExercises && snapS.data().assignedExercises.length > 0) {
-                        assigned = snapS.data().assignedExercises;
-                    } else {
-                        // Nếu không có bài cá nhân thì xem bài chung của lớp
-                        let snapC = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `${cId}_${modId}`));
-                        if(snapC.exists()) assigned = snapC.data().assignedExercises || [];
-                        else {
-                            // Dự phòng chưa xếp lớp
-                            let snapU = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `unassigned_${modId}`));
-                            if(snapU.exists()) assigned = snapU.data().assignedExercises || [];
-                        }
-                    }
-                }
-            } catch(e) { console.error("Lỗi tải assignment", e); }
-            
-            window.currentAssignedExercises = assigned;
-            return assigned;
+        window.changeClass = function() {
+            currentClass = document.getElementById('class-selector').value;
+            window.renderMenu();
+            if(window.database[currentClass].modules.length > 0) window.loadModule(window.database[currentClass].modules[0].id);
         }
 
         window.loadModule = async function(moduleId) {
-            if (window.innerWidth < 1024) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+            if (window.innerWidth < 1024) window.toggleMenu(); 
             
-            const mod = database[currentClass].modules.find(m => m.id === moduleId);
+            const mod = window.database[currentClass].modules.find(m => m.id === moduleId);
             if (!mod) return;
-            
-            localStorage.setItem('gs6_last_module', moduleId);
 
             window.currentModule = mod;
             document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
-            const navBtn = document.getElementById('nav-' + moduleId);
-            if(navBtn) navBtn.classList.add('active');
+            if(document.getElementById('nav-' + moduleId)) document.getElementById('nav-' + moduleId).classList.add('active');
             
             document.getElementById('header-title').innerText = mod.title;
             const printClassTitle = document.getElementById('print-class-title');
-            if (printClassTitle) printClassTitle.innerText = database[currentClass].name;
+            if (printClassTitle) printClassTitle.innerText = window.database[currentClass].name;
             const printModuleTitle = document.getElementById('print-module-title');
             if (printModuleTitle) printModuleTitle.innerText = mod.title;
             
             const contentArea = document.getElementById('content-area');
-            contentArea.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Đang tải dữ liệu...</div>`;
+            contentArea.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading data...</div>`;
             
             const sourceNotice = document.getElementById('sbt-source-notice');
-            if (mod.type === 'sbt_module') sourceNotice.classList.remove('hidden'); else sourceNotice.classList.add('hidden');
-            if(currentExam.timer) clearInterval(currentExam.timer);
+            if (sourceNotice) {
+                if (mod.type === 'sbt_module') sourceNotice.classList.remove('hidden');
+                else sourceNotice.classList.add('hidden');
+            }
+
+            if(window.currentExam && window.currentExam.timer) clearInterval(window.currentExam.timer);
             
-            // 🔒 BẢO MẬT: CHỈ CHO PHÉP XEM UNIT 1, 2, 3, 4 VÀ REVIEW 1 KHI CHƯA ĐĂNG NHẬP
-            const allowedFreeModules = ['u1', 'u2', 'u3', 'u4', 'sbt_u1', 'sbt_u2', 'sbt_u3', 'sbt_u4', 'rev1'];
+            let isExamSecure = mod.type === 'exam_module' && mod.id !== 'rev1';
+            let isUnit5Secure = mod.id === 'u5';
             
-            if (!window.currentUser && !allowedFreeModules.includes(mod.id)) {
+            if ((isExamSecure || isUnit5Secure) && !window.currentUser) {
                 contentArea.innerHTML = `
                     <div class="glass-card text-center py-16 border-t-4 border-rose-500">
                         <div class="text-6xl mb-4">🔒</div>
-                        <h2 class="text-2xl font-bold text-slate-800 baloo-font mb-2">Yêu Cầu Đăng Nhập</h2>
-                        <p class="text-slate-600 mb-6 font-medium">Nội dung này thuộc hệ thống nâng cao. Bạn cần đăng nhập bằng tài khoản được cấp phép để xem tiếp.</p>
+                        <h2 class="text-2xl font-bold text-slate-800 baloo-font mb-2">Login Required</h2>
+                        <p class="text-slate-600 mb-6 font-medium">You need to sign in with an authorized account to view this content.</p>
                         <button onclick="window.loginWithGoogle()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 shadow-md">
-                            Đăng nhập ngay
+                            Sign in now
                         </button>
                     </div>`;
                 return;
             }
 
-            // Gọi Database Fetch thời gian thực cho Bài Tập và Đề thi
-            if (mod.type === 'sbt_module' || mod.type === 'exam_module') {
-                window.sbtShowAll = false;
-                window.adminViewAssignedOnly = false; // Mặc định Admin vào sẽ xem Toàn Bộ
-                await window.fetchAssignments(mod.id);
+            if (mod.type === 'lesson') window.renderLessonView(mod, contentArea);
+            else if (mod.type === 'exam_module') {
+                if(window.renderExamSetupView) window.renderExamSetupView(mod, contentArea);
             }
+            else if (mod.type === 'sbt_module') {
+                // Mặc định: HS xem bài được giao, GV xem toàn bộ
+                window.sbtShowAll = window.isAdmin ? true : false; 
+                window.currentAssignedExercises = []; // Lưu trữ ID các Exercise được giao
 
-            if (mod.type === 'lesson') {
-                window.userPracticeAnswers = {}; window.userListeningAnswers = {};
-                window.renderLessonView(mod, contentArea);
+                if (window.currentUser) {
+                    let targetClassId = window.currentUser.classId || 'unassigned';
+                    let hasAssigned = false;
+
+                    try {
+                        // 1. Học sinh: Ưu tiên tìm bài tập cá nhân trước
+                        if (!window.isAdmin) {
+                            let studentDocSnap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `student_${window.currentUser.uid}_${mod.id}`));
+                            if (studentDocSnap.exists() && studentDocSnap.data().assignedExercises) {
+                                window.currentAssignedExercises = studentDocSnap.data().assignedExercises;
+                                hasAssigned = true;
+                            }
+                        }
+                        
+                        // 2. Nếu không có bài cá nhân (Hoặc là Giáo viên), lấy bài tập chung của Lớp
+                        if (!hasAssigned) {
+                            let classDocSnap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `${targetClassId}_${mod.id}`));
+                            if (classDocSnap.exists() && classDocSnap.data().assignedExercises) {
+                                window.currentAssignedExercises = classDocSnap.data().assignedExercises;
+                                hasAssigned = true;
+                            }
+                        }
+
+                        // 3. Nếu chưa ai giao gì, mặc định load toàn bộ ID bài tập
+                        if (!hasAssigned) {
+                            window.currentAssignedExercises = mod.exercises.map(e => e.id);
+                        }
+                    } catch(e) { 
+                        console.warn("Fetch assignment error, fallback to all.", e);
+                        window.currentAssignedExercises = mod.exercises.map(e => e.id);
+                    }
+                } else {
+                    window.currentAssignedExercises = mod.exercises.map(e => e.id);
+                }
+                
+                window.renderSBTView(mod, contentArea);
             }
-            else if (mod.type === 'exam_module') window.renderExamSetupView(mod, contentArea);
-            else if (mod.type === 'sbt_module') window.renderSBTView(mod, contentArea);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ====================== LESSON: RENDER LÝ THUYẾT & PRACTICE ======================
         window.renderLessonView = function(mod, container) {
             let html = '';
-            mod.sections.forEach((sec) => {
+            mod.sections.forEach((sec, sIdx) => {
                 html += `<section><h2 class="text-2xl font-bold text-slate-800 baloo-font mt-6 mb-4">${sec.title}</h2>`;
-                if (sec.type === 'objectives') { html += `<div class="glass-card bg-indigo-50 border-indigo-200 note-box-print">${sec.content}</div>`; } 
+                if (sec.type === 'objectives') {
+                    html += `<div class="glass-card bg-indigo-50 border-indigo-200 note-box-print">${sec.content}</div>`;
+                } 
                 else if (sec.type === 'vocab') {
-                    html += `<p class="text-sm text-indigo-600 font-bold mb-4 bg-indigo-50 inline-block px-3 py-1 rounded-lg no-print">💡 Tap a card to listen</p><div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 print-grid">`;
+                    html += `<p class="text-sm text-indigo-600 font-bold mb-4 bg-indigo-50 inline-block px-3 py-1 rounded-lg no-print shadow-sm">💡 Tap a card to listen</p><div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 print-grid">`;
                     sec.words.forEach(w => {
                         let safeWord = w.w.replace(/"/g, '&quot;');
-                        html += `<div class="glass-card !mb-0 p-4 audio-row border border-slate-200 bg-white vocab-item-print" data-text="${safeWord}" onclick="window.playAudio(this.dataset.text, 'en-US')">
+                        html += `<div class="glass-card !mb-0 p-4 audio-row border border-slate-200 bg-white vocab-item-print" onclick="window.playAudio(this, '${encodeURIComponent(safeWord)}', 'en-US')">
                                     <h3 class="font-bold text-indigo-700 text-lg print:text-black">${w.w}</h3><p class="text-sm text-slate-500 mb-1 print:italic print:text-black">${w.p}</p><p class="text-slate-800 font-medium">${w.m}</p>
                                  </div>`;
                     });
@@ -851,25 +1002,42 @@ themBaiHoc({
                         html += `</div></div>`;
                     }
                 } 
-                else if (sec.type === 'grammar' || sec.type === 'pronunciation') { html += sec.content; }
+                else if (sec.type === 'grammar' || sec.type === 'pronunciation') {
+                    html += sec.content;
+                }
                 else if (sec.type === 'listening' || sec.type === 'dialogue') {
                     html += `<div class="glass-card border-t-4 border-sky-500 bg-sky-50/30">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-sky-200 pb-4 print:border-none no-print">
-                                    <span class="text-sm text-sky-600 font-bold bg-sky-100 px-3 py-1.5 rounded-full shadow-sm">👇 ROLE-PLAY</span>
-                                    <button onclick="window.playAllDialogue()" class="bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-600">▶️ Play All</button>
+                                    <span class="text-sm text-sky-600 font-bold bg-sky-100 px-3 py-1.5 rounded-full shadow-sm">👇 TAP TO LISTEN & ROLE-PLAY</span>
+                                    <button onclick="window.playAllDialogue()" class="bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-600 w-full sm:w-auto">▶️ Play All</button>
                                 </div><div class="space-y-3 mb-8">`;
-                    sec.lines.forEach((l) => {
-                        let isRev = l.gender === 'male' ? 'flex-row-reverse print:flex-row' : '';
-                        let align = l.gender === 'male' ? 'text-right print:text-left' : '';
-                        let bg = l.gender === 'male' ? 'bg-sky-50 border-sky-200' : 'bg-white border-slate-200';
+                    sec.lines.forEach((l, i) => {
+                        let isRev = i % 2 !== 0 ? 'flex-row-reverse print:flex-row' : '';
+                        let align = i % 2 !== 0 ? 'text-right print:text-left' : '';
+                        let bg = i % 2 !== 0 ? 'bg-sky-50 border-sky-200' : 'bg-white border-slate-200';
                         let safeText = l.t.replace(/"/g, '&quot;');
-                        html += `<div class="audio-row flex gap-3 p-2 ${isRev}" data-text="${safeText}" onclick="window.playDialogueLine(this.dataset.text, '${l.gender}')">
+                        html += `<div class="audio-row flex gap-3 p-2 ${isRev}" onclick="window.playDialogueLine(this, '${encodeURIComponent(safeText)}', '${l.gender}')">
                                     <div class="chat-avatar w-10 h-10 rounded-full bg-sky-200 flex items-center justify-center text-xl shrink-0 no-print">${l.a}</div>
                                     <div class="${align} w-full"><div class="text-xs font-bold text-sky-600 mb-1 mx-1 no-print">${l.c}</div>
                                     <div class="p-3 rounded-2xl border ${bg} inline-block max-w-[85%] text-[15px] font-medium shadow-sm"><span class="hidden print:inline chat-name-print">${l.c}: </span>${l.t}</div></div>
                                  </div>`;
                     });
-                    html += `</div></div>`;
+                    html += `</div>`;
+                    if (sec.questions) {
+                        html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item">
+                                    <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">🎧 Choose the correct answer:</h4><div class="space-y-5">`;
+                        sec.questions.forEach(q => {
+                            html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
+                            q.opts.forEach((opt, idx) => {
+                                html += `<div onclick="window.selectListeningChoice(this, '${q.id}', ${idx})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-sky-100">${opt}</div>`;
+                            });
+                            html += `</div></div>`;
+                        });
+                        html += `</div><div class="text-center mt-6 no-print listening-action-buttons">
+                                    <button onclick="window.submitListeningTask('${sec.questions[0].id}')" class="bg-sky-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-sky-700 shadow-md text-base w-full md:w-auto">✅ Submit Listening</button>
+                                 </div></div>`;
+                    }
+                    html += `</div>`;
                 }
                 else if (sec.type === 'speaking') {
                     let safeSample = sec.sample.replace(/"/g, '&quot;');
@@ -879,7 +1047,7 @@ themBaiHoc({
                     sec.prompts.forEach(p => html += `<li>${p}</li>`);
                     html += `</ul></div>
                                 <div class="flex flex-col md:flex-row items-start gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                                    <button data-text="${safeSample}" onclick="window.playSpeakingSample(this.dataset.text)" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-rose-600 shrink-0 no-print flex items-center gap-2">🔊 Listen to Sample</button>
+                                    <button onclick="window.playAudio(this, '${encodeURIComponent(safeSample)}', 'en-US')" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-rose-600 shrink-0 no-print flex items-center gap-2">🔊 Listen to Sample</button>
                                     <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Sample Answer:</p><p class="text-[15px] text-slate-700 font-medium">"${sec.sample}"</p></div>
                                 </div>
                              </div>`;
@@ -890,33 +1058,34 @@ themBaiHoc({
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 border-b border-teal-200 pb-4 print:border-none no-print">
                                     <span class="text-sm text-teal-600 font-bold bg-teal-100 px-3 py-1.5 rounded-full shadow-sm">🎧 TAP TO LISTEN</span>
                                     <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                                        <button data-text="${safeScript}" onclick="window.playAudio(this.dataset.text, 'en-US')" class="flex-1 sm:flex-none bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-teal-600 flex items-center justify-center gap-2">▶️ Play</button>
-                                        <button onclick="window.toggleTranscript(this)" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-300 flex items-center justify-center gap-2">📝 Transcript</button>
+                                        <button onclick="window.playAudio(this, '${encodeURIComponent(safeScript)}', 'en-US')" class="flex-1 sm:flex-none bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">▶️ Play</button>
+                                        <button onclick="window.toggleTranscript(this)" class="flex-1 sm:flex-none bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">📝 Transcript</button>
                                     </div>
                                 </div>
                                 <div class="audio-transcript hidden mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl text-sm text-slate-800 leading-relaxed no-print shadow-inner"><b>Audio Script:</b> ${sec.audioScript}</div>
                                 <div class="hidden print:block text-slate-800 text-sm leading-relaxed mb-6 italic border border-slate-300 p-4 rounded-xl bg-white"><b>Audio Script (For teacher):</b> ${sec.audioScript}</div>
-                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item" id="list-task-container">
+                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:border-slate-300 exercise-item">
                                     <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">🎧 Listen and choose the correct answer:</h4><div class="space-y-5">`;
                     sec.questions.forEach(q => {
-                        html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="flex flex-wrap gap-2 print:block" id="opts-list-${q.id}">`;
+                        html += `<div><p class="font-bold text-slate-800 mb-2">${q.q}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-2" id="opts-${q.id}">`;
                         q.opts.forEach((opt, idx) => {
                             html += `<div onclick="window.selectListeningChoice(this, '${q.id}', ${idx})" class="q-btn bg-slate-50 border border-slate-300 p-2.5 rounded-lg text-sm font-medium hover:bg-teal-100">${opt}</div>`;
                         });
-                        html += `</div><div id="exp-list-${q.id}" class="hidden mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800 print:bg-transparent print:border-none print:p-0 print:text-black"></div></div>`;
+                        html += `</div></div>`;
                     });
                     html += `</div>
-                             <div class="text-center mt-6 no-print" id="action-list-btn">
-                                <button onclick="window.submitListeningTask()" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md">✅ Submit Listening</button>
+                             <div class="text-center mt-6 no-print listening-action-buttons">
+                                <button onclick="window.submitListeningTask('${sec.questions[0].id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">✅ Submit Listening</button>
                              </div></div></div>`;
                 }
                 else if (sec.type === 'reading_practice' || sec.type === 'practice' || sec.type === 'reading') {
                     if (sec.readingText || sec.text) {
                         let textContent = sec.readingText || sec.text;
-                        let safeReading = textContent.replace(/<[^>]*>?/gm, '').replace(/"/g, '&quot;');
+                        let rawReading = textContent.replace(/<[^>]*>?/gm, ''); 
+                        let safeReading = rawReading.replace(/"/g, '&quot;');
                         html += `<div class="glass-card border-t-4 border-amber-500 mb-6 note-box-print">
                                     <h3 class="text-lg font-bold text-slate-800 mb-3">🌎 Reading</h3>
-                                    <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:border-none print:p-0" data-text="${safeReading}" onclick="window.playReadingText(this.dataset.text)">
+                                    <div class="text-slate-800 text-base leading-relaxed bg-amber-50/50 p-5 rounded-xl border border-amber-100 audio-row print:border-none print:p-0" onclick="window.playAudio(this, '${encodeURIComponent(safeReading)}', 'en-US')">
                                         ${textContent}
                                     </div>
                                  </div>`;
@@ -924,18 +1093,19 @@ themBaiHoc({
                     if (sec.exercises) {
                         html += `<div class="glass-card border-t-4 border-indigo-500" id="practice-container">`;
                         sec.exercises.forEach(ex => {
-                            html += `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4 exercise-item print:border-none print:p-0 print:mb-4">
+                            html += `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4 exercise-item print:border-none print:p-0 print:mb-4" id="ex-${ex.id}">
                                         <p class="text-[15px] font-bold text-slate-800 mb-3">${ex.q}</p>
-                                        <div class="flex flex-wrap gap-2 print:block" id="opts-prac-${ex.id}">`;
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 print:grid-cols-3" id="opts-${ex.id}">`;
                             ex.opts.forEach((opt, idx) => {
                                 html += `<div onclick="window.selectChoice(this, '${ex.id}', ${idx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 print:border-none print:p-1 print:inline">${opt}</div>`;
                             });
-                            html += `</div><div id="exp-prac-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"></div></div>`;
+                            html += `</div><div id="exp-${ex.id}" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"><b>💡 Explanation:</b> ${ex.exp}</div></div>`;
                         });
-                        html += `<div class="text-center mt-6 no-print" id="action-prac-btn">
-                                    <button onclick="window.submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">✅ Submit Practice</button>
+                        html += `<div class="text-center mt-6 no-print" id="action-buttons">
+                                    <button onclick="window.submitExercises()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md text-base w-full md:w-auto">✅ Submit & Explain</button>
                                  </div></div>`;
                     }
+                    window.userPracticeAnswers = {}; 
                 }
                 html += `</section>`;
             });
@@ -944,20 +1114,25 @@ themBaiHoc({
 
         window.selectListeningChoice = function(btn, qId, choiceIdx) {
             window.userListeningAnswers[qId] = choiceIdx;
-            const parent = document.getElementById('opts-list-' + qId);
+            const parent = document.getElementById('opts-' + qId);
             if(parent) {
                 parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
                 btn.classList.add('q-selected');
             }
         }
 
-        window.submitListeningTask = async function() {
+        window.submitListeningTask = async function(firstQid) {
             let score = 0; let questions = [];
-            const section = window.currentModule.sections.find(s => s.type === 'listening_task');
-            if(section && section.questions) questions = section.questions;
+            window.currentModule.sections.forEach(s => {
+                if ((s.type === 'listening_task' || s.type === 'listening') && s.questions) {
+                    questions = questions.concat(s.questions);
+                }
+            });
+
+            if (questions.length === 0) return;
 
             questions.forEach(q => {
-                const parent = document.getElementById('opts-list-' + q.id);
+                const parent = document.getElementById('opts-' + q.id);
                 if(!parent) return;
                 const btns = parent.querySelectorAll('.q-btn');
                 const userAns = window.userListeningAnswers[q.id];
@@ -972,33 +1147,29 @@ themBaiHoc({
                 }
             });
 
-            const actionContainer = document.getElementById('action-list-btn');
+            if (window.currentUser && !window.isAdmin) {
+                try {
+                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
+                        uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
+                        testId: window.currentModule.id, level: "Listening", testName: window.currentModule.title,
+                        score: score, total: questions.length, percentage: (score/questions.length)*10,
+                        timeTaken: 0, timestamp: Date.now(), isLesson: true
+                    });
+                } catch(e) {}
+            }
+
+            const actionContainer = document.querySelector('.listening-action-buttons');
             if(actionContainer) {
                 actionContainer.innerHTML = `
-                    <div class="text-xl font-bold text-teal-600 mb-4">🎉 Score: ${score} / ${questions.length}</div>
-                    <div class="flex justify-center gap-3">
-                        <button onclick="window.resetListening()" class="bg-amber-500 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-amber-600">🔄 Làm Lại</button>
-                        <button onclick="window.showListeningAnswers()" class="bg-teal-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-teal-700">💡 Xem Đáp Án</button>
-                    </div>`;
+                    <div class="text-xl font-bold text-teal-600 mb-4 bg-teal-50 inline-block px-6 py-2 rounded-xl border border-teal-200">🎉 Score: ${score} / ${questions.length}</div>
+                    <br><button onclick="window.loadModule('${window.currentModule.id}')" class="bg-teal-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-teal-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>
+                `;
             }
         }
-
-        window.showListeningAnswers = function() {
-            const section = window.currentModule.sections.find(s => s.type === 'listening_task');
-            if(!section || !section.questions) return;
-            section.questions.forEach(q => {
-                const expDiv = document.getElementById('exp-list-' + q.id);
-                if(expDiv) {
-                    expDiv.innerHTML = `<b>💡 Đáp án chuẩn:</b> ${q.opts[q.ans]}`;
-                    expDiv.classList.remove('hidden');
-                }
-            });
-        }
-        window.resetListening = function() { window.userListeningAnswers = {}; window.loadModule(window.currentModule.id); }
-
+        
         window.selectChoice = function(btn, exId, choiceIdx) {
             window.userPracticeAnswers[exId] = choiceIdx;
-            const parent = document.getElementById('opts-prac-' + exId);
+            const parent = document.getElementById('opts-' + exId);
             if(parent) {
                 parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
                 btn.classList.add('q-selected');
@@ -1008,14 +1179,17 @@ themBaiHoc({
         window.submitExercises = async function() {
             let score = 0; let exercises = [];
             window.currentModule.sections.forEach(s => {
-                if(s.type === 'reading_practice' || s.type === 'practice') {
+                if(s.type === 'reading_practice' || s.type === 'practice' || s.type === 'reading') {
                     if (s.exercises) exercises = exercises.concat(s.exercises);
                 }
             });
             if (exercises.length === 0) return;
 
             exercises.forEach(ex => {
-                const parent = document.getElementById('opts-prac-' + ex.id);
+                const expDiv = document.getElementById('exp-' + ex.id);
+                if(expDiv) expDiv.classList.remove('hidden');
+
+                const parent = document.getElementById('opts-' + ex.id);
                 if(!parent) return;
                 const btns = parent.querySelectorAll('.q-btn');
                 const userAns = window.userPracticeAnswers[ex.id];
@@ -1030,174 +1204,156 @@ themBaiHoc({
                 }
             });
 
-            const actionContainer = document.getElementById('action-prac-btn');
+            if (window.currentUser && !window.isAdmin) {
+                try {
+                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
+                        uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
+                        testId: window.currentModule.id, level: "Practice", testName: window.currentModule.title,
+                        score: score, total: exercises.length, percentage: (score/exercises.length)*10,
+                        timeTaken: 0, timestamp: Date.now(), isLesson: true
+                    });
+                } catch(e) {}
+            }
+
+            const actionContainer = document.getElementById('action-buttons');
             if(actionContainer) {
                 actionContainer.innerHTML = `
-                    <div class="text-xl font-bold text-indigo-600 mb-4">🎉 Score: ${score} / ${exercises.length}</div>
-                    <div class="flex justify-center gap-3">
-                        <button onclick="window.resetPractice()" class="bg-amber-500 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-amber-600">🔄 Làm Lại</button>
-                        <button onclick="window.showPracticeAnswers()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700">💡 Xem Giải Thích</button>
-                    </div>`;
+                    <div class="text-xl font-bold text-indigo-600 mb-4 bg-indigo-50 inline-block px-6 py-2 rounded-xl border border-indigo-200">🎉 Score: ${score} / ${exercises.length}</div>
+                    <br><button onclick="window.loadModule('${window.currentModule.id}')" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition-transform transform active:scale-95 text-base w-full md:w-auto">🔄 Try Again</button>
+                `;
             }
         };
 
-        window.showPracticeAnswers = function() {
-            let exercises = [];
-            window.currentModule.sections.forEach(s => {
-                if(s.type === 'reading_practice' || s.type === 'practice') {
-                    if (s.exercises) exercises = exercises.concat(s.exercises);
-                }
-            });
-            exercises.forEach(ex => {
-                const expDiv = document.getElementById('exp-prac-' + ex.id);
-                if(expDiv && ex.exp) {
-                    expDiv.innerHTML = `<b>💡 Giải thích:</b> ${ex.exp}`;
-                    expDiv.classList.remove('hidden');
-                }
-            });
-        }
-        window.resetPractice = function() { window.userPracticeAnswers = {}; window.loadModule(window.currentModule.id); }
-
-        window.toggleTranscript = function(btn) {
-            const container = btn.closest('.glass-card');
-            const el = container.querySelector('.audio-transcript');
-            if(el) {
-                if(el.classList.contains('hidden')) el.classList.remove('hidden');
-                else el.classList.add('hidden');
+        // =======================================================
+        // WORKBOOK (SBT) LOGIC & ASSIGNMENT
+        // =======================================================
+        window.openAssignmentModal = async function(modId) {
+            document.getElementById('assignmentModal').classList.add('active');
+            document.getElementById('assignment-list').innerHTML = '<div class="text-center py-8 font-bold text-indigo-600">Loading configurations...</div>';
+            
+            let className = "Entire Class";
+            if(window.adminClassesData && window.currentUser.classId) {
+                let cls = window.adminClassesData.find(c => c.id === window.currentUser.classId);
+                if(cls) className = "Class " + cls.name;
             }
+            document.getElementById('assign-class-option').innerText = className;
+
+            let studentContainer = document.getElementById('student-select-container');
+            if(studentContainer) studentContainer.classList.add('hidden');
+            document.getElementById('assign-target-select').value = 'class';
+            
+            await window.syncAssignmentUI();
         }
 
-        // ====================== WORKBOOK (SBT) RENDERER ======================
-        window.toggleAdminSBTView = async function() {
-            window.adminViewAssignedOnly = !window.adminViewAssignedOnly;
-            if(window.adminViewAssignedOnly) {
-                // Tải lại fresh data từ DB khi bật chế độ "Bài đã giao"
-                await window.fetchAssignments(window.currentModule.id);
-            }
-            window.renderSBTView(window.currentModule, document.getElementById('content-area'));
-        }
-
-        window.renderSBTView = function(mod, container) {
-            let teacherBtnHtml = '';
-            if (window.isAdmin) {
-                let viewToggleText = window.adminViewAssignedOnly ? "📖 Xem Tất Cả" : "📋 Xem Bài Đã Giao";
-                teacherBtnHtml = `<div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 hover:bg-slate-700 transition-colors">🖨️ In Đề</button>
-                                    <button onclick="window.toggleAdminSBTView()" class="bg-sky-100 text-sky-700 px-4 py-2 rounded-xl text-sm font-bold border border-sky-300 hover:bg-sky-200 shadow-sm flex items-center gap-2 transition-colors">${viewToggleText}</button>
-                                    <button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-300 hover:bg-indigo-200 shadow-sm flex items-center gap-2 transition-colors">⚙️ Giao Bài Tập</button>
-                                  </div>`;
-            }
-
-            let studentToggleHtml = '';
-            if (!window.isAdmin) {
-                let checkState = window.sbtShowAll ? "checked" : "";
-                studentToggleHtml = `
-                    <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm mt-2 sm:mt-0">
-                        <span class="text-sm font-bold ${window.sbtShowAll ? 'text-slate-400' : 'text-rose-600'}">🎯 Bài Được Giao</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer" onchange="window.toggleSBTShowAll(this.checked)" ${checkState}>
-                            <div class="w-11 h-6 bg-rose-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                        </label>
-                        <span class="text-sm font-bold ${window.sbtShowAll ? 'text-indigo-600' : 'text-slate-400'}">Toàn Bộ Sách</span>
-                    </div>
-                `;
-            }
-
-            let html = `<div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4 border-b pb-4 border-slate-200 no-print">
-                            <div>
-                                <h2 class="text-2xl font-bold text-indigo-800 baloo-font uppercase">${mod.title}</h2>
-                                <p class="text-slate-500 text-sm">Học sinh chỉ được nộp bài 1 lần duy nhất.</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
-                                ${studentToggleHtml} ${teacherBtnHtml}
-                            </div>
-                        </div>`;
+        window.toggleStudentSelect = async function(val) {
+            const container = document.getElementById('student-select-container');
+            const assignList = document.getElementById('assignment-list');
             
-            if(!window.sbtState[mod.id]) window.sbtState[mod.id] = { answers: {}, locked: false };
-            let state = window.sbtState[mod.id];
-            
-            let exercisesToRender = mod.exercises;
-            
-            // Xử lý Lọc bộ hiển thị dựa trên Quyền (Admin hay Học sinh)
-            if (window.isAdmin) {
-                if (window.adminViewAssignedOnly) {
-                    if (window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
-                        exercisesToRender = mod.exercises.map(ex => {
-                            let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
-                            return { ...ex, questions: filteredQs };
-                        }).filter(ex => ex.questions.length > 0);
-                    } else {
-                        exercisesToRender = [];
-                    }
+            if (val === 'individual') {
+                container.classList.remove('hidden');
+                let selectHtml = '';
+                if (window.adminUsersData) {
+                    let students = window.adminUsersData.filter(u => u.role === 'student' && u.classId === window.currentUser.classId);
+                    students.forEach(s => { selectHtml += `<option value="${s.id}">${s.nickname} (${s.email})</option>`; });
                 }
-            } else {
-                // Phân quyền Học sinh
-                if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
-                    exercisesToRender = mod.exercises.map(ex => {
-                        let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
-                        return { ...ex, questions: filteredQs };
-                    }).filter(ex => ex.questions.length > 0);
-                } else if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length === 0) {
-                    exercisesToRender = []; // Chưa giao gì
-                }
-            }
-
-            if (exercisesToRender.length === 0) {
-                let emptyMsg = window.isAdmin && window.adminViewAssignedOnly 
-                    ? "Thầy/Cô chưa giao bài tập nào cho lớp này." 
-                    : "Giáo viên chưa giao bài tập nào trong phần này.";
-                container.innerHTML = html + `<div class="glass-card text-center py-10 no-print"><p class="text-4xl mb-3">📭</p><p class="text-slate-500 font-bold">${emptyMsg}</p></div>`;
-                return;
-            }
-
-            exercisesToRender.forEach((ex) => {
-                html += `<div class="glass-card mb-8 exercise-container" id="ex-container-${ex.id}">
-                            <div class="border-b-2 border-slate-100 pb-3 mb-4">
-                                <span class="text-xs font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-1 rounded print:bg-transparent print:p-0">${ex.part}</span>
-                                <h3 class="font-bold text-lg text-slate-800 mt-2">${ex.title}</h3>
-                            </div>`;
+                if (selectHtml === '') selectHtml = '<option value="">No students in this class</option>';
                 
-                if(ex.note) html += `<p class="text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200 mb-5 font-medium shadow-inner print:bg-transparent print:border-slate-300 print:shadow-none">${ex.note}</p>`;
-
-                html += `<div class="space-y-6">`;
-                ex.questions.forEach((q) => {
-                    html += `<div><p class="font-bold text-slate-800 mb-3 text-[15px] leading-relaxed">${window.parseSBTQuestion(q.q, q.id, state.locked, state.answers[q.id])}</p>`;
-                    
-                    if (ex.type === 'choice') {
-                        html += `<div class="flex flex-wrap gap-2" id="opts-${q.id}">`;
-                        q.opts.forEach((opt, oIdx) => { 
-                            let btnClass = "q-btn bg-white border border-slate-300 p-2 rounded-lg text-sm font-medium hover:bg-indigo-50 shadow-sm";
-                            let isChecked = state.answers[q.id] && state.answers[q.id].val === oIdx;
-                            
-                            if(state.locked) {
-                                btnClass += " disabled";
-                                if (isChecked && oIdx === q.ans) btnClass += " q-correct";
-                                else if (isChecked && oIdx !== q.ans) btnClass += " q-wrong";
-                                else if (oIdx === q.ans) btnClass += " q-correct";
-                            } else if(isChecked) {
-                                btnClass += " q-selected";
-                            }
-                            
-                            html += `<div onclick="window.selectSBTChoice('${mod.id}', '${q.id}', ${oIdx})" class="${btnClass}">${opt}</div>`; 
-                        });
-                        html += `</div>`;
-                    }
-                    
-                    let expClass = state.locked ? "mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800 print:border-none print:p-0 print:bg-transparent print:text-black" : "hidden";
-                    html += `<div id="exp-${q.id}" class="${expClass}"><b>💡 Giải thích:</b> ${q.exp}</div></div>`;
-                });
-                html += `</div></div>`;
-            });
-
-            if (!state.locked && !window.isAdmin) {
-                html += `<div class="mt-8 text-center no-print" id="sbt-action-container-${mod.id}">
-                            <button onclick="window.submitSBTModule('${mod.id}')" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 text-lg w-full md:w-auto submit-btn">🚀 NỘP BÀI (1 LẦN DUY NHẤT)</button>
-                         </div>`;
-            } else if (state.locked) {
-                html += `<div class="mt-8 text-center no-print"><button onclick="window.loadModule('${mod.id}')" class="bg-slate-200 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-300 shadow-sm transition-transform active:scale-95">🔄 Tải lại trang</button></div>`;
+                document.getElementById('assign-student-select').innerHTML = selectHtml;
+            } else { 
+                container.classList.add('hidden'); 
             }
-                     
-            container.innerHTML = html;
+            
+            assignList.innerHTML = '<div class="text-center py-8 font-bold text-indigo-600">Loading configurations...</div>';
+            await window.syncAssignmentUI();
+        }
+        
+        window.syncAssignmentUI = async function() {
+            const mod = window.currentModule;
+            let targetType = document.getElementById('assign-target-select').value;
+            let targetId = '';
+            
+            if (targetType === 'class') {
+                targetId = window.currentUser.classId || 'unassigned';
+            } else {
+                let studentSelect = document.getElementById('assign-student-select');
+                targetId = studentSelect ? studentSelect.value : '';
+                if(!targetId) {
+                    document.getElementById('assignment-list').innerHTML = '<div class="text-center p-4 text-rose-500 font-bold">Please select a specific student!</div>';
+                    return;
+                }
+            }
+
+            let docId = targetType === 'class' ? `${targetId}_${mod.id}` : `student_${targetId}_${mod.id}`;
+            let currentAssigned = [];
+            
+            try {
+                let docSnap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", docId));
+                if (docSnap.exists() && docSnap.data().assignedExercises) {
+                    currentAssigned = docSnap.data().assignedExercises;
+                } else {
+                    currentAssigned = mod.exercises.map(e => e.id); 
+                }
+            } catch(e) {
+                currentAssigned = mod.exercises.map(e => e.id);
+            }
+
+            let html = '';
+            mod.exercises.forEach(ex => {
+                let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
+                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm transition-colors">
+                            <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
+                            <div>
+                                <div class="font-bold text-sm text-indigo-700">${ex.part || 'Exercise'}</div>
+                                <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
+                            </div>
+                         </label>`;
+            });
+            
+            document.getElementById('assignment-list').innerHTML = html;
+        }
+
+        window.selectAllAssignments = function(isSelect) {
+            document.querySelectorAll('.assign-checkbox').forEach(cb => cb.checked = isSelect);
+        }
+
+        window.saveAssignment = async function() {
+            let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
+            let selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            let targetSelect = document.getElementById('assign-target-select');
+            let targetType = targetSelect ? targetSelect.value : 'class';
+            
+            let docId = '';
+            if (targetType === 'class') {
+                let classIdToSave = window.currentUser.classId || 'unassigned';
+                docId = `${classIdToSave}_${window.currentModule.id}`;
+            } else {
+                let studentSelect = document.getElementById('assign-student-select');
+                let studentId = studentSelect ? studentSelect.value : '';
+                if (!studentId) return window.showCustomAlert("Error", "Please select a student!", "⚠️");
+                docId = `student_${studentId}_${window.currentModule.id}`;
+            }
+            
+            try {
+                let saveBtn = document.getElementById('btn-save-assign');
+                let originalText = saveBtn.innerText;
+                saveBtn.innerText = "Saving..."; saveBtn.disabled = true;
+
+                await window.fSetDoc(window.fDoc(window.fdb, "assignments", docId), {
+                    assignedExercises: selectedIds,
+                    updatedAt: Date.now(),
+                    assignedBy: window.currentUser.email
+                });
+                
+                saveBtn.innerText = originalText; saveBtn.disabled = false;
+                document.getElementById('assignmentModal').classList.remove('active');
+                window.showCustomAlert("Success", "Homework assignment saved successfully!", "✅");
+                
+                window.loadModule(window.currentModule.id);
+            } catch(e) { 
+                console.error(e); 
+                window.showCustomAlert("Error", "Failed to save assignment. Check network.", "⚠️");
+            }
         }
 
         window.toggleSBTShowAll = function(isChecked) {
@@ -1205,39 +1361,116 @@ themBaiHoc({
             window.renderSBTView(window.currentModule, document.getElementById('content-area'));
         }
 
-        window.parseSBTQuestion = function(text, qId, isLocked, answerData) {
+        window.renderSBTView = function(mod, container) {
+            let teacherToolbarHtml = '';
+            if (window.isAdmin) {
+                teacherToolbarHtml = `
+                    <div class="flex flex-wrap gap-2 mb-6 bg-indigo-50 p-3 rounded-xl border border-indigo-200 no-print">
+                        <span class="font-bold text-indigo-800 flex items-center mr-2">👨‍🏫 Teacher Tools:</span>
+                        <button onclick="window.togglePresentationMode()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 flex items-center gap-2">🖥️ Present</button>
+                        <button onclick="window.printBlankTest()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-700 flex items-center gap-2">🖨️ Print Blank Test</button>
+                        <button onclick="window.openAssignmentModal('${mod.id}')" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-amber-600 flex items-center gap-2">⚙️ Assign Homework</button>
+                    </div>
+                `;
+            }
+
+            let studentToggleHtml = '';
+            if (window.currentAssignedExercises && window.currentAssignedExercises.length < mod.exercises.length) {
+                let checkState = window.sbtShowAll ? "checked" : "";
+                studentToggleHtml = `
+                    <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+                        <input type="checkbox" class="w-4 h-4 accent-indigo-600" onchange="window.toggleSBTShowAll(this.checked)" ${checkState}>
+                        <span class="text-sm font-bold text-slate-700">Show all exercises (Self-study)</span>
+                    </label>
+                `;
+            }
+
+            let html = teacherToolbarHtml + `
+                        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b pb-4 border-slate-200 no-print">
+                            <div>
+                                <h2 class="text-2xl font-bold text-indigo-800 baloo-font uppercase">${mod.title}</h2>
+                                <p class="text-slate-500 text-sm">Submit to record your score. Wrong answers will be highlighted.</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                                ${studentToggleHtml}
+                            </div>
+                        </div>`;
+            
+            if(!window.sbtState[mod.id]) window.sbtState[mod.id] = { answers: {}, locked: false, attempts: 0 };
+            
+            let exercisesToRender = mod.exercises;
+            if (!window.sbtShowAll && window.currentAssignedExercises) {
+                exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+            }
+
+            if (exercisesToRender.length === 0) {
+                container.innerHTML = html + `<div class="glass-card text-center py-12"><div class="text-5xl mb-3">📭</div><p class="text-slate-500 font-bold text-lg">No homework assigned yet.</p></div>`;
+                return;
+            }
+
+            html += `<div class="flex justify-end mb-4"><span class="text-sm font-bold text-slate-600 bg-slate-200 px-4 py-1.5 rounded-full" id="sbt-global-badge-${mod.id}">Attempts: ${window.sbtState[mod.id].attempts}/3</span></div>`;
+
+            exercisesToRender.forEach((ex) => {
+                html += `<div class="glass-card mb-8 exercise-container" id="ex-container-${ex.id}">
+                            <div class="border-b-2 border-slate-100 pb-3 mb-4">
+                                <span class="text-xs font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-1 rounded">${ex.part || 'Exercise'}</span>
+                                <h3 class="font-bold text-lg text-slate-800 mt-2">${ex.title}</h3>
+                            </div>`;
+                
+                if(ex.note) html += `<p class="text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200 mb-5 font-medium shadow-inner">${ex.note}</p>`;
+
+                html += `<div class="space-y-6">`;
+                ex.questions.forEach((q, qIdx) => {
+                    html += `<div><p class="font-bold text-slate-800 mb-3 text-[15px] leading-relaxed">${window.parseSBTQuestion(q.q, q.id)}</p>`;
+                    
+                    if (ex.type === 'choice') {
+                        html += `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2" id="opts-${q.id}">`;
+                        q.opts.forEach((opt, oIdx) => { 
+                            let selClass = '';
+                            if (window.sbtState[mod.id].answers[q.id] && window.sbtState[mod.id].answers[q.id].val === oIdx) {
+                                selClass = 'q-selected';
+                            }
+                            html += `<div onclick="window.selectSBTChoice('${mod.id}', '${q.id}', ${oIdx})" class="q-btn bg-white border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50 shadow-sm ${selClass}">${opt}</div>`; 
+                        });
+                        html += `</div>`;
+                    }
+                    html += `<div id="exp-${q.id}" class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800"><b>💡 Explanation:</b> ${q.exp}</div></div>`;
+                });
+                html += `</div></div>`;
+            });
+
+            html += `<div class="mt-8 text-center no-print" id="sbt-action-container-${mod.id}">
+                        <button onclick="window.submitSBTModule('${mod.id}')" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 text-lg w-full md:w-auto submit-btn">🚀 SUBMIT ALL</button>
+                     </div>`;
+                     
+            container.innerHTML = html;
+        }
+
+        window.parseSBTQuestion = function(text, qId) {
             let count = 0;
             return text.replace(/\[fill\]/g, () => {
-                let userVal = answerData && answerData.val && answerData.val[count] ? answerData.val[count] : "";
-                let classNames = "fill-input";
-                let disabled = "";
-                
-                if(isLocked) {
-                    disabled = "disabled";
-                    if(answerData && answerData.isCorrectArr && answerData.isCorrectArr[count]) {
-                        classNames += " fill-correct";
-                    } else {
-                        classNames += " fill-wrong";
-                    }
-                }
-                
-                let html = `<input type="text" id="fill-${qId}-${count}" oninput="window.saveSBTFill('${window.currentModule.id}', '${qId}', ${count}, this.value)" class="${classNames}" value="${userVal}" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="..." ${disabled}>`;
+                let html = `<input type="text" id="fill-${qId}-${count}" oninput="window.saveSBTFill('${window.currentModule.id}', '${qId}', ${count}, this.value)" class="fill-input w-24" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="...">`;
                 count++; return html;
             });
         }
 
         window.selectSBTChoice = function(modId, qId, choiceIdx) {
             let state = window.sbtState[modId];
-            if (state.locked) return; 
+            if (state.attempts >= 3 || state.locked) return;
+            if (state.answers[qId] && state.answers[qId].isCorrect) return; 
+            
             state.answers[qId] = { val: choiceIdx };
             const parent = document.getElementById(`opts-${qId}`);
-            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
-            parent.children[choiceIdx].classList.add('q-selected');
+            if(parent) {
+                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+                parent.children[choiceIdx].classList.add('q-selected');
+            }
         }
 
         window.saveSBTFill = function(modId, qId, fillIdx, val) {
             let state = window.sbtState[modId];
-            if (state.locked) return;
+            if (state.attempts >= 3 || state.locked) return;
+            
             if(!state.answers[qId]) state.answers[qId] = { val: [] };
             if(!Array.isArray(state.answers[qId].val)) state.answers[qId].val = [];
             state.answers[qId].val[fillIdx] = val.trim();
@@ -1247,59 +1480,89 @@ themBaiHoc({
             const mod = window.currentModule;
             let state = window.sbtState[modId];
             if (state.locked) return;
-            if (!confirm("Hệ thống chỉ chấm các bài tập được giao. Bạn có chắc chắn muốn nộp bài? Chỉ được nộp 1 lần duy nhất!")) return;
 
-            state.locked = true;
+            state.attempts++;
+            document.getElementById(`sbt-global-badge-${modId}`).innerText = `Attempts: ${state.attempts}/3`;
+            
             let totalQuestions = 0;
             let correctCount = 0;
+            let allCorrect = true;
             let detailedResults = [];
 
             let exercisesToRender = mod.exercises;
             if (!window.sbtShowAll && window.currentAssignedExercises) {
-                exercisesToRender = mod.exercises.map(ex => {
-                    let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
-                    return { ...ex, questions: filteredQs };
-                }).filter(ex => ex.questions.length > 0);
+                exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
             }
 
             exercisesToRender.forEach(ex => {
                 ex.questions.forEach((q) => {
                     totalQuestions++;
-                    let userAns = state.answers[q.id] || { val: null };
+                    let userAns = state.answers[q.id];
                     let isQCorrect = false;
 
                     if (ex.type === 'choice') {
-                        if (userAns.val === q.ans) isQCorrect = true;
+                        if (userAns !== undefined && userAns.val === q.ans) isQCorrect = true;
                         
-                        if(isQCorrect) correctCount++;
-                        state.answers[q.id].isCorrect = isQCorrect;
-
+                        const parent = document.getElementById(`opts-${q.id}`);
+                        if(parent) {
+                            const btns = parent.children;
+                            if (isQCorrect) {
+                                correctCount++;
+                                btns[userAns.val].classList.remove('q-selected', 'q-wrong');
+                                btns[userAns.val].classList.add('q-correct', 'disabled');
+                                state.answers[q.id].isCorrect = true;
+                            } else {
+                                allCorrect = false;
+                                if (userAns !== undefined && userAns.val !== undefined) {
+                                    btns[userAns.val].classList.remove('q-selected');
+                                    btns[userAns.val].classList.add('q-wrong');
+                                }
+                                if (state.attempts >= 3) {
+                                    btns[q.ans].classList.add('q-correct');
+                                    Array.from(btns).forEach(b => b.classList.add('disabled'));
+                                }
+                            }
+                        }
+                        
                         detailedResults.push({
                             q: q.q.replace(/\[fill\]/g, '___'),
-                            userAns: userAns.val !== null && userAns.val !== undefined ? q.opts[userAns.val] : "Bỏ trống",
+                            userAns: userAns ? q.opts[userAns.val] : "Blank",
                             correctAns: q.opts[q.ans],
                             isCorrect: isQCorrect
                         });
-                    } 
-                    else if (ex.type === 'fill') {
+                        
+                    } else if (ex.type === 'fill') {
                         let qCorrect = true;
                         let uAnsArr = []; let cAnsArr = [];
-                        let isCorrectArr = [];
                         
                         q.ans.forEach((allowedAnsArray, fIdx) => {
-                            let uVal = (userAns.val && userAns.val[fIdx]) ? userAns.val[fIdx].toLowerCase().replace(/\s+/g, ' ').trim() : "";
+                            let uVal = (userAns && userAns.val && userAns.val[fIdx]) ? userAns.val[fIdx].toLowerCase().replace(/\s+/g, ' ').trim() : "";
                             let isBlankCorrect = allowedAnsArray.some(a => a.toLowerCase().replace(/\s+/g, ' ').trim() === uVal);
+                            let inputEl = document.getElementById(`fill-${q.id}-${fIdx}`);
                             
                             uAnsArr.push(uVal || "___");
                             cAnsArr.push(allowedAnsArray[0]);
-                            isCorrectArr.push(isBlankCorrect);
 
-                            if (!isBlankCorrect) qCorrect = false;
+                            if (inputEl) {
+                                if (isBlankCorrect) {
+                                    inputEl.classList.remove('fill-wrong'); inputEl.classList.add('fill-correct'); inputEl.disabled = true;
+                                } else {
+                                    qCorrect = false;
+                                    inputEl.classList.add('fill-wrong');
+                                    if (state.attempts >= 3) {
+                                        inputEl.value = allowedAnsArray[0]; 
+                                        inputEl.classList.remove('fill-wrong'); inputEl.classList.add('fill-correct'); inputEl.disabled = true;
+                                    }
+                                }
+                            }
                         });
                         
-                        if(qCorrect) correctCount++;
-                        state.answers[q.id].isCorrect = qCorrect;
-                        state.answers[q.id].isCorrectArr = isCorrectArr;
+                        if(qCorrect) {
+                            correctCount++;
+                            state.answers[q.id] = { isCorrect: true };
+                        } else {
+                            allCorrect = false;
+                        }
                         
                         detailedResults.push({
                             q: q.q.replace(/\[fill\]/g, '___'),
@@ -1308,44 +1571,69 @@ themBaiHoc({
                             isCorrect: qCorrect
                         });
                     }
+
+                    if (state.attempts >= 3 || isQCorrect) {
+                        const expDiv = document.getElementById(`exp-${q.id}`);
+                        if(expDiv) expDiv.classList.remove('hidden');
+                    }
                 });
             });
 
-            let percentage = (correctCount / totalQuestions) * 10;
-            
-            if (window.currentUser && !window.isAdmin) {
-                try {
-                    await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
-                        classId: window.currentUser.classId || 'unassigned', testId: modId, level: "SBT",
-                        testName: window.currentModule.title, score: correctCount, total: totalQuestions,
-                        percentage: percentage, timeTaken: 0, timestamp: Date.now(),
-                        isLesson: true, detailedResults: detailedResults 
-                    });
-                } catch(e) { console.error(e); }
-            }
+            if (allCorrect || state.attempts >= 3) {
+                state.locked = true;
+                let percentage = (correctCount / totalQuestions) * 10;
+                
+                if (window.currentUser && !window.isAdmin) {
+                    try {
+                        await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
+                            uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
+                            classId: window.currentUser.classId || 'unassigned', testId: modId, level: "SBT",
+                            testName: window.currentModule.title, score: correctCount, total: totalQuestions,
+                            percentage: percentage, timeTaken: 0, timestamp: Date.now(),
+                            isLesson: true, detailedResults: detailedResults 
+                        });
+                    } catch(e) { console.error(e); }
+                }
 
-            window.renderSBTView(mod, document.getElementById('content-area'));
+                const actionContainer = document.getElementById(`sbt-action-container-${modId}`);
+                let resultColor = percentage >= 8 ? "emerald" : (percentage >= 5 ? "amber" : "rose");
+
+                actionContainer.innerHTML = `
+                    <div class="p-6 bg-white border-2 border-${resultColor}-500 rounded-2xl shadow-lg inline-block text-center w-full md:w-auto mb-4">
+                        <h2 class="text-xl font-bold text-slate-800 mb-1 baloo-font">RESULT</h2>
+                        <div class="text-4xl font-extrabold text-${resultColor}-600 mb-1">${correctCount} / ${totalQuestions}</div>
+                        <p class="text-slate-500 font-medium">Score: ${percentage.toFixed(1)} / 10</p>
+                        <p class="text-xs font-bold text-slate-400 mt-2">${allCorrect ? "Perfect!" : "Out of attempts. Check the explanations."}</p>
+                    </div><br>
+                    <button onclick="window.sbtState['${modId}'] = null; window.loadModule('${modId}')" class="bg-slate-200 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-300 shadow-sm transition-transform active:scale-95">🔄 Try Again</button>
+                `;
+                
+                let badge = document.getElementById(`sbt-global-badge-${modId}`);
+                if(badge) {
+                    badge.classList.replace('bg-slate-200', 'bg-emerald-200');
+                    badge.classList.replace('text-slate-600', 'text-emerald-800');
+                    badge.innerText = allCorrect ? "100% Correct" : "Submitted";
+                }
+            }
         }
 
-        // ====================== EXAM RENDERER (PHÒNG THI 45P) ======================
         window.renderExamSetupView = function(mod, container) {
             let html = `
-                <div class="glass-card border-t-4 border-rose-500 text-center py-12 no-print">
+                <div class="glass-card border-t-4 border-rose-500 text-center py-12">
                     <div class="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🎓</div>
                     <h2 class="text-3xl font-extrabold text-slate-800 baloo-font mb-2">45-Minute Test Room</h2>
                     <p class="text-slate-500 mb-8 font-medium">Review & Test</p>
-                    <div class="max-w-md mx-auto space-y-4">
-                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">`;
-            for (let testKey in mod.tests) { html += `<option value="${testKey}">${mod.tests[testKey].name}</option>`; }
-            html += `   </select>
-                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white shadow-sm outline-none">
+                    <div class="max-w-md mx-auto space-y-4 mt-8">
+                        <select id="exam-test-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold outline-none">`;
+            for (let testKey in mod.tests) {
+                html += `<option value="${testKey}">${mod.tests[testKey].name}</option>`;
+            }
+            html += `</select>
+                        <select id="exam-level-selector" class="w-full p-4 rounded-xl border border-slate-300 font-bold outline-none">
                             <option value="normal">Level: Normal</option>
                             <option value="hard">Level: Hard</option>
                         </select>
-                        <button onclick="window.startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700 transition-colors mt-4 text-lg">
-                            🚀 START EXAM
-                        </button>
+                        <button onclick="window.startExam('${mod.id}')" class="w-full bg-rose-600 text-white font-bold py-4 rounded-xl shadow-md hover:bg-rose-700">🚀 START EXAM</button>
                     </div>
                 </div>
             `;
@@ -1357,430 +1645,625 @@ themBaiHoc({
             const testId = document.getElementById('exam-test-selector').value;
             const level = document.getElementById('exam-level-selector').value;
             
-            currentExam.testId = testId;
-            currentExam.level = level;
-            currentExam.questions = mod.tests[testId].levels[level];
-            currentExam.answers = {};
-            currentExam.flagged = {};
-            currentExam.timeLeft = 45 * 60;
+            window.currentExam = {
+                testId: testId,
+                level: level,
+                questions: mod.tests[testId].levels[level],
+                answers: {},
+                flagged: {},
+                timeLeft: 45 * 60,
+                startTime: Date.now()
+            };
 
             const testData = mod.tests[testId];
-            let safeAudio = (testData.listeningScript || "").replace(/"/g, '&quot;');
-
-            let examTeacherBtns = '';
+            
+            let teacherToolbarHtml = '';
             if (window.isAdmin) {
-                examTeacherBtns = `
-                    <button onclick="window.print()" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-slate-700 text-sm flex items-center gap-1 transition-colors">🖨️ In Đề</button>
-                    <button onclick="window.openAssignmentModal('${mod.id}')" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-200 border border-indigo-200 text-sm flex items-center gap-1 transition-colors">⚙️ Giao Đề</button>
+                teacherToolbarHtml = `
+                    <div class="flex flex-wrap gap-2 mb-6 bg-indigo-50 p-3 rounded-xl border border-indigo-200 no-print">
+                        <span class="font-bold text-indigo-800 flex items-center mr-2">👨‍🏫 Teacher Tools:</span>
+                        <button onclick="window.togglePresentationMode()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 flex items-center gap-2">🖥️ Present</button>
+                        <button onclick="window.printBlankTest()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-700 flex items-center gap-2">🖨️ Print Blank Test</button>
+                    </div>
                 `;
             }
 
-            let html = `<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center sticky top-0 z-50 no-print">
-                    <h2 class="text-xl font-bold text-slate-800 baloo-font uppercase text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
-                    <div class="flex gap-2 items-center">
-                        ${examTeacherBtns}
-                        <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold text-lg border border-rose-200 shadow-inner tracking-widest" id="exam-timer-display">45:00</div>
-                    </div>
-                </div>`;
-
-            let parts = new Set();
-            currentExam.questions.forEach(q => parts.add(q.part));
+            let html = teacherToolbarHtml + `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex justify-between items-center sticky top-0 z-50 no-print">
+                    <h2 class="text-xl font-bold text-rose-600">${testData.name} - ${level === 'hard' ? 'Hard' : 'Normal'}</h2>
+                    <div class="bg-rose-100 text-rose-700 px-4 py-2 rounded-lg font-bold" id="exam-timer-display">45:00</div>
+                </div>
+                <div class="space-y-6">`;
             
-            html += `<div class="sticky top-[70px] z-[40] bg-white shadow-sm border-b border-slate-200 px-4 py-3 -mx-4 md:-mx-8 mb-6 no-print flex gap-2 overflow-x-auto whitespace-nowrap">`;
-            Array.from(parts).forEach((partName, index) => {
-                let shortName = partName.split(':')[0] || `Part ${index+1}`;
-                html += `<button onclick="document.getElementById('part-${index}').scrollIntoView({behavior: 'smooth'})" class="shrink-0 px-4 py-1.5 bg-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 border border-transparent transition-colors">${shortName}</button>`;
-            });
-            html += `</div>`;
-
-            html += `<div class="flex flex-col lg:flex-row gap-6 relative">
-                    <div class="flex-1 space-y-6">
-                        <div class="glass-card bg-sky-50 border-sky-200 p-5 scroll-mt-32" id="part-0">
-                            <h3 class="font-bold text-sky-800 mb-3 text-lg">🎧 I. LISTENING AUDIO</h3>
-                            <button data-text="${safeAudio}" onclick="window.playAudio(this.dataset.text, 'en-US')" class="bg-sky-500 text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-sky-600 no-print">▶️ Play Audio</button>
-                            <div class="hidden mt-4 p-4 bg-white rounded border border-sky-100 text-sm text-slate-700 italic" id="exam-audio-script"><b>Audio Script:</b><br>${testData.listeningScript}</div>
-                        </div>`;
-
             let currentPart = "";
-            let partCounter = 0; 
-            
-            currentExam.questions.forEach((q, idx) => {
+            window.currentExam.questions.forEach((q, idx) => {
                 if (q.part !== currentPart) {
-                    let partId = `part-${partCounter}`;
-                    if (q.part.includes("READING COMPREHENSION")) {
-                        html += `<div class="glass-card bg-amber-50 border-amber-200 mt-8 mb-6 p-5 scroll-mt-32" id="${partId}">
-                            <h3 class="font-bold text-amber-800 mb-3 text-lg">📚 READING TEXT</h3>
-                            <div class="bg-white p-4 rounded-xl border border-amber-100 text-slate-800 leading-relaxed text-[15px]">
-                                ${testData.readingText}
-                            </div>
-                        </div>`;
-                    } else if (q.part !== "PART I: LISTENING") {
-                        html += `<h3 id="${partId}" class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2 scroll-mt-32">${q.part}</h3>`;
-                    }
+                    html += `<h3 class="font-bold text-slate-500 uppercase tracking-wider mt-8 border-b-2 border-slate-200 pb-2">${q.part}</h3>`;
                     currentPart = q.part;
-                    partCounter++;
                 }
-                
-                html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm scroll-mt-32 exercise-item print:border-none print:p-0 print:shadow-none" id="exam-q-${idx}">
-                            <div class="flex justify-between items-start mb-4 gap-4">
-                                <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Q${idx+1}.</span> ${q.q}</p>
-                                <button onclick="window.toggleExamFlag(${idx})" id="flag-btn-${idx}" class="shrink-0 text-slate-300 hover:text-rose-500 p-2 rounded-lg hover:bg-rose-50 bg-slate-50 border border-slate-200 no-print">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"></path></svg>
-                                </button>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 print:block" id="exam-opts-${idx}">`;
+
+                html += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm" id="exam-q-${idx}">
+                            <p class="font-bold text-slate-800 text-[15px] mb-4"><span class="text-indigo-600">Q${idx+1}.</span> ${q.q}</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="exam-opts-${idx}">`;
                 q.opts.forEach((opt, oIdx) => {
                     html += `<div onclick="window.selectExamChoice(this, ${idx}, ${oIdx})" class="q-btn bg-slate-50 border border-slate-300 p-3 rounded-lg text-sm font-medium hover:bg-indigo-50">${opt}</div>`;
                 });
-                html += `</div><div id="exam-exp-${idx}" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 no-print"><b>💡 Explanation:</b> ${q.exp}</div></div>`;
+                html += `</div>
+                         <div id="exam-exp-${idx}" class="hidden mt-4 p-3 bg-amber-50 text-amber-800 text-sm rounded-lg border border-amber-200"><b>💡 Explanation:</b> ${q.exp}</div>
+                         </div>`;
             });
 
-            html += `
-                        <div class="text-center mt-10 pb-8 no-print" id="exam-action-buttons">
-                            <button onclick="window.submitExam()" class="bg-rose-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-rose-700 shadow-xl w-full md:w-auto">✅ SUBMIT EXAM</button>
-                        </div>
-                    </div>
-                    <div class="w-full lg:w-72 shrink-0 no-print order-first lg:order-last">
-                        <div class="sticky top-32 bg-white p-5 rounded-2xl border border-slate-200 shadow-md max-h-[60vh] lg:max-h-[75vh] overflow-y-auto">
-                            <h3 class="font-bold text-slate-800 baloo-font text-lg mb-5 border-b pb-4">Question Board</h3>
-                            <div class="grid grid-cols-5 gap-2" id="exam-navigator"></div>
-                        </div>
-                    </div>
-                </div>`;
-
+            html += `<div class="text-center mt-10" id="exam-action-buttons"><button onclick="window.submitExam()" class="bg-rose-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-rose-700 shadow-xl">SUBMIT EXAM</button></div></div>`;
             document.getElementById('content-area').innerHTML = html;
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            window.renderExamNavigator();
 
-            const inlineTimeVal = document.getElementById('exam-timer-display');
-            if(currentExam.timer) clearInterval(currentExam.timer);
-            
-            currentExam.timer = setInterval(() => {
-                currentExam.timeLeft--;
-                let m = Math.floor(currentExam.timeLeft / 60);
-                let s = currentExam.timeLeft % 60;
-                if(inlineTimeVal) inlineTimeVal.innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-                if (currentExam.timeLeft <= 0) { clearInterval(currentExam.timer); window.submitExam(true); }
+            if(window.currentExam.timer) clearInterval(window.currentExam.timer);
+            window.currentExam.timer = setInterval(() => {
+                window.currentExam.timeLeft--;
+                let m = Math.floor(window.currentExam.timeLeft / 60); let s = window.currentExam.timeLeft % 60;
+                let displayStr = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+                let timerEl = document.getElementById('exam-timer-display');
+                if(timerEl) timerEl.innerText = displayStr;
+                if (window.currentExam.timeLeft <= 0) { clearInterval(window.currentExam.timer); window.submitExam(true); }
             }, 1000);
         }
 
-        window.renderExamNavigator = function() {
-            let navHtml = '';
-            currentExam.questions.forEach((_, idx) => {
-                navHtml += `<button onclick="document.getElementById('exam-q-${idx}').scrollIntoView({behavior: 'smooth', block: 'center'})" id="nav-btn-${idx}" class="w-full aspect-square rounded-lg border-2 border-rose-300 text-rose-500 bg-white flex items-center justify-center font-bold text-[15px] hover:bg-rose-50">${idx + 1}</button>`;
-            });
-            document.getElementById('exam-navigator').innerHTML = navHtml;
-        }
-
-        window.updateExamNavigator = function(idx) {
-            let btn = document.getElementById('nav-btn-' + idx);
-            if (!btn) return;
-            let hasAnswer = currentExam.answers[idx] !== undefined;
-            let isFlagged = currentExam.flagged[idx];
-
-            btn.className = "w-full aspect-square rounded-lg border-2 flex items-center justify-center font-bold text-[15px] cursor-pointer shadow-sm";
-            if (isFlagged) {
-                btn.classList.add("bg-rose-100", "border-rose-500", "text-rose-600");
-                btn.innerHTML = `!`;
-            } else if (hasAnswer) {
-                btn.classList.add("bg-emerald-500", "border-emerald-600", "text-white");
-                btn.innerHTML = idx + 1;
-            } else {
-                btn.classList.add("bg-white", "border-rose-300", "text-rose-500");
-                btn.innerHTML = idx + 1;
-            }
-        }
-
-        window.toggleExamFlag = function(idx) {
-            currentExam.flagged[idx] = !currentExam.flagged[idx];
-            let flagBtn = document.getElementById('flag-btn-' + idx);
-            if(currentExam.flagged[idx]) {
-                flagBtn.classList.add('text-rose-600', 'bg-rose-100');
-                flagBtn.classList.remove('text-slate-300', 'bg-slate-50');
-            } else {
-                flagBtn.classList.remove('text-rose-600', 'bg-rose-100');
-                flagBtn.classList.add('text-slate-300', 'bg-slate-50');
-            }
-            window.updateExamNavigator(idx);
-        }
-
         window.selectExamChoice = function(btn, qIdx, choiceIdx) {
-            currentExam.answers[qIdx] = choiceIdx;
+            window.currentExam.answers[qIdx] = choiceIdx;
             const parent = document.getElementById('exam-opts-' + qIdx);
-            parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
-            btn.classList.add('q-selected');
-            window.updateExamNavigator(qIdx);
+            if(parent) {
+                parent.querySelectorAll('.q-btn').forEach(b => b.classList.remove('q-selected'));
+                btn.classList.add('q-selected');
+            }
         }
 
         window.submitExam = async function(isTimeout = false) {
-            let unanswered = currentExam.questions.length - Object.keys(currentExam.answers).length;
+            let unanswered = window.currentExam.questions.length - Object.keys(window.currentExam.answers).length;
             if(!isTimeout && unanswered > 0) {
-                if(!confirm(`Bạn còn ${unanswered} câu chưa làm! Vẫn muốn nộp bài chứ?`)) return;
+                if(!confirm(`You have ${unanswered} unanswered questions! Submit anyway?`)) return;
             }
-
-            clearInterval(currentExam.timer);
-            let score = 0;
-            let detailedResults = []; 
             
-            currentExam.questions.forEach((q, idx) => {
-                let userAnsIdx = currentExam.answers[idx];
+            clearInterval(window.currentExam.timer);
+            let score = 0;
+            let detailedResults = [];
+            
+            window.currentExam.questions.forEach((q, idx) => {
+                let userAnsIdx = window.currentExam.answers[idx];
                 let parent = document.getElementById('exam-opts-' + idx);
                 let btns = parent.querySelectorAll('.q-btn');
+                
                 btns.forEach(b => b.classList.add('disabled'));
 
-                let userAnsText = userAnsIdx !== undefined ? q.opts[userAnsIdx] : "Bỏ trống";
-                let correctAnsText = q.opts[q.ans];
                 let isCorrect = userAnsIdx === q.ans;
+                let userAnsText = userAnsIdx !== undefined ? q.opts[userAnsIdx] : "Blank";
+                let correctAnsText = q.opts[q.ans];
+                detailedResults.push({ q: q.q, userAns: userAnsText, correctAns: correctAnsText, isCorrect: isCorrect });
 
                 if (isCorrect) {
                     score++;
-                    btns[userAnsIdx].classList.add('q-correct');
-                } else {
-                    if (userAnsIdx !== undefined) {
+                    if(btns[userAnsIdx]) {
                         btns[userAnsIdx].classList.remove('q-selected');
-                        btns[userAnsIdx].classList.add('q-wrong'); 
+                        btns[userAnsIdx].classList.add('q-correct');
+                    }
+                } else {
+                    if (userAnsIdx !== undefined && btns[userAnsIdx]) { 
+                        btns[userAnsIdx].classList.remove('q-selected');
+                        btns[userAnsIdx].classList.add('q-wrong');
                     }
                 }
-                detailedResults.push({ q: q.q, userAns: userAnsText, correctAns: correctAnsText, isCorrect: isCorrect });
             });
 
-            let percentage = (score / currentExam.questions.length) * 10;
-            if (window.currentUser && !window.isAdmin) {
+            let percentage = (score / window.currentExam.questions.length) * 10;
+            let timeTaken = Math.floor((Date.now() - window.currentExam.startTime) / 1000);
+
+            if (window.currentUser && !window.isSuperAdmin) {
                 try {
                     await window.fAddDoc(window.fCollection(window.fdb, "exam_results"), {
-                        uid: window.currentUser.uid, email: window.currentUser.email, nickname: window.currentUser.nickname,
-                        classId: window.currentUser.classId || 'unassigned', testId: currentExam.testId, level: currentExam.level,
-                        testName: window.currentModule.title, score: score, total: currentExam.questions.length,
-                        percentage: percentage, timeTaken: 45*60 - currentExam.timeLeft, timestamp: Date.now(),
-                        isLesson: false, detailedResults: detailedResults 
+                        uid: window.currentUser.uid,
+                        email: window.currentUser.email,
+                        nickname: window.currentUser.nickname,
+                        classId: window.currentUser.classId || 'unassigned',
+                        testId: window.currentExam.testId,
+                        level: window.currentExam.level,
+                        testName: window.currentModule.title,
+                        score: score,
+                        total: window.currentExam.questions.length,
+                        percentage: percentage,
+                        timeTaken: timeTaken,
+                        timestamp: Date.now(),
+                        isLesson: false,
+                        detailedResults: detailedResults 
                     });
                 } catch(e) { console.error(e); }
             }
 
-            const actionContainer = document.getElementById('exam-action-buttons');
             let resultColor = percentage >= 8 ? "emerald" : (percentage >= 5 ? "amber" : "rose");
-
-            actionContainer.innerHTML = `
-                <div class="p-8 bg-white border-2 border-${resultColor}-500 rounded-2xl shadow-lg inline-block text-center w-full md:w-auto mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2 baloo-font">KẾT QUẢ BÀI THI</h2>
-                    <div class="text-5xl font-extrabold text-${resultColor}-600 mb-2">${score} / ${currentExam.questions.length}</div>
-                    <p class="text-slate-500 font-medium">Điểm số: ${percentage.toFixed(1)} / 10</p>
+            document.getElementById('exam-action-buttons').innerHTML = `
+                <div class="p-8 bg-white border-2 border-${resultColor}-500 rounded-2xl shadow-lg inline-block text-center mb-6 w-full md:w-auto">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">RESULT</h2>
+                    <div class="text-5xl font-extrabold text-${resultColor}-600 mb-2">${score} / ${window.currentExam.questions.length}</div>
+                    <p class="text-slate-500 font-medium">Score: ${percentage.toFixed(1)} / 10</p>
                 </div>
-                <div class="flex justify-center gap-4">
-                    <button onclick="window.loadModule('${window.currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 transition-colors">🔄 Làm Lại</button>
-                    <button onclick="window.explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors">💡 Xem Đáp Án</button>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <button onclick="window.loadModule('${window.currentModule.id}')" class="bg-amber-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-amber-600 shadow-md">🔄 Try Again</button>
+                    <button onclick="window.explainExam()" class="bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-md">💡 Show Answers & Explanations</button>
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         window.explainExam = function() {
-            currentExam.questions.forEach((q, idx) => {
+            window.currentExam.questions.forEach((q, idx) => {
                 let parent = document.getElementById('exam-opts-' + idx);
-                let btns = parent.querySelectorAll('.q-btn');
-                btns[q.ans].classList.remove('q-wrong'); 
-                btns[q.ans].classList.add('q-correct');
-                document.getElementById('exam-exp-' + idx).classList.remove('hidden');
+                if(parent) {
+                    let btns = parent.querySelectorAll('.q-btn');
+                    if (btns[q.ans]) {
+                        btns[q.ans].classList.remove('q-wrong'); 
+                        btns[q.ans].classList.add('q-correct');
+                    }
+                }
+                let exp = document.getElementById('exam-exp-' + idx);
+                if(exp) exp.classList.remove('hidden');
             });
-            const scriptDiv = document.getElementById('exam-audio-script');
-            if(scriptDiv) scriptDiv.classList.remove('hidden');
+            window.showCustomAlert("Notice", "Correct answers and explanations are now visible below each question.", "💡");
         }
 
-        // =======================================================================
-        // KHU VỰC 6: ADMIN - GIAO BÀI TẬP VÀ ĐỀ THI
-        // =======================================================================
-        window.loadAdminUsersSilent = async function() {
+        // --- DASHBOARD FUNCTIONS ---
+        window.showMyProgress = async function() {
+            if (!window.currentUser) { window.showCustomAlert("Notice", "Please sign in to view your progress.", "🔒"); return; }
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-progress')) document.getElementById('nav-progress').classList.add('active');
+            document.getElementById('header-title').innerText = "My Progress";
+            if (window.innerWidth < 1024) window.toggleMenu();
+
+            const container = document.getElementById('content-area');
+            container.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading progress...</div>`;
+
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let completedModules = {};
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.uid === window.currentUser.uid && d.isLesson) {
+                        completedModules[d.testId] = true;
+                    }
+                });
+
+                let html = `<div class="glass-card border-t-4 border-sky-500"><h2 class="text-2xl font-bold baloo-font mb-6 text-sky-600">📈 Learning Progress</h2><div class="space-y-3">`;
+                window.database[currentClass].modules.forEach(mod => {
+                    if(mod.type === 'lesson' || mod.type === 'sbt_module') {
+                        let isCompleted = completedModules[mod.id];
+                        let statusUI = isCompleted 
+                            ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold">✅ Completed</span>`
+                            : `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-sm font-bold">⏳ Learning...</span>`;
+                            
+                        html += `<div class="p-4 border rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-sky-300 cursor-pointer transition-colors" onclick="window.loadModule('${mod.id}')">
+                            <p class="font-bold text-slate-800">${mod.title}</p>
+                            ${statusUI}
+                        </div>`;
+                    }
+                });
+                html += `</div></div>`;
+                container.innerHTML = html;
+            } catch(e) { container.innerHTML = "Error loading data."; console.error(e); }
+        }
+
+        window.showLeaderboard = async function() {
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-leaderboard')) document.getElementById('nav-leaderboard').classList.add('active');
+            document.getElementById('header-title').innerText = "Leaderboard";
+            if (window.innerWidth < 1024) window.toggleMenu();
+
+            let html = `
+                <div class="glass-card border-t-4 border-amber-500 mb-6">
+                    <h2 class="text-2xl font-bold baloo-font mb-4 text-amber-600">🏆 LEADERBOARD</h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <select id="lb-test-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="test1">Review 1 - Test 1</option>
+                            <option value="test2">Review 1 - Test 2</option>
+                        </select>
+                        <select id="lb-level-select" class="p-3 border border-slate-300 rounded-lg flex-1 bg-white font-bold outline-none text-slate-700">
+                            <option value="normal">Level: Normal</option>
+                            <option value="hard">Level: Hard</option>
+                        </select>
+                        <button onclick="window.fetchLeaderboardData()" class="bg-amber-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-amber-600 shadow-md">View Leaderboard</button>
+                    </div>
+                </div>
+                <div id="lb-results"></div>
+            `;
+            document.getElementById('content-area').innerHTML = html;
+            window.fetchLeaderboardData();
+        }
+
+        window.fetchLeaderboardData = async function() {
+            const testId = document.getElementById('lb-test-select').value;
+            const level = document.getElementById('lb-level-select').value;
+            const resContainer = document.getElementById('lb-results');
+            resContainer.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Loading...</div>`;
+
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let results = [];
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    if(d.testId === testId && d.level === level && !d.isLesson) results.push(d);
+                });
+
+                results.sort((a, b) => b.percentage !== a.percentage ? b.percentage - a.percentage : a.timeTaken - b.timeTaken);
+
+                let html = `<div class="glass-card"><h3 class="text-xl font-bold mb-4 text-slate-800">Top 10 - ${testId.toUpperCase()} (${level.toUpperCase()})</h3><table class="w-full bg-white text-sm">
+                    <tr class="bg-amber-50 text-amber-800"><th class="p-3 w-16 text-center">Rank</th><th class="p-3">Student</th><th class="p-3 text-center">Score</th></tr>`;
+                
+                if (results.length === 0) {
+                    html += `<tr><td colspan="3" class="p-4 text-center text-slate-500">No results yet.</td></tr>`;
+                } else {
+                    results.slice(0, 10).forEach((r, idx) => {
+                        let medal = idx === 0 ? "🥇" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : idx + 1));
+                        let isMe = (window.currentUser && r.uid === window.currentUser.uid) ? "bg-amber-100 font-bold" : "";
+                        html += `<tr class="border-b ${isMe}">
+                            <td class="p-3 font-bold text-lg text-slate-500 text-center">${medal}</td>
+                            <td class="p-3 text-slate-800 font-bold">${r.nickname}</td>
+                            <td class="p-3 text-center font-extrabold text-indigo-600 text-lg">${r.percentage.toFixed(1)}</td>
+                        </tr>`;
+                    });
+                }
+                html += `</table></div>`;
+                resContainer.innerHTML = html;
+            } catch(e) { resContainer.innerHTML = "Error loading data."; console.error(e); }
+        }
+
+        window.togglePresentationMode = function() {
+            document.body.classList.toggle('presentation-mode');
+            if(document.body.classList.contains('presentation-mode')) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        window.printBlankTest = function() {
+            document.body.classList.add('printing-blank-test');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('printing-blank-test');
+            }, 1000);
+        }
+
+        window.openStudentReportModal = async function(uid, nickname) {
+            document.getElementById('reportModalTitle').innerText = `Report for: ${nickname}`;
+            const content = document.getElementById('reportModalContent');
+            content.innerHTML = `<div class="text-center py-10 font-bold text-slate-500">Retrieving server data...</div>`;
+            document.getElementById('studentReportModal').classList.add('active');
+
+            try {
+                const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "exam_results"));
+                let results = [];
+                snapshot.forEach(doc => { 
+                    let d = doc.data(); 
+                    if (d.uid === uid) {
+                        d.docId = doc.id; 
+                        results.push(d); 
+                    }
+                });
+                results.sort((a,b) => b.timestamp - a.timestamp);
+
+                window.currentStudentResultsCache = results;
+
+                if (results.length === 0) {
+                    content.innerHTML = `<div class="text-center py-10"><p class="text-4xl mb-2">📭</p><p class="font-bold text-slate-500">No completed tasks yet.</p></div>`;
+                    return;
+                }
+
+                let html = `<div class="space-y-3">`;
+                results.forEach(r => {
+                    let date = new Date(r.timestamp).toLocaleString('vi-VN');
+                    let color = r.percentage >= 8 ? "emerald" : (r.percentage >= 5 ? "amber" : "rose");
+                    let badge = r.isLesson ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">Practice</span>` 
+                                           : `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-xs font-bold">Exam</span>`;
+
+                    html += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-300 transition-colors">
+                        <div>
+                            <div class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-1">${r.testName} ${badge}</div>
+                            <div class="text-sm text-slate-500 font-medium">Submitted: ${date}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-extrabold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-lg border border-${color}-200">${r.percentage.toFixed(1)} <span class="text-sm">/ 10</span></div>
+                            <button onclick="window.viewDetailedTest('${r.docId}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors">🔍 View Details</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+
+            } catch(e) { console.error(e); content.innerHTML = "<p class='text-center text-rose-600 font-bold py-10'>Error loading data.</p>"; }
+        }
+
+        window.viewDetailedTest = function(docId) {
+            const content = document.getElementById('reportModalContent');
+            if(!window.currentStudentResultsCache) return;
+            const data = window.currentStudentResultsCache.find(r => r.docId === docId);
+            if(!data || !data.detailedResults) {
+                content.innerHTML = `
+                    <div class="mb-4"><button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300">⬅ Back</button></div>
+                    <div class="text-center py-10 font-bold text-slate-500">No detailed records saved for this submission.</div>`;
+                return;
+            }
+
+            let html = `
+                <div class="flex items-center gap-4 mb-6 border-b pb-4">
+                    <button onclick="window.openStudentReportModal('${data.uid}', '${data.nickname}')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-300 flex items-center gap-2 shrink-0">⬅ Back</button>
+                    <div>
+                        <h4 class="font-bold text-lg text-indigo-900 leading-tight">${data.testName}</h4>
+                        <p class="text-sm text-slate-500">Detailed Answer Sheet</p>
+                    </div>
+                </div>
+                <div class="space-y-4">`;
+
+            data.detailedResults.forEach((res, i) => {
+                let bg = res.isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200";
+                let badge = res.isCorrect ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">CORRECT</span>` 
+                                          : `<span class="bg-rose-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">WRONG</span>`;
+                
+                html += `<div class="p-5 rounded-2xl border ${bg} shadow-sm">
+                    <div class="flex items-start justify-between gap-4 mb-3">
+                        <p class="font-bold text-slate-800 text-[15px]"><span class="text-indigo-600">Q${i+1}:</span> ${res.q}</p>
+                        ${badge}
+                    </div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 space-y-2 text-sm">
+                        <p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0">Student chose:</span> <b class="${res.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${res.userAns}</b></p>
+                        ${!res.isCorrect ? `<p class="flex items-start gap-2"><span class="text-slate-500 w-28 shrink-0">Correct Answer:</span> <b class="text-emerald-700">${res.correctAns}</b></p>` : ''}
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+            content.innerHTML = html;
+            document.getElementById('studentReportModal').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.showCustomAlert = function(title, message, icon="🔔") {
+            document.getElementById('alertIcon').innerText = icon;
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.add('active');
+        }
+        window.closeCustomAlert = function() { document.getElementById('customAlert').classList.remove('active'); }
+        window.alert = function(msg) { window.showCustomAlert("Notification", msg); };
+
+        window.saveNickname = async function() {
+            const input = document.getElementById('nicknameInput').value.trim();
+            if (!input) return window.showCustomAlert("Error", "Please enter a nickname.", "⚠️");
+
+            if (window.pendingUser) {
+                const userRef = window.fDoc(window.fdb, "users", window.pendingUser.uid);
+                await window.fSetDoc(userRef, { email: window.pendingUser.email, nickname: input, role: 'student', classId: '', status: 'active', lastLogin: Date.now(), joinDate: Date.now(), plan: 'trial', expiryDate: Date.now() + (7 * 24 * 60 * 60 * 1000) });
+                window.location.reload();
+            } else if (window.currentUser) {
+                const userRef = window.fDoc(window.fdb, "users", window.currentUser.uid);
+                await window.fUpdateDoc(userRef, { nickname: input });
+                window.location.reload();
+            }
+        }
+
+        window.showNicknameModal = function() {
+            document.getElementById('nicknameInput').value = window.currentUser.nickname;
+            document.getElementById('cancelNicknameBtn').classList.remove('hidden');
+            document.getElementById('nicknameOverlay').classList.add('active');
+        }
+        
+        // ADMIN CLASSES & USERS
+        window.adminClassesData = [];
+        window.adminUsersData = [];
+
+        window.showClassManagement = async function(filterClassId = 'all') {
+            if(!window.isAdmin) return;
+            document.querySelectorAll('.module-nav-btn').forEach(b => b.classList.remove('active'));
+            if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.add('active');
+            
+            document.getElementById('header-title').innerText = "Class Management";
+            if (window.innerWidth < 1024) window.toggleMenu();
+
+            let createClassHtml = "";
+            if (window.isSuperAdmin) {
+                createClassHtml = `
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-6 flex flex-col sm:flex-row gap-3 items-center shadow-sm">
+                        <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xl shrink-0">+</div>
+                        <input type="text" id="new-class-name" placeholder="Create new class (e.g., 6A1)..." class="flex-1 p-3 rounded-lg border border-slate-300 font-bold outline-none focus:border-indigo-500 w-full text-slate-700">
+                        <button onclick="window.createNewClass()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-sm w-full sm:w-auto whitespace-nowrap transition-colors">Create</button>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="glass-card border-t-4 border-indigo-500 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                        <h2 class="text-2xl font-bold baloo-font text-indigo-700">🏫 User & Class Management</h2>
+                        <button onclick="window.exportUsersToCSV()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-emerald-700 text-sm shadow-sm flex items-center justify-center gap-2 transition-colors">
+                            📥 Export to CSV
+                        </button>
+                    </div>
+                    
+                    ${createClassHtml}
+
+                    <div class="flex justify-between items-center mb-4 bg-slate-100 p-3 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-3 w-full">
+                            <span class="font-bold text-slate-700 shrink-0">Filter by class:</span>
+                            <select id="main-class-filter" onchange="window.loadAdminUsers(this.value)" class="flex-1 p-2.5 border border-slate-300 rounded-lg font-bold text-indigo-700 outline-none cursor-pointer bg-white">
+                                <option value="all">All Students</option>
+                                <option value="unassigned">Unassigned Students</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-2 sm:p-4 rounded-xl border border-slate-200">
+                        <div id="admin-users-list" class="space-y-3 max-h-[600px] overflow-y-auto">
+                            <div class="text-center py-10 font-bold text-slate-500">Loading data...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('content-area').innerHTML = html;
+            
+            try {
+                const snap = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
+                window.adminClassesData = [];
+                snap.forEach(doc => { window.adminClassesData.push({id: doc.id, ...doc.data()}) });
+                
+                let filterSelect = document.getElementById('main-class-filter');
+                if(filterSelect) {
+                    let opts = `<option value="all">All Students</option><option value="unassigned">Unassigned Students</option>`;
+                    window.adminClassesData.forEach(c => {
+                        opts += `<option value="${c.id}" ${filterClassId === c.id ? 'selected' : ''}>Class ${c.name}</option>`;
+                    });
+                    filterSelect.innerHTML = opts;
+                }
+                let sidebarSelect = document.getElementById('sidebar-class-filter');
+                if(sidebarSelect) {
+                    let opts = `<option value="all">All Classes</option><option value="unassigned">Unassigned</option>`;
+                    window.adminClassesData.forEach(c => { opts += `<option value="${c.id}">Class ${c.name}</option>`; });
+                    sidebarSelect.innerHTML = opts;
+                    sidebarSelect.value = filterClassId;
+                }
+            } catch(e) { console.error(e); }
+
+            window.loadAdminUsers(filterClassId);
+        }
+
+        window.createNewClass = async function() {
+            if(!window.isSuperAdmin) return;
+            const nameInput = document.getElementById('new-class-name');
+            const name = nameInput.value.trim();
+            if(!name) { window.showCustomAlert("Error", "Please enter a class name!", "⚠️"); return; }
+
+            try {
+                await window.fAddDoc(window.fCollection(window.fdb, "classes"), { name: name, createdAt: Date.now() });
+                nameInput.value = '';
+                window.showClassManagement('all'); 
+                window.showCustomAlert("Success", "Class created successfully!", "✅");
+            } catch(e) { console.error(e); }
+        }
+
+        window.loadAdminUsers = async function(filterClassId = 'all') {
             try {
                 const snapshot = await window.fGetDocs(window.fCollection(window.fdb, "users"));
                 let users = [];
                 snapshot.forEach(doc => { let d = doc.data(); d.id = doc.id; users.push(d); });
+                users.sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
                 window.adminUsersData = users;
 
-                const snapClasses = await window.fGetDocs(window.fCollection(window.fdb, "classes"));
-                window.adminClassesData = [];
-                snapClasses.forEach(doc => { window.adminClassesData.push({id: doc.id, ...doc.data()}) });
-            } catch(e) { console.error("Error silently loading users", e); }
-        }
-
-        window.openAssignmentModal = async function(modId) {
-            if (!window.adminUsersData || window.adminUsersData.length === 0) { await window.loadAdminUsersSilent(); }
-
-            const mod = window.currentModule;
-            let html = '';
-            
-            // Xử lý nạp danh sách học sinh cho ô select (bắt buộc làm trước để lấy ID cá nhân nếu chọn)
-            if(window.adminUsersData) {
-                let stdHtml = '';
-                let myStudents = window.isSuperAdmin 
-                    ? window.adminUsersData.filter(u => u.role === 'student') 
-                    : window.adminUsersData.filter(u => u.classId === window.currentUser?.classId && u.role === 'student');
-                
-                if(myStudents.length === 0) { stdHtml = `<option value="">Không có học sinh nào</option>`; } 
-                else { myStudents.forEach(u => { stdHtml += `<option value="${u.id}">${u.nickname} (${u.email})</option>`; }); }
-                document.getElementById('assign-student-select').innerHTML = stdHtml;
-            }
-
-            // Gọi hàm render checkbox dựa trên mode hiện tại
-            await window.refreshAssignmentModalChecks(modId);
-            document.getElementById('assignmentModal').classList.add('active');
-        }
-
-        window.refreshAssignmentModalChecks = async function(modId = null) {
-            if(!modId) modId = window.currentModule.id;
-            const mod = window.currentModule;
-            
-            let targetMode = document.getElementById('assign-target-select').value;
-            let docId = '';
-            if (targetMode === 'class') {
-                let cId = window.currentUser.classId || 'unassigned';
-                docId = `${cId}_${mod.id}`; // LƯU VÀ ĐỌC ĐÚNG FORMAT NÀY
-            } else {
-                let sId = document.getElementById('assign-student-select').value;
-                if(!sId) return;
-                docId = `student_${sId}_${mod.id}`;
-            }
-
-            let snap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", docId));
-            let currentAssigned = snap.exists() ? snap.data().assignedExercises : [];
-
-            let html = '';
-            if (mod.type === 'sbt_module') {
-                mod.exercises.forEach(ex => {
-                    let isChecked = currentAssigned.includes(ex.id) ? 'checked' : '';
-                    html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
-                                <input type="checkbox" value="${ex.id}" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
-                                <div>
-                                    <div class="font-bold text-sm text-indigo-700">${ex.part}</div>
-                                    <div class="text-sm text-slate-700 font-medium">${ex.title}</div>
-                                </div>
-                             </label>`;
-                });
-            } else if (mod.type === 'exam_module') {
-                let isChecked = currentAssigned.includes('exam_full') || currentAssigned.length === 0 ? 'checked' : '';
-                html += `<label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-indigo-50 mb-2 shadow-sm">
-                            <input type="checkbox" value="exam_full" class="mt-1 w-5 h-5 accent-indigo-600 assign-checkbox" ${isChecked}>
-                            <div>
-                                <div class="font-bold text-sm text-indigo-700">Giao toàn bộ đề thi</div>
-                                <div class="text-sm text-slate-700 font-medium">${mod.title}</div>
-                            </div>
-                         </label>`;
-            }
-            document.getElementById('assignment-list').innerHTML = html;
-        }
-
-        window.selectAllAssignments = function() {
-            let checkboxes = document.querySelectorAll('.assign-checkbox');
-            let allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            checkboxes.forEach(cb => cb.checked = !allChecked);
-        }
-
-        window.toggleStudentSelect = function(val) {
-            if(val === 'individual') {
-                document.getElementById('student-select-container').classList.remove('hidden');
-            } else {
-                document.getElementById('student-select-container').classList.add('hidden');
-            }
-            window.refreshAssignmentModalChecks(); // Nạp lại cấu hình tương ứng
-        }
-
-        window.saveAssignment = async function() {
-            let checkboxes = document.querySelectorAll('.assign-checkbox:checked');
-            let selectedIds = Array.from(checkboxes).map(cb => cb.value);
-            
-            if(selectedIds.length === 0) return showCustomAlert("Lỗi", "Phải chọn ít nhất 1 bài tập.", "⚠️");
-            
-            let targetMode = document.getElementById('assign-target-select').value;
-            let docId = '';
-            
-            if (targetMode === 'class') {
-                let cId = window.currentUser.classId || 'unassigned';
-                docId = `${cId}_${window.currentModule.id}`; // LƯU VÀ ĐỌC ĐÚNG FORMAT NÀY
-            } else {
-                let sId = document.getElementById('assign-student-select').value;
-                if(!sId) return showCustomAlert("Lỗi", "Vui lòng chọn 1 học sinh.", "⚠️");
-                docId = `student_${sId}_${window.currentModule.id}`;
-            }
-            
-            try {
-                await window.fSetDoc(window.fDoc(window.fdb, "assignments", docId), { assignedExercises: selectedIds, updatedAt: Date.now() });
-                document.getElementById('assignmentModal').classList.remove('active');
-                showCustomAlert("Thành công", "Đã lưu cấu hình giao bài thành công!", "✅");
-                // Fetch lại rồi render
-                await window.fetchAssignments(window.currentModule.id);
-                if (window.currentModule.type === 'sbt_module') {
-                    window.renderSBTView(window.currentModule, document.getElementById('content-area'));
+                let filteredUsers = users;
+                if (!window.isSuperAdmin) {
+                    filteredUsers = users.filter(u => u.classId === window.currentUser.classId);
+                } else {
+                    if(filterClassId !== 'all') {
+                        if(filterClassId === 'unassigned') filteredUsers = users.filter(u => !u.classId);
+                        else filteredUsers = users.filter(u => u.classId === filterClassId);
+                    }
                 }
-            } catch(e) { console.error(e); showCustomAlert("Lỗi", "Có lỗi khi lưu cấu hình.", "❌"); }
+
+                let uHtml = "";
+                filteredUsers.forEach(data => {
+                    const isBlocked = data.status === 'blocked';
+                    const joinDate = data.joinDate ? new Date(data.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                    let expStr = data.plan === 'lifetime' ? 'Lifetime' : (data.expiryDate ? new Date(data.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                    
+                    let isExpired = data.plan !== 'lifetime' && data.expiryDate && Date.now() > data.expiryDate;
+                    let statusBadge = isBlocked ? `<span class="bg-rose-100 text-rose-600 px-2 py-0.5 text-xs rounded font-bold">Blocked</span>` : 
+                                      (isExpired ? `<span class="bg-amber-100 text-amber-600 px-2 py-0.5 text-xs rounded font-bold">Expired</span>` : 
+                                      `<span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 text-xs rounded font-bold">Active</span>`);
+
+                    let classSelectHtml = `<span class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Class: ${window.adminClassesData.find(c => c.id === data.classId)?.name || 'Unassigned'}</span>`;
+                    let actionButtons = "";
+                    let roleSelectHtml = `<span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase tracking-wider">${data.role === 'teacher' ? 'Teacher' : 'Student'}</span>`;
+
+                    if (window.isSuperAdmin) {
+                        let classOptions = `<option value="">-- Assign Class --</option>`;
+                        window.adminClassesData.forEach(c => {
+                            classOptions += `<option value="${c.id}" ${data.classId === c.id ? 'selected' : ''}>Class ${c.name}</option>`;
+                        });
+                        classSelectHtml = `<select onchange="window.updateUserClass('${data.id}', this.value)" class="text-sm font-bold border-2 border-indigo-300 rounded-lg p-1.5 bg-indigo-50 text-indigo-700 outline-none cursor-pointer w-full sm:w-auto">${classOptions}</select>`;
+                        roleSelectHtml = `<select onchange="window.updateUserRole('${data.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded p-1 bg-white text-slate-700 outline-none cursor-pointer"><option value="student" ${data.role === 'student' ? 'selected' : ''}>STUDENT</option><option value="teacher" ${data.role === 'teacher' ? 'selected' : ''}>TEACHER</option></select>`;
+                        actionButtons = `
+                            <select onchange="window.updateUserPlan('${data.id}', this.value)" class="text-sm font-bold border-2 border-slate-200 rounded-lg p-1.5 bg-white text-slate-700 outline-none cursor-pointer w-full sm:w-auto">
+                                <option value="trial" ${data.plan === 'trial' ? 'selected' : ''}>Trial 7 Days</option>
+                                <option value="3_months" ${data.plan === '3_months' ? 'selected' : ''}>3 Months</option>
+                                <option value="6_months" ${data.plan === '6_months' ? 'selected' : ''}>6 Months</option>
+                                <option value="lifetime" ${data.plan === 'lifetime' ? 'selected' : ''}>Lifetime</option>
+                            </select>
+                            <button onclick="window.toggleUserStatus('${data.id}', '${isBlocked ? 'active' : 'blocked'}')" class="${isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm w-full sm:w-20">${isBlocked ? 'Unblock' : 'Block'}</button>
+                            <button onclick="window.deleteUser('${data.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-700 w-full sm:w-auto">Delete</button>
+                        `;
+                    }
+
+                    uHtml += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between xl:items-center gap-4 hover:border-indigo-300">
+                        <div class="flex gap-4 items-center">
+                            <div class="w-12 h-12 rounded-full ${data.role === 'teacher' ? 'bg-purple-100 border-purple-300' : 'bg-slate-100 border-slate-300'} flex items-center justify-center text-xl shrink-0 border">
+                                ${data.role === 'teacher' ? '👨‍🏫' : '🎓'}
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-lg flex flex-wrap items-center gap-2">
+                                    ${data.nickname} ${roleSelectHtml}
+                                    <button onclick="window.openStudentReportModal('${data.id}', '${data.nickname}')" class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300 px-2 py-0.5 rounded font-bold hover:bg-indigo-200">🔍 View Report</button>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1.5 flex flex-wrap items-center gap-2">
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${data.email}</span>
+                                    <span>| Expires: <b class="${isExpired ? 'text-rose-600' : 'text-indigo-600'}">${expStr}</b></span>
+                                    <span>| ${statusBadge}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 w-full xl:w-auto">
+                            ${classSelectHtml} ${actionButtons}
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('admin-users-list').innerHTML = uHtml || `<div class="text-center py-12"><p class="text-slate-500 font-bold">No students found.</p></div>`;
+            } catch(e) { console.error(e); }
         }
 
-        // =======================================================================
-        // KHU VỰC 7: TEXT-TO-SPEECH (ÂM THANH ĐỌC CHỮ)
-        // =======================================================================
-        window.voices = [];
-        window.speechSynthesis.onvoiceschanged = () => { window.voices = window.speechSynthesis.getVoices(); };
-        window.getVoiceByGender = function(gender, lang = 'en-US') {
-            if (window.voices.length === 0) window.voices = window.speechSynthesis.getVoices();
-            const femaleKeywords = ['female', 'zira', 'samantha', 'victoria', 'karen', 'susan'];
-            const maleKeywords = ['male', 'david', 'daniel', 'alex', 'george', 'mark'];
-            let selectedVoice = null;
-            if (gender === 'female') { selectedVoice = window.voices.find(v => femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))); } 
-            else if (gender === 'male') { selectedVoice = window.voices.find(v => maleKeywords.some(kw => v.name.toLowerCase().includes(kw))); }
-            if (!selectedVoice) { selectedVoice = window.voices.find(v => v.lang === lang) || window.voices.find(v => v.lang.startsWith(lang.split('-')[0])); }
-            return selectedVoice;
-        };
-
-        window.highlightAudioRow = function(event) {
-            document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio'));
-            if(event && event.currentTarget && event.currentTarget.classList.contains('audio-row')) event.currentTarget.classList.add('active-audio');
-        };
-        window.removeHighlight = function() { document.querySelectorAll('.audio-row').forEach(el => el.classList.remove('active-audio')); };
-
-        window.playAudio = function(text, lang = 'en-US') {
-            window.highlightAudioRow(window.event);
-            window.speechSynthesis.cancel();
-            if(!text) return;
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang; utterance.rate = 0.85;
-            let voice = window.voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
-            if(voice) utterance.voice = voice;
-            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
-            window.speechSynthesis.speak(utterance);
-        };
-
-        window.playDialogueLine = function(text, gender) {
-            window.highlightAudioRow(window.event);
-            window.speechSynthesis.cancel();
-            if(!text) return;
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voice = window.getVoiceByGender(gender, 'en-US');
-            if(voice) utterance.voice = voice;
-            utterance.lang = 'en-US'; utterance.rate = 0.85;
-            utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight;
-            window.speechSynthesis.speak(utterance);
-        };
-
-        window.playAllDialogue = function() {
-            window.speechSynthesis.cancel(); window.removeHighlight();
-            let listeningSec = window.currentModule.sections.find(s => s.type === 'listening' || s.type === 'dialogue');
-            if(!listeningSec || !listeningSec.lines) return;
-            let currentLine = 0;
-            function speakNextLine() {
-                if(currentLine >= listeningSec.lines.length) return;
-                let l = listeningSec.lines[currentLine];
-                let utterance = new SpeechSynthesisUtterance(l.t || l.text);
-                const voice = window.getVoiceByGender(l.gender, l.loc || 'en-US');
-                if(voice) utterance.voice = voice;
-                utterance.lang = l.loc || 'en-US'; utterance.rate = 0.85;
-                utterance.onend = () => { currentLine++; speakNextLine(); };
-                window.speechSynthesis.speak(utterance);
+        window.updateUserClass = async function(uid, classId) {
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { classId: classId });
+            window.loadAdminUsers(document.getElementById('main-class-filter').value);
+        }
+        window.updateUserRole = async function(uid, role) {
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { role: role });
+            window.loadAdminUsers(document.getElementById('main-class-filter').value);
+        }
+        window.updateUserPlan = async function(uid, plan) {
+            let expiryDate = null; let now = Date.now();
+            if(plan === 'trial') expiryDate = now + (7 * 24 * 60 * 60 * 1000);
+            else if(plan === '3_months') expiryDate = now + (90 * 24 * 60 * 60 * 1000);
+            else if(plan === '6_months') expiryDate = now + (180 * 24 * 60 * 60 * 1000);
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { plan: plan, expiryDate: expiryDate });
+            window.loadAdminUsers(document.getElementById('main-class-filter').value);
+        }
+        window.toggleUserStatus = async function(uid, status) {
+            await window.fUpdateDoc(window.fDoc(window.fdb, "users", uid), { status: status });
+            window.loadAdminUsers(document.getElementById('main-class-filter').value);
+        }
+        window.deleteUser = async function(uid) {
+            if(confirm("DELETE THIS ACCOUNT PERMANENTLY?")) {
+                await window.fDeleteDoc(window.fDoc(window.fdb, "users", uid));
+                window.loadAdminUsers(document.getElementById('main-class-filter').value);
             }
-            speakNextLine();
+        }
+        window.exportUsersToCSV = function() {
+            if(!window.adminUsersData) return;
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFNickname,Email,Role,Class,Join Date,Plan,Expiry Date,Status\n";
+            window.adminUsersData.forEach(user => {
+                let className = window.adminClassesData.find(c => c.id === user.classId)?.name || 'Unassigned';
+                let joinDate = user.joinDate ? new Date(user.joinDate).toLocaleDateString('en-GB') : 'N/A';
+                let expDate = user.plan === 'lifetime' ? 'Lifetime' : (user.expiryDate ? new Date(user.expiryDate).toLocaleDateString('en-GB') : 'N/A');
+                csvContent += `"${user.nickname}","${user.email}","${user.role}","${className}","${joinDate}","${user.plan || 'trial'}","${expDate}","${user.status || 'active'}"\n`;
+            });
+            const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "students.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        window.onload = function() {
+            window.initApp();
         };
 
-        window.playSpeakingSample = function(text) { window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance); };
-        window.playReadingText = function(text) { window.highlightAudioRow(window.event); window.speechSynthesis.cancel(); if(!text) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.85; utterance.onend = window.removeHighlight; utterance.onerror = window.removeHighlight; window.speechSynthesis.speak(utterance); }
-
-        window.onload = window.initApp;
     </script>
 </body>
 </html>
