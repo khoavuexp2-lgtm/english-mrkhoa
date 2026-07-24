@@ -630,7 +630,6 @@ themBaiHoc({
 });
 // Kết thúc SBT Unit 5  
 
-
 // ↑↑↑↑↑↑↑↑↑↑↑↑↑ DÁN CODE CÁC HÀM "themBaiHoc({...})" CỦA THẦY VÀO TRÊN DÒNG NÀY ↑↑↑↑↑↑↑↑↑↑↑↑↑
 
         const database = {
@@ -745,7 +744,7 @@ themBaiHoc({
                 if (window.isAdmin) {
                     // Giáo viên mặc định xem cấu hình chung của cả lớp mình
                     let cId = window.currentUser.classId || 'unassigned';
-                    let snap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `class_${cId}_${modId}`));
+                    let snap = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `${cId}_${modId}`));
                     if (snap.exists()) assigned = snap.data().assignedExercises || [];
                 } else {
                     // Học sinh: ưu tiên xem bài giao cho cá nhân
@@ -757,8 +756,13 @@ themBaiHoc({
                         assigned = snapS.data().assignedExercises;
                     } else {
                         // Nếu không có bài cá nhân thì xem bài chung của lớp
-                        let snapC = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `class_${cId}_${modId}`));
+                        let snapC = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `${cId}_${modId}`));
                         if(snapC.exists()) assigned = snapC.data().assignedExercises || [];
+                        else {
+                            // Dự phòng chưa xếp lớp
+                            let snapU = await window.fGetDoc(window.fDoc(window.fdb, "assignments", `unassigned_${modId}`));
+                            if(snapU.exists()) assigned = snapU.data().assignedExercises || [];
+                        }
                     }
                 }
             } catch(e) { console.error("Lỗi tải assignment", e); }
@@ -1063,7 +1067,7 @@ themBaiHoc({
             }
         }
 
-        // ====================== WORKBOOK (SBT) RENDERER (GIAO BÀI & IN) ======================
+        // ====================== WORKBOOK (SBT) RENDERER ======================
         window.toggleAdminSBTView = async function() {
             window.adminViewAssignedOnly = !window.adminViewAssignedOnly;
             if(window.adminViewAssignedOnly) {
@@ -1088,10 +1092,14 @@ themBaiHoc({
             if (!window.isAdmin) {
                 let checkState = window.sbtShowAll ? "checked" : "";
                 studentToggleHtml = `
-                    <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200 shadow-sm mt-2 sm:mt-0">
-                        <input type="checkbox" class="w-4 h-4 accent-indigo-600" onchange="window.toggleSBTShowAll(this.checked)" ${checkState}>
-                        <span class="text-sm font-bold text-slate-700">Hiển thị toàn bộ SBT</span>
-                    </label>
+                    <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm mt-2 sm:mt-0">
+                        <span class="text-sm font-bold ${window.sbtShowAll ? 'text-slate-400' : 'text-rose-600'}">🎯 Bài Được Giao</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" onchange="window.toggleSBTShowAll(this.checked)" ${checkState}>
+                            <div class="w-11 h-6 bg-rose-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                        <span class="text-sm font-bold ${window.sbtShowAll ? 'text-indigo-600' : 'text-slate-400'}">Toàn Bộ Sách</span>
+                    </div>
                 `;
             }
 
@@ -1114,7 +1122,10 @@ themBaiHoc({
             if (window.isAdmin) {
                 if (window.adminViewAssignedOnly) {
                     if (window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
-                        exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+                        exercisesToRender = mod.exercises.map(ex => {
+                            let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
+                            return { ...ex, questions: filteredQs };
+                        }).filter(ex => ex.questions.length > 0);
                     } else {
                         exercisesToRender = [];
                     }
@@ -1122,7 +1133,10 @@ themBaiHoc({
             } else {
                 // Phân quyền Học sinh
                 if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length > 0) {
-                    exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+                    exercisesToRender = mod.exercises.map(ex => {
+                        let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
+                        return { ...ex, questions: filteredQs };
+                    }).filter(ex => ex.questions.length > 0);
                 } else if (!window.sbtShowAll && window.currentAssignedExercises && window.currentAssignedExercises.length === 0) {
                     exercisesToRender = []; // Chưa giao gì
                 }
@@ -1242,7 +1256,10 @@ themBaiHoc({
 
             let exercisesToRender = mod.exercises;
             if (!window.sbtShowAll && window.currentAssignedExercises) {
-                exercisesToRender = mod.exercises.filter(ex => window.currentAssignedExercises.includes(ex.id));
+                exercisesToRender = mod.exercises.map(ex => {
+                    let filteredQs = ex.questions.filter(q => window.currentAssignedExercises.includes(q.id));
+                    return { ...ex, questions: filteredQs };
+                }).filter(ex => ex.questions.length > 0);
             }
 
             exercisesToRender.forEach(ex => {
@@ -1616,7 +1633,7 @@ themBaiHoc({
             let docId = '';
             if (targetMode === 'class') {
                 let cId = window.currentUser.classId || 'unassigned';
-                docId = `${cId}_${mod.id}`; // Sửa lại key cho đúng với lúc lưu
+                docId = `${cId}_${mod.id}`; // LƯU VÀ ĐỌC ĐÚNG FORMAT NÀY
             } else {
                 let sId = document.getElementById('assign-student-select').value;
                 if(!sId) return;
@@ -1677,7 +1694,7 @@ themBaiHoc({
             
             if (targetMode === 'class') {
                 let cId = window.currentUser.classId || 'unassigned';
-                docId = `${cId}_${window.currentModule.id}`; // Sửa lại cho chuẩn
+                docId = `${cId}_${window.currentModule.id}`; // LƯU VÀ ĐỌC ĐÚNG FORMAT NÀY
             } else {
                 let sId = document.getElementById('assign-student-select').value;
                 if(!sId) return showCustomAlert("Lỗi", "Vui lòng chọn 1 học sinh.", "⚠️");
