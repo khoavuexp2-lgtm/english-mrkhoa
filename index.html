@@ -577,6 +577,7 @@ themBaiHoc({
     ]
 }); 
 // Kết thúc Unit 5
+
 // ============================REVIEWS ============================
 themBaiHoc({
     id: "rev1", type: "exam_module", title: "Review 1 (Units 1-3) - 45 Min Test",
@@ -723,8 +724,7 @@ themBaiHoc({
 }); 
 // Kết thúc Review 1
 
-//=========================SÁCH BÀI TẬP (SBT)=========================
-
+////=========================SÁCH BÀI TẬP (SBT)=========================
 themBaiHoc({
     id: "sbt_u1", type: "sbt_module", title: "SBT Unit 1: My New School",
     exercises: [
@@ -1168,8 +1168,14 @@ themBaiHoc({
 
         window.startExam = function(modId) {
             const mod = window.currentModule;
-            const testId = document.getElementById('exam-test-selector').value;
-            const level = document.getElementById('exam-level-selector').value;
+            
+            // FIX LỖI TRY AGAIN: Kiểm tra xem thẻ select có còn trên màn hình không
+            const testSelector = document.getElementById('exam-test-selector');
+            const levelSelector = document.getElementById('exam-level-selector');
+            
+            // Nếu có thẻ select thì lấy giá trị mới, nếu không thì lấy giá trị của bài thi trước đó
+            const testId = testSelector ? testSelector.value : window.currentExam.testId;
+            const level = levelSelector ? levelSelector.value : window.currentExam.level;
             
             let examKey = modId + "_" + testId + "_" + level;
             if(!window.examAttempts[examKey]) window.examAttempts[examKey] = 0;
